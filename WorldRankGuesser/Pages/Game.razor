@@ -1,0 +1,57 @@
+﻿@page "/game"
+
+@using WorldRankGuesser.Components;
+
+
+<div class="row justify-content-center">
+    <div class="d-flex justify-content-center col-6">
+        <p class="flag mb-0">@Flag</p>
+    </div>
+    <div class="d-flex justify-content-center col-12">
+        <p>@DisplayCountry.EnglishName</p>
+    </div>
+    @if (BasketballRank != null)
+    {
+        <div class="d-flex justify-content-center col-12">
+            <p>@BasketballRank.Rank</p>
+        </div>
+    }
+    @if (BaseballRank != null)
+    {
+        <div class="d-flex justify-content-center col-12">
+            <p>@BaseballRank.Rank</p>
+        </div>
+    }
+    @if (HockeyRank != null)
+    {
+        <div class="d-flex justify-content-center col-12">
+            <p>@HockeyRank.Rank</p>
+        </div>
+    }
+</div>
+<div class="row">
+    <CategoryCard></CategoryCard>
+    <CategoryCard></CategoryCard>
+    <CategoryCard></CategoryCard>
+    <CategoryCard></CategoryCard>
+    <CategoryCard></CategoryCard>
+    <CategoryCard></CategoryCard>
+    <CategoryCard></CategoryCard>
+    <CategoryCard></CategoryCard>
+    <CategoryCard></CategoryCard>
+    <CategoryCard></CategoryCard>
+</div>
+<div class="row justify-content-center">
+    <div class="d-flex justify-content-center col-6">
+        <button @onclick="@(() => CycleCountriesAsync())">Cycle</button>
+    </div>
+    <div class="d-flex justify-content-center col-6">
+        <button @onclick="@(() => GetBasketballRankAsync(DisplayCountry.ThreeLetterISORegionName))">Get Basketball Ranking</button>
+    </div>
+    <div class="d-flex justify-content-center col-6">
+        <button @onclick="@(() => GetBaseballRankAsync(DisplayCountry.ThreeLetterISORegionName))">Get Baseball Ranking</button>
+    </div>
+    <div class="d-flex justify-content-center col-6">
+        <button @onclick="@(() => GetHockeyRankAsync(DisplayCountry.ThreeLetterISORegionName))">Get Hockey Ranking</button>
+    </div>
+</div>
