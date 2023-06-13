@@ -8,6 +8,112 @@
 
   <ItemGroup>
     <PackageReference Include="HtmlAgilityPack" Version="1.11.46" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Files\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women.html" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\10.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\104.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\11.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\113.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\114.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\115.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\12.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\120.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\129.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\13.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\14.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\140.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\16.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\17.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\19.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\20.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\21.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\22.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\24.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\28.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\29.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\3.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\31.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\32.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\33.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\34.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\35.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\37.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\38.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\39.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\4.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\40.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\41.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\42.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\43.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\45.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\46.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\47.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\48.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\49.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\5.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\50.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\52.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\53.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\54.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\55.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\57.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\58.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\59.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\60.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\61.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\62.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\63.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\67.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\68.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\69.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\70.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\71.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\73.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\74.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\75.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\77.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\78.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\8.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\81.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\82.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\83.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\84.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\86.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\87.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\88.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\89.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\9.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\90.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\92.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\93.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\94.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\97.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\98.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\gold-town-games-logo.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\gtm.js" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\horizm-logo1.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\init.js" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\js" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\kayford-logo.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\lazy-load.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\logo-d11.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\logo-hero.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\logo-osaka.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\logo-polytan.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\nagra-sm.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\odisha-new-logo.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\outdoorRankings.js" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\simba-mrkt.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\sponsors.js" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\sport-radar-logo.webp" />
+    <None Include="wwwroot\remotehtml\outdoor-hockey-rankings-women_files\vue.min.js" />
   </ItemGroup>
 
 </Project>

@@ -1,5 +1,9 @@
 ﻿using HtmlAgilityPack;
+using Newtonsoft.Json.Linq;
+using System;
+using System.Linq;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using WorldRankGuesser.Data;
 using WorldRankGuesser.Helpers;
 
@@ -7,47 +11,53 @@ namespace WorldRankGuesser.Services
 {
     public class ScrapeService<TRank, TRankModel> where TRank : Ranking, new()
     {
-        protected virtual List<string>? Urls { get; set; }
+        protected virtual Dictionary<string, Dictionary<string, string>>? Urls { get => MapUrls(); }
 
         public async Task<TRank> GetLowestRankAsync(string ISO3)
         {
             TRank lowestRank = new()
             {
-                IOC = ISO3,
+                ISO3 = ISO3,
                 Rank = 200
             };
 
-            foreach (string url in Urls)
+            foreach (KeyValuePair<string, Dictionary<string, string>> sport in Urls)
             {
-                TRank currentRank = await GetRankingAsync(url, ISO3);
-
-                if (currentRank.Rank < lowestRank.Rank)
+                foreach (KeyValuePair<string, string> gender in sport.Value)
                 {
-                    lowestRank = currentRank;
-                }
+                    TRank currentRank = await GetRankingAsync(gender.Value, ISO3);
+
+                    if (currentRank.Rank < lowestRank.Rank)
+                    {
+                        lowestRank = currentRank;
+                        lowestRank.Sport = sport.Key;
+                        lowestRank.Gender = gender.Key;
+                    }
+                }               
             }
 
             return lowestRank;
         }
 
+        //TODO: Set Sport & Gender in ParseData
         public async Task<TRank> GetRankingAsync(string fullUrl, string ISO3)
         {
             TRank? countryRank = new();
 
-            string? html = await CallUrl(fullUrl);
+            string? html = await ScrapeService<TRank, TRankModel>.CallUrl(fullUrl);
 
             HtmlDocument? htmlDocument = new();
             htmlDocument.LoadHtml(html);
  
             List<TRank> ranks = ParseData(htmlDocument);
 
-            countryRank = ranks.FirstOrDefault(x => x.IOC == CountryUtilities.GetIOCMapping(ISO3));
+            countryRank = ranks.FirstOrDefault(x => x.ISO3 == CountryUtilities.GetIOCMapping(ISO3));
 
             if (countryRank == null)
             {
                 countryRank = new TRank
                 {
-                    IOC = ISO3,
+                    ISO3 = ISO3,
                     Rank = 200
                 };
             }
@@ -55,10 +65,19 @@ namespace WorldRankGuesser.Services
             return countryRank;
         }
 
-        private async Task<string> CallUrl(string fullUrl)
+        private static async Task<string> CallUrl(string fullUrl)
         {
             HttpClient? httpClient = new();
-            var response = await httpClient.GetStringAsync(fullUrl);
+            var response = string.Empty;
+
+            if (fullUrl.StartsWith("wwwroot"))
+            {
+                response = File.ReadAllText(fullUrl);
+            }
+            else
+            {
+                response = await httpClient.GetStringAsync(fullUrl);
+            }
 
             return response;
         }
@@ -66,6 +85,15 @@ namespace WorldRankGuesser.Services
         protected virtual List<TRank> ParseData(HtmlDocument htmlDoc)
         {
             return new List<TRank>();
+        }
+
+        private static Dictionary<string, Dictionary<string, string>> MapUrls()
+        {
+            string urlsConfig = GeneralUtilities.ReadConfig("urls");
+            var urlsDict = JsonSerializer.Deserialize<Dictionary<string, Dictionary<string, Dictionary<string, string>>>>(urlsConfig);
+            var sportsDict = urlsDict[typeof(TRank).Name];
+
+            return sportsDict;
         }
     }
 }

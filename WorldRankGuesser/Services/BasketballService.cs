@@ -12,17 +12,17 @@ namespace WorldRankGuesser.Services
 {
     public class BasketballService : ScrapeService<BasketballRank, BasketballRank>
     {
-        protected override List<string> Urls
-        {
-            get
-            {
-                return new List<string>
-                {
-                    "https://www.fiba.basketball/rankingmen",
-                    "https://www.fiba.basketball/rankingwomen"
-                };
-            }
-        }
+        //protected override List<string> Urls
+        //{
+        //    get
+        //    {
+        //        return new List<string>
+        //        {
+        //            "https://www.fiba.basketball/rankingmen",
+        //            "https://www.fiba.basketball/rankingwomen"
+        //        };
+        //    }
+        //}
 
         protected override List<BasketballRank> ParseData(HtmlDocument htmlDoc)
         {
@@ -38,11 +38,11 @@ namespace WorldRankGuesser.Services
 
                     if (cells != null)
                     {
-                        if (!rankings.Any(x => x.IOC == cells[3]) && int.TryParse(cells[0].Trim('.'), out int rank))
+                        if (!rankings.Any(x => x.ISO3 == cells[3]) && int.TryParse(cells[0].Trim('.'), out int rank))
                         {
                             rankings.Add(new BasketballRank 
                             { 
-                                IOC = cells[3], 
+                                ISO3 = cells[3], 
                                 Rank = rank 
                             });
                         }
