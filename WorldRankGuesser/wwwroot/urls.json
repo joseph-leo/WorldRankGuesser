@@ -1,0 +1,28 @@
+{
+  "BasketballRank": {
+    "Basketball": {
+      "Men": "https://www.fiba.basketball/rankingmen",
+      "Women": "https://www.fiba.basketball/rankingwomen"
+    }
+  },
+  "BaseballRank": {
+    "Baseball": {
+      "Men": "https://rankings.wbsc.org/list/baseball/men",
+      "Women": "https://rankings.wbsc.org/list/baseball/women"
+    },
+    "Softball": {
+      "Men": "https://rankings.wbsc.org/list/softball/men",
+      "Women": "https://rankings.wbsc.org/list/softball/women"
+    }
+  },
+  "HockeyRank": {
+    "Field Hockey": {
+      "Men": "https://www.fih.hockey/outdoor-hockey-rankings",
+      "Women": "wwwroot/remotehtml/outdoor-hockey-rankings-women.html"
+    },
+    "Ice Hockey": {
+      "Both": "https://www.iihf.com/en/worldranking"
+    }
+  }
+}
+
