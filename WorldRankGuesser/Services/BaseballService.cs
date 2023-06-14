@@ -19,7 +19,7 @@ namespace WorldRankGuesser.Services
         //    }
         //}
 
-        protected override List<BaseballRank> ParseData(HtmlDocument htmlDoc)
+        protected override List<BaseballRank> ParseRanks(HtmlDocument htmlDoc)
         {
             List<HtmlNode> ulist = htmlDoc.DocumentNode.SelectNodes("//div").Where(x => x.GetClasses().Contains("ranking-listing-team-row")).ToList();
             List<BaseballRank> rankings = new();
@@ -28,12 +28,14 @@ namespace WorldRankGuesser.Services
             {
                 List<string> cells = row.SelectNodes("ul/li").Select(x => x.InnerText.Trim()).ToList();
 
-                if (!rankings.Any(x => x.ISO3 == cells[2]) && int.TryParse(cells[0], out int rank))
+                if (!rankings.Any(x => x.IOC == cells[2]) && int.TryParse(cells[0], out int rank))
                 {
                     rankings.Add(new BaseballRank
                     {
-                        ISO3 = cells[2],
-                        Rank = rank
+                        IOC = cells[2],
+                        Rank = rank,
+                        Sport = Sport,
+                        Gender = Gender
                     });
                 }
             }

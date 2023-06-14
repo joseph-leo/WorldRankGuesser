@@ -11,58 +11,57 @@ namespace WorldRankGuesser.Services
 {
     public class ScrapeService<TRank, TRankModel> where TRank : Ranking, new()
     {
-        protected virtual Dictionary<string, Dictionary<string, string>>? Urls { get => MapUrls(); }
+        protected virtual Dictionary<string, Dictionary<string, string>> Urls { get => MapUrls(); }
+
+        protected string? Sport { get; set; }
+        protected string? Gender { get; set; }
 
         public async Task<TRank> GetLowestRankAsync(string ISO3)
         {
-            TRank lowestRank = new()
-            {
-                ISO3 = ISO3,
-                Rank = 200
-            };
+            List<TRank> allCountryRankings = await GetRankingsAsync(ISO3);
+            TRank lowestRank = allCountryRankings[0];
 
-            foreach (KeyValuePair<string, Dictionary<string, string>> sport in Urls)
+            foreach (var rank in allCountryRankings)
             {
-                foreach (KeyValuePair<string, string> gender in sport.Value)
-                {
-                    TRank currentRank = await GetRankingAsync(gender.Value, ISO3);
-
-                    if (currentRank.Rank < lowestRank.Rank)
-                    {
-                        lowestRank = currentRank;
-                        lowestRank.Sport = sport.Key;
-                        lowestRank.Gender = gender.Key;
-                    }
-                }               
+                lowestRank = rank.Rank < lowestRank.Rank ? rank : lowestRank;
             }
 
             return lowestRank;
         }
 
-        //TODO: Set Sport & Gender in ParseData
-        public async Task<TRank> GetRankingAsync(string fullUrl, string ISO3)
+        public async Task<List<TRank>> GetRankingsAsync(string ISO3)
         {
-            TRank? countryRank = new();
+            List<TRank> allRanks = new();
+            List<TRank> countryRanks = new();
+            
 
-            string? html = await ScrapeService<TRank, TRankModel>.CallUrl(fullUrl);
-
-            HtmlDocument? htmlDocument = new();
-            htmlDocument.LoadHtml(html);
- 
-            List<TRank> ranks = ParseData(htmlDocument);
-
-            countryRank = ranks.FirstOrDefault(x => x.ISO3 == CountryUtilities.GetIOCMapping(ISO3));
-
-            if (countryRank == null)
+            foreach (KeyValuePair<string, Dictionary<string, string>> sport in Urls)
             {
-                countryRank = new TRank
-                {
-                    ISO3 = ISO3,
-                    Rank = 200
-                };
-            }
+                Sport = sport.Key;
 
-            return countryRank;
+                foreach (KeyValuePair<string, string> gender in sport.Value)
+                {
+                    Gender = gender.Key;
+
+                    TRank unranked = new()
+                    {
+                        IOC = CountryUtil.GetIOCMapping(ISO3),
+                        Sport = Sport,
+                        Gender = Gender,
+                        Rank = 200
+                    };
+
+                    string? html = await CallUrl(gender.Value);
+                    HtmlDocument? htmlDocument = new();
+                    htmlDocument.LoadHtml(html);
+
+                    allRanks = ParseRanks(htmlDocument);
+                    TRank countryRank = allRanks.FirstOrDefault(x => x.IOC == CountryUtil.GetIOCMapping(ISO3), unranked);
+                    countryRanks.Add(countryRank);
+                }
+            }          
+
+            return countryRanks;
         }
 
         private static async Task<string> CallUrl(string fullUrl)
@@ -82,14 +81,14 @@ namespace WorldRankGuesser.Services
             return response;
         }
 
-        protected virtual List<TRank> ParseData(HtmlDocument htmlDoc)
+        protected virtual List<TRank> ParseRanks(HtmlDocument htmlDoc)
         {
             return new List<TRank>();
         }
 
         private static Dictionary<string, Dictionary<string, string>> MapUrls()
         {
-            string urlsConfig = GeneralUtilities.ReadConfig("urls");
+            string urlsConfig = GeneralUtil.ReadConfig("urls");
             var urlsDict = JsonSerializer.Deserialize<Dictionary<string, Dictionary<string, Dictionary<string, string>>>>(urlsConfig);
             var sportsDict = urlsDict[typeof(TRank).Name];
 

@@ -24,7 +24,7 @@ namespace WorldRankGuesser.Services
         //    }
         //}
 
-        protected override List<BasketballRank> ParseData(HtmlDocument htmlDoc)
+        protected override List<BasketballRank> ParseRanks(HtmlDocument htmlDoc)
         {
             HtmlNode? table = htmlDoc.DocumentNode.SelectSingleNode("//table");
 
@@ -38,12 +38,14 @@ namespace WorldRankGuesser.Services
 
                     if (cells != null)
                     {
-                        if (!rankings.Any(x => x.ISO3 == cells[3]) && int.TryParse(cells[0].Trim('.'), out int rank))
+                        if (!rankings.Any(x => x.IOC == cells[3]) && int.TryParse(cells[0].Trim('.'), out int rank))
                         {
                             rankings.Add(new BasketballRank 
                             { 
-                                ISO3 = cells[3], 
-                                Rank = rank 
+                                IOC = cells[3], 
+                                Rank = rank,
+                                Sport = Sport,
+                                Gender = Gender
                             });
                         }
                     }

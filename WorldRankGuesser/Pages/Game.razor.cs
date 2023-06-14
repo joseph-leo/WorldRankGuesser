@@ -38,7 +38,7 @@ namespace WorldRankGuesser.Pages
         private HockeyRank? HockeyRank { get; set; }
 
 
-        private List<RegionInfo> countries = CountryUtilities.GetCountries();
+        private List<RegionInfo> countries = CountryUtil.GetCountries();
 
         protected override void OnInitialized()
         {
@@ -61,7 +61,7 @@ namespace WorldRankGuesser.Pages
             for (int i = 0; i < 50; i++)
             {
                 DisplayCountry = countries[i];
-                Flag = CountryUtilities.GetFlag(DisplayCountry.TwoLetterISORegionName);
+                Flag = CountryUtil.GetFlag(DisplayCountry.TwoLetterISORegionName);
                 StateHasChanged();
                 await Task.Delay(50);
             }
