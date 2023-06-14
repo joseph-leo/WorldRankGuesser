@@ -2,7 +2,7 @@
 
 namespace WorldRankGuesser.Helpers
 {
-    public static class CountryUtilities
+    public static class CountryUtil
     {
         public static List<RegionInfo> GetCountries()
         {

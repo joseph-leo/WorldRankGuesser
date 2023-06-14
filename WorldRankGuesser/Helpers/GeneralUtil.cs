@@ -3,7 +3,7 @@ using System.Text.Json;
 
 namespace WorldRankGuesser.Helpers
 {
-    public static class GeneralUtilities
+    public static class GeneralUtil
     {
         public static string ReadConfig(string jsonName)
         {
