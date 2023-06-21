@@ -31,11 +31,21 @@ namespace WorldRankGuesser.Pages
         [Inject]
         HockeyService HockeyService { get; set; }
 
+        [Inject]
+        GymnasticsService GymnasticsService { get; set; }
+
+        [Inject]
+        CricketService CricketService { get; set; }
+
         private RegionInfo DisplayCountry { get; set; } = new RegionInfo("aa-DJ");
         private string Flag { get; set; } = string.Empty;
         private BasketballRank? BasketballRank { get; set; }
         private BaseballRank? BaseballRank { get; set; }
         private HockeyRank? HockeyRank { get; set; }
+        private GymnasticsRank? GymnasticsRank { get; set; }
+        public CricketRank? CricketRank { get; set; }
+
+        private List<Rank> rankings = new List<Rank>();
 
 
         private List<RegionInfo> countries = CountryUtil.GetCountries();
@@ -83,6 +93,26 @@ namespace WorldRankGuesser.Pages
         private async Task GetHockeyRankAsync(string ISO3)
         {
             HockeyRank = await HockeyService.GetLowestRankAsync(ISO3);
+        }
+
+        private async Task GetGymnasticsRankAsync(string ISO3)
+        {
+            GymnasticsRank = await GymnasticsService.GetLowestRankAsync(ISO3);
+        }
+
+        private async Task GetCricketRankAsync(string ISO3)
+        {
+            CricketRank = await CricketService.GetLowestRankAsync(ISO3);
+        }
+
+        private List<Rank> GetRankings()
+        {
+            rankings.Add(BasketballRank);
+            rankings.Add(BaseballRank);
+            rankings.Add(HockeyRank);
+            rankings.Add(GymnasticsRank);
+
+            return rankings;
         }
     }
 }

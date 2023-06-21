@@ -23,6 +23,28 @@
     "Ice Hockey": {
       "Both": "https://www.iihf.com/en/worldranking"
     }
+  },
+  "GymnasticsRank": {
+    "Artistic Gymnastics": {
+      "Men": "wwwroot/remotehtml/ranking_mag.html",
+      "Women": "wwwroot/remotehtml/ranking_wag.html"
+    },
+    "Rythmic Gymnastics": {
+      "Women": "wwwroot/remotehtml/ranking_rg.html"
+    }
+  },
+  "CricketRank": {
+    "Test": {
+      "Men": "https://www.icc-cricket.com/rankings/mens/team-rankings/test"
+    },
+    "ODI": {
+      "Men": "https://www.icc-cricket.com/rankings/mens/team-rankings/odi",
+      "Women": "https://www.icc-cricket.com/rankings/womens/team-rankings/odi"
+    },
+    "T20I": {
+      "Men": "https://www.icc-cricket.com/rankings/mens/team-rankings/t20i",
+      "Women": "https://www.icc-cricket.com/rankings/womens/team-rankings/t20i"
+    }
   }
 }
 

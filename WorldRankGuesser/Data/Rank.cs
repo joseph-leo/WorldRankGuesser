@@ -2,13 +2,13 @@
 
 namespace WorldRankGuesser.Data
 {
-    public class Ranking
+    public class Rank
     {
         public virtual string? IOC { get; set; }
-        public virtual int Rank { get; set; }
+        public virtual int Position { get; set; }
         public virtual string? Sport { get; set; }
         public virtual string? Gender { get; set; }
-        public bool Unranked { get => Rank == 200; }
+        public bool Unranked { get => Position == 200; }
 
     }
 }

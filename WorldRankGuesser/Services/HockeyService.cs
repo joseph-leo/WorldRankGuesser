@@ -27,14 +27,14 @@ namespace WorldRankGuesser.Services
             {
                 var rowList = row.InnerText.Split("  ").Select(x => x.Trim()).ToList();
                 string ISO3 = CountryUtil.GetISO3(rowList[1]);
-                string IOC = CountryUtil.GetIOCMapping(ISO3);
+                string IOC = ISO3.ToIOC();
 
                 if (!rankings.Any(x => x.IOC == IOC) && int.TryParse(rowList[0], out int rank))
                 {
                     rankings.Add(new HockeyRank
                     {
                         IOC = IOC,
-                        Rank = rank,
+                        Position = rank,
                         Sport = Sport,
                         Gender = Gender
                     });
@@ -72,7 +72,7 @@ namespace WorldRankGuesser.Services
                     rankings.Add(new HockeyRank
                     {
                         IOC = IOC,
-                        Rank = rank,
+                        Position = rank,
                         Sport = Sport,
                         Gender = gender
                     });

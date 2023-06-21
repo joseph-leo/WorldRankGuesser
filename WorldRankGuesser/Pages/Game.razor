@@ -12,26 +12,45 @@
     </div>
     @if (BasketballRank != null)
     {
-        <div class="d-flex justify-content-center col-12">
-            <p>@BasketballRank.Rank</p>
-            <p>@BasketballRank.Sport</p>
-            <p>@BasketballRank.Gender</p>
+        <div class="col-3 mx-auto">
+            <p class="text-center">@BasketballRank.Position</p>
+            <p class="text-center">@BasketballRank.Sport</p>
+            <p class="text-center">@BasketballRank.Gender</p>
         </div>
     }
     @if (BaseballRank != null)
     {
-        <div class="d-flex justify-content-center col-12">
-            <p>@BaseballRank.Rank</p>
-            <p>@BaseballRank.Sport</p>
-            <p>@BaseballRank.Gender</p>
+        <div class="col-3 mx-auto">
+            <p class="text-center">@BaseballRank.Position</p>
+            <p class="text-center">@BaseballRank.Sport</p>
+            <p class="text-center">@BaseballRank.Gender</p>
         </div>
     }
     @if (HockeyRank != null)
     {
-        <div class="d-flex justify-content-center col-12">
-            <p>@HockeyRank.Rank</p>
-            <p>@HockeyRank.Sport</p>
-            <p>@HockeyRank.Gender</p>
+        <div class="col-3 mx-auto">
+            <p class="text-center">@HockeyRank.Position</p>
+            <p class="text-center">@HockeyRank.Sport</p>
+            <p class="text-center">@HockeyRank.Gender</p>
+        </div>
+    }
+    @if (GymnasticsRank != null)
+    {
+
+        <div class="col-3 mx-auto">
+            <p class="text-center">@GymnasticsRank.Position</p>
+            <p class="text-center">@GymnasticsRank.Sport</p>
+            <p class="text-center">@GymnasticsRank.Event</p>
+            <p class="text-center">@GymnasticsRank.Gender</p>
+        </div>
+    }
+    @if (CricketRank != null)
+    {
+        <div class="col-3 mx-auto">
+            <p class="text-center">@CricketRank.Position</p>
+            <p class="text-center">@CricketRank.Sport</p>
+            <p class="text-center">@CricketRank.Format</p>
+            <p class="text-center">@CricketRank.Gender</p>
         </div>
     }
 </div>
@@ -59,5 +78,14 @@
     </div>
     <div class="d-flex justify-content-center col-6">
         <button @onclick="@(() => GetHockeyRankAsync(DisplayCountry.ThreeLetterISORegionName))">Get Hockey Ranking</button>
+    </div>
+    <div class="d-flex justify-content-center col-6">
+        <button @onclick="@(() => GetGymnasticsRankAsync(DisplayCountry.ThreeLetterISORegionName))">Get Gymnastics Ranking</button>
+    </div>
+    <div class="d-flex justify-content-center col-6">
+        <button @onclick="@(() => GetCricketRankAsync(DisplayCountry.ThreeLetterISORegionName))">Get Cricket Ranking</button>
+    </div>
+    <div class="d-flex justify-content-center col-6">
+        <button @onclick="@(() => GetRankings())">Get All Rankings</button>
     </div>
 </div>

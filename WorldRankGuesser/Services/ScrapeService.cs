@@ -9,7 +9,7 @@ using WorldRankGuesser.Helpers;
 
 namespace WorldRankGuesser.Services
 {
-    public class ScrapeService<TRank, TRankModel> where TRank : Ranking, new()
+    public class ScrapeService<TRank, TRankModel> where TRank : Rank, new()
     {
         protected virtual Dictionary<string, Dictionary<string, string>> Urls { get => MapUrls(); }
 
@@ -23,7 +23,7 @@ namespace WorldRankGuesser.Services
 
             foreach (var rank in allCountryRankings)
             {
-                lowestRank = rank.Rank < lowestRank.Rank ? rank : lowestRank;
+                lowestRank = rank.Position < lowestRank.Position ? rank : lowestRank;
             }
 
             return lowestRank;
@@ -45,26 +45,38 @@ namespace WorldRankGuesser.Services
 
                     TRank unranked = new()
                     {
-                        IOC = CountryUtil.GetIOCMapping(ISO3),
+                        IOC = ISO3.ToIOC(),
                         Sport = Sport,
                         Gender = Gender,
-                        Rank = 200
+                        Position = 200
                     };
 
-                    string? html = await CallUrl(gender.Value);
+                    string? html = await CallUrlAsync(gender.Value);
                     HtmlDocument? htmlDocument = new();
                     htmlDocument.LoadHtml(html);
 
                     allRanks = ParseRanks(htmlDocument);
-                    TRank countryRank = allRanks.FirstOrDefault(x => x.IOC == CountryUtil.GetIOCMapping(ISO3), unranked);
-                    countryRanks.Add(countryRank);
+
+                    List<TRank> countryRank = GetCountryRank(allRanks, ISO3);
+                    if (countryRank.Any()) 
+                    {
+                        countryRanks.AddRange(countryRank);
+                    }
+                    else
+                    {
+                        countryRanks.Add(unranked);
+                    }                   
                 }
             }          
 
             return countryRanks;
         }
+        protected virtual List<TRank> GetCountryRank(List<TRank> allRanks, string ISO3) 
+        {
+            return allRanks.Where(x => x.IOC == ISO3.ToIOC()).ToList();
+        }
 
-        private static async Task<string> CallUrl(string fullUrl)
+        protected static async Task<string> CallUrlAsync(string fullUrl)
         {
             HttpClient? httpClient = new();
             var response = string.Empty;
