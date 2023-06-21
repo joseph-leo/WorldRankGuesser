@@ -10,6 +10,8 @@ builder.Services.AddServerSideBlazor();
 builder.Services.AddSingleton<BasketballService>();
 builder.Services.AddSingleton<BaseballService>();
 builder.Services.AddSingleton<HockeyService>();
+builder.Services.AddSingleton<GymnasticsService>();
+builder.Services.AddSingleton<CricketService>();
 
 var app = builder.Build();
 

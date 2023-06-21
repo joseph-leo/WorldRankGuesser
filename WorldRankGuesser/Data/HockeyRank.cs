@@ -1,6 +1,6 @@
 ﻿namespace WorldRankGuesser.Data
 {
-    public class HockeyRank : Ranking
+    public class HockeyRank : Rank
     {
 
     }

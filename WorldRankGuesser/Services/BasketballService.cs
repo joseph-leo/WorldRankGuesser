@@ -43,7 +43,7 @@ namespace WorldRankGuesser.Services
                             rankings.Add(new BasketballRank 
                             { 
                                 IOC = cells[3], 
-                                Rank = rank,
+                                Position = rank,
                                 Sport = Sport,
                                 Gender = Gender
                             });

@@ -1,0 +1,96 @@
+﻿<style type="text/css">
+	.minipadding {
+		padding: 8px !important;
+	}
+	td#photo{
+		padding-right:15px;
+	}
+	div#social-medias{
+		position:relative;
+		top:66px;
+	}
+	div#social-medias img{
+		margin:5px;
+	}
+	div#head-title{
+		margin-top:20px;
+		font-family:inherit;
+		font-size:25px;
+		line-height: 1.1;
+		color:inherit;
+		background-color:#ececec;
+	}	
+	div#head-gymnast{
+		margin-top:20px;
+		font-family:inherit;
+		font-size:20px;
+		line-height: 1.1;
+		color:inherit;
+		background-color:#ececec;
+		margin-bottom:0px;
+	}	
+	div#row-button{
+		margin-top: 10px;
+		margin-bottom: 20px;	
+	}
+	#status{
+		vertical-align:middle;
+	}
+	.green{
+		color:#5cb85c;
+	}
+	.red{
+		color:#d9534f;
+	}
+	.grey{
+		color:#777777;
+	}
+	.row{
+		line-height: 2;
+	}
+	img#picture{
+		height:200px;
+		width: auto;
+	}
+	.img-polaroid {
+			padding: 4px;
+			background-color: #fff;
+			border: 1px solid #ccc;
+			border: 1px solid rgba(0,0,0,0.2);
+			-webkit-box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+			-moz-box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+			box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+	}	
+	.row#row-picture{
+		padding-top:15px;
+		padding-bottom:15px;
+	}
+	.gymnast-name{
+		margin-top:10px;
+		margin-bottom:0px;
+	}
+	.container-youtube {
+			position: relative;
+			width: 100%;
+			height: 0;
+			padding-bottom: 56.25%;
+	}
+	.video {
+			position: absolute;
+			top: 0;
+			left: 0;
+			width: 100%;
+			height: 100%;
+	}
+	div#moreInfo h4{
+		font-family: 'Helvetica Neue',Helvetica,Arial,sans-serif;
+		font-size: 14px;
+		color: #333;
+		line-height: 1;
+		text-align: left;
+		font-weight: 700;	
+	}
+	table#table_result{
+		font-size: 14px;
+	}
+</style>
