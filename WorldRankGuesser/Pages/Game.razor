@@ -53,6 +53,22 @@
             <p class="text-center">@CricketRank.Gender</p>
         </div>
     }
+    @if (SoccerRank != null)
+    {
+        <div class="col-3 mx-auto">
+            <p class="text-center">@SoccerRank.Position</p>
+            <p class="text-center">@SoccerRank.Sport</p>
+            <p class="text-center">@SoccerRank.Gender</p>
+        </div>
+    }
+    @if (RugbyRank != null)
+    {
+        <div class="col-3 mx-auto">
+            <p class="text-center">@RugbyRank.Position</p>
+            <p class="text-center">@RugbyRank.Sport</p>
+            <p class="text-center">@RugbyRank.Gender</p>
+        </div>
+    }
 </div>
 <div class="row">
     <CategoryCard></CategoryCard>
@@ -84,6 +100,12 @@
     </div>
     <div class="d-flex justify-content-center col-6">
         <button @onclick="@(() => GetCricketRankAsync(DisplayCountry.ThreeLetterISORegionName))">Get Cricket Ranking</button>
+    </div>
+    <div class="d-flex justify-content-center col-6">
+        <button @onclick="@(() => GetSoccerRankAsync(DisplayCountry.ThreeLetterISORegionName))">Get Soccer Ranking</button>
+    </div>
+    <div class="d-flex justify-content-center col-6">
+        <button @onclick="@(() => GetRugbyRankAsync(DisplayCountry.ThreeLetterISORegionName))">Get Rugby Ranking</button>
     </div>
     <div class="d-flex justify-content-center col-6">
         <button @onclick="@(() => GetRankings())">Get All Rankings</button>

@@ -23,19 +23,25 @@ namespace WorldRankGuesser.Pages
     public partial class Game
     {
         [Inject]
-        BasketballService BasketballRankingService { get; set; }
+        BasketballService BasketballService { get; set; } = default!;
 
         [Inject]
-        BaseballService BaseballService { get; set; }
+        BaseballService BaseballService { get; set; } = default!;
 
         [Inject]
-        HockeyService HockeyService { get; set; }
+        HockeyService HockeyService { get; set; } = default!;
 
         [Inject]
-        GymnasticsService GymnasticsService { get; set; }
+        GymnasticsService GymnasticsService { get; set; } = default!;
 
         [Inject]
-        CricketService CricketService { get; set; }
+        CricketService CricketService { get; set; } = default!;
+
+        [Inject]
+        SoccerService SoccerService { get; set; } = default!;
+
+        [Inject]
+        RugbyService RugbyService { get; set; } = default!;
 
         private RegionInfo DisplayCountry { get; set; } = new RegionInfo("aa-DJ");
         private string Flag { get; set; } = string.Empty;
@@ -44,6 +50,8 @@ namespace WorldRankGuesser.Pages
         private HockeyRank? HockeyRank { get; set; }
         private GymnasticsRank? GymnasticsRank { get; set; }
         public CricketRank? CricketRank { get; set; }
+        public SoccerRank? SoccerRank { get; set; }
+        public RugbyRank? RugbyRank { get; set; }
 
         private List<Rank> rankings = new List<Rank>();
 
@@ -82,7 +90,7 @@ namespace WorldRankGuesser.Pages
 
         private async Task GetBasketballRankAsync(string ISO3)
         {
-            BasketballRank = await BasketballRankingService.GetLowestRankAsync(ISO3);
+            BasketballRank = await BasketballService.GetLowestRankAsync(ISO3);
         }
 
         private async Task GetBaseballRankAsync(string ISO3)
@@ -103,6 +111,16 @@ namespace WorldRankGuesser.Pages
         private async Task GetCricketRankAsync(string ISO3)
         {
             CricketRank = await CricketService.GetLowestRankAsync(ISO3);
+        }
+
+        private async Task GetSoccerRankAsync(string ISO3)
+        {
+            SoccerRank = await SoccerService.GetLowestRankAsync(ISO3);
+        }
+
+        private async Task GetRugbyRankAsync(string ISO3)
+        {
+            RugbyRank = await RugbyService.GetLowestRankAsync(ISO3);
         }
 
         private List<Rank> GetRankings()

@@ -12,7 +12,6 @@ namespace WorldRankGuesser.Services
     public class ScrapeService<TRank, TRankModel> where TRank : Rank, new()
     {
         protected virtual Dictionary<string, Dictionary<string, string>> Urls { get => MapUrls(); }
-
         protected string? Sport { get; set; }
         protected string? Gender { get; set; }
 
@@ -45,19 +44,17 @@ namespace WorldRankGuesser.Services
 
                     TRank unranked = new()
                     {
-                        IOC = ISO3.ToIOC(),
+                        ISO3 = ISO3,
                         Sport = Sport,
                         Gender = Gender,
                         Position = 200
                     };
 
-                    string? html = await CallUrlAsync(gender.Value);
-                    HtmlDocument? htmlDocument = new();
-                    htmlDocument.LoadHtml(html);
-
-                    allRanks = ParseRanks(htmlDocument);
+                    string? response = await CallUrlAsync(gender.Value);
+                    allRanks = ParseRanks(response);
 
                     List<TRank> countryRank = GetCountryRank(allRanks, ISO3);
+
                     if (countryRank.Any()) 
                     {
                         countryRanks.AddRange(countryRank);
@@ -73,7 +70,7 @@ namespace WorldRankGuesser.Services
         }
         protected virtual List<TRank> GetCountryRank(List<TRank> allRanks, string ISO3) 
         {
-            return allRanks.Where(x => x.IOC == ISO3.ToIOC()).ToList();
+            return allRanks.Where(x => x.ISO3 == ISO3).ToList();
         }
 
         protected static async Task<string> CallUrlAsync(string fullUrl)
@@ -93,7 +90,7 @@ namespace WorldRankGuesser.Services
             return response;
         }
 
-        protected virtual List<TRank> ParseRanks(HtmlDocument htmlDoc)
+        protected virtual List<TRank> ParseRanks(string response)
         {
             return new List<TRank>();
         }
