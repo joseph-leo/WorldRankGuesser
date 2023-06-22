@@ -7,11 +7,13 @@ namespace WorldRankGuesser.Services
 {
     public class GymnasticsService : ScrapeService<GymnasticsRank, GymnasticsRank>
     {
-        protected override List<GymnasticsRank> ParseRanks(HtmlDocument htmlDoc)
+        protected override List<GymnasticsRank> ParseRanks(string response)
         {
             List<GymnasticsRank> ranks = new();
 
-            var tables = htmlDoc.DocumentNode.SelectNodes("//table");
+            HtmlDocument? htmlDocument = new();
+            htmlDocument.LoadHtml(response);
+            var tables = htmlDocument.DocumentNode.SelectNodes("//table");
             
             foreach (var table in tables )
             {
@@ -24,12 +26,12 @@ namespace WorldRankGuesser.Services
                 {
                     List<string> cells = row.SelectNodes("td").Select(x => x.InnerText.Trim()).ToList();
                     
-                    string IOC = string.Empty;
+                    string ISO3 = string.Empty;
 
                     if (cells[2].Contains(';'))
-                        IOC = cells[2].Split(';')[1];
+                        ISO3 = CountryUtil.IOCToISO3(cells[2].Split(';')[1]);
                     else
-                        IOC = CountryUtil.GetISO3(cells[2]).ToIOC();
+                        ISO3 = CountryUtil.GetISO3FromCountry(cells[2]);
 
                     if (int.TryParse(cells[0], out int rank))
                     {
@@ -38,7 +40,7 @@ namespace WorldRankGuesser.Services
                             Event = _event,
                             Sport = Sport,
                             Gender = Gender,
-                            IOC = IOC,
+                            ISO3 = ISO3,
                             Position = rank
                         });
                     }                   

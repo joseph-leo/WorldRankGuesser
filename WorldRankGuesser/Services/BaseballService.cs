@@ -19,20 +19,23 @@ namespace WorldRankGuesser.Services
         //    }
         //}
 
-        protected override List<BaseballRank> ParseRanks(HtmlDocument htmlDoc)
+        protected override List<BaseballRank> ParseRanks(string response)
         {
-            List<HtmlNode> ulist = htmlDoc.DocumentNode.SelectNodes("//div").Where(x => x.GetClasses().Contains("ranking-listing-team-row")).ToList();
+            HtmlDocument? htmlDocument = new();
+            htmlDocument.LoadHtml(response);
+
+            List<HtmlNode> ulist = htmlDocument.DocumentNode.SelectNodes("//div").Where(x => x.GetClasses().Contains("ranking-listing-team-row")).ToList();
             List<BaseballRank> rankings = new();
 
             foreach (HtmlNode row in ulist)
             {
                 List<string> cells = row.SelectNodes("ul/li").Select(x => x.InnerText.Trim()).ToList();
 
-                if (!rankings.Any(x => x.IOC == cells[2]) && int.TryParse(cells[0], out int rank))
+                if (int.TryParse(cells[0], out int rank))
                 {
                     rankings.Add(new BaseballRank
                     {
-                        IOC = cells[2],
+                        ISO3 = CountryUtil.IOCToISO3(cells[2]),
                         Position = rank,
                         Sport = Sport,
                         Gender = Gender

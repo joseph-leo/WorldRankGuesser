@@ -8,11 +8,14 @@ namespace WorldRankGuesser.Services
 {
     public class CricketService : ScrapeService<CricketRank, CricketRank>
     {
-        protected override List<CricketRank> ParseRanks(HtmlDocument htmlDoc)
+        protected override List<CricketRank> ParseRanks(string response)
         {
             List<CricketRank> rankings = new();
 
-            var table = htmlDoc.DocumentNode.SelectSingleNode("//table");
+            HtmlDocument? htmlDocument = new();
+            htmlDocument.LoadHtml(response);
+
+            var table = htmlDocument.DocumentNode.SelectSingleNode("//table");
             var rows = table.SelectSingleNode("tbody").SelectNodes("tr");
 
             foreach (var row in rows)
@@ -28,21 +31,20 @@ namespace WorldRankGuesser.Services
                             Gender = Gender,
                             Format = Sport,
                             Sport = "Cricket",
-                            IOC = "WI",
+                            ISO3 = "WI",
                             Position = position
                         });
                     }
                     else
                     {
-                        string ISO3 = CountryUtil.GetISO3(countryName);
-                        string IOC = ISO3.ToIOC();
+                        string ISO3 = CountryUtil.GetISO3FromCountry(countryName);
 
                         rankings.Add(new CricketRank
                         {
                             Gender = Gender,
                             Format = Sport,
                             Sport = "Cricket",
-                            IOC = IOC,
+                            ISO3 = ISO3,
                             Position = position
                         });
                     }
@@ -54,7 +56,7 @@ namespace WorldRankGuesser.Services
 
         protected override List<CricketRank> GetCountryRank(List<CricketRank> allRanks, string ISO3)
         {
-            return CountryUtil.WestIndiesIOCs.Contains(ISO3.ToIOC()) ? allRanks.Where(x => x.IOC == "WI").ToList() : base.GetCountryRank(allRanks, ISO3);
+            return CountryUtil.WestIndiesISO3s.Contains(ISO3) ? allRanks.Where(x => x.ISO3 == "WI").ToList() : base.GetCountryRank(allRanks, ISO3);
         }
     }
 }

@@ -24,9 +24,11 @@ namespace WorldRankGuesser.Services
         //    }
         //}
 
-        protected override List<BasketballRank> ParseRanks(HtmlDocument htmlDoc)
+        protected override List<BasketballRank> ParseRanks(string response)
         {
-            HtmlNode? table = htmlDoc.DocumentNode.SelectSingleNode("//table");
+            HtmlDocument? htmlDocument = new();
+            htmlDocument.LoadHtml(response);
+            HtmlNode? table = htmlDocument.DocumentNode.SelectSingleNode("//table");
 
             List<BasketballRank> rankings = new();
 
@@ -38,11 +40,11 @@ namespace WorldRankGuesser.Services
 
                     if (cells != null)
                     {
-                        if (!rankings.Any(x => x.IOC == cells[3]) && int.TryParse(cells[0].Trim('.'), out int rank))
+                        if (int.TryParse(cells[0].Trim('.'), out int rank))
                         {
                             rankings.Add(new BasketballRank 
                             { 
-                                IOC = cells[3], 
+                                ISO3 = CountryUtil.IOCToISO3(cells[3]), 
                                 Position = rank,
                                 Sport = Sport,
                                 Gender = Gender

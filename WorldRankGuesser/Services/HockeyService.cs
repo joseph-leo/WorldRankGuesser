@@ -8,32 +8,34 @@ namespace WorldRankGuesser.Services
 {
     public class HockeyService : ScrapeService<HockeyRank, HockeyRank>
     {
-        protected override List<HockeyRank> ParseRanks(HtmlDocument htmlDoc)
+        protected override List<HockeyRank> ParseRanks(string response)
         {
             return Sport switch
             {
-                "Field Hockey" => ParseFieldHockey(htmlDoc),
-                "Ice Hockey" => ParseIceHockey(htmlDoc),
+                "Field Hockey" => ParseFieldHockey(response),
+                "Ice Hockey" => ParseIceHockey(response),
                 _ => new List<HockeyRank>(),
             };
         }
 
-        private List<HockeyRank> ParseFieldHockey(HtmlDocument htmlDoc)
+        private List<HockeyRank> ParseFieldHockey(string response)
         {
             List<HockeyRank> rankings = new();
-            var table = htmlDoc.DocumentNode.SelectNodes("//a").Where(x => x.GetClasses().Contains("table-row"));
+
+            HtmlDocument? htmlDocument = new();
+            htmlDocument.LoadHtml(response);
+            var table = htmlDocument.DocumentNode.SelectNodes("//a").Where(x => x.GetClasses().Contains("table-row"));
 
             foreach (var row in table)
             {
                 var rowList = row.InnerText.Split("  ").Select(x => x.Trim()).ToList();
-                string ISO3 = CountryUtil.GetISO3(rowList[1]);
-                string IOC = ISO3.ToIOC();
+                string ISO3 = CountryUtil.GetISO3FromCountry(rowList[1]);
 
-                if (!rankings.Any(x => x.IOC == IOC) && int.TryParse(rowList[0], out int rank))
+                if (int.TryParse(rowList[0], out int rank))
                 {
                     rankings.Add(new HockeyRank
                     {
-                        IOC = IOC,
+                        ISO3 = ISO3,
                         Position = rank,
                         Sport = Sport,
                         Gender = Gender
@@ -44,10 +46,13 @@ namespace WorldRankGuesser.Services
             return rankings;
         }
 
-        private List<HockeyRank> ParseIceHockey(HtmlDocument htmlDoc)
+        private List<HockeyRank> ParseIceHockey(string response)
         {
             List<HockeyRank> rankings = new();
-            var tables = htmlDoc.DocumentNode.SelectNodes("//table");
+
+            HtmlDocument? htmlDocument = new();
+            htmlDocument.LoadHtml(response);
+            var tables = htmlDocument.DocumentNode.SelectNodes("//table");
 
             HtmlNode mensTable = tables[0];
             rankings.AddRange(ParseIceHockeyTable(mensTable, "Men"));
@@ -67,11 +72,11 @@ namespace WorldRankGuesser.Services
                 List<string> cells = row.SelectNodes("td").Select(x => x.InnerText.Trim()).ToList();
                 string IOC = row.SelectNodes("td/a/span").Where(x => x.GetClasses().Contains("show-small")).FirstOrDefault().InnerText;
 
-                if (!rankings.Any(x => x.IOC == IOC) && int.TryParse(cells[0], out int rank))
+                if (int.TryParse(cells[0], out int rank))
                 {
                     rankings.Add(new HockeyRank
                     {
-                        IOC = IOC,
+                        ISO3 = CountryUtil.IOCToISO3(IOC),
                         Position = rank,
                         Sport = Sport,
                         Gender = gender
