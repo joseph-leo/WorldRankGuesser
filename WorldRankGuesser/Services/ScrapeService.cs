@@ -73,7 +73,7 @@ namespace WorldRankGuesser.Services
             return allRanks.Where(x => x.ISO3 == ISO3).ToList();
         }
 
-        protected static async Task<string> CallUrlAsync(string fullUrl)
+        protected virtual async Task<string> CallUrlAsync(string fullUrl)
         {
             HttpClient? httpClient = new();
             var response = string.Empty;

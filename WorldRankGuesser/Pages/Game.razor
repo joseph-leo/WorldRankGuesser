@@ -1,6 +1,7 @@
 ﻿@page "/game"
 
 @using WorldRankGuesser.Components;
+@using WorldRankGuesser.Data;
 
 
 <div class="row justify-content-center">
@@ -10,65 +11,7 @@
     <div class="d-flex justify-content-center col-12">
         <p>@DisplayCountry.EnglishName</p>
     </div>
-    @if (BasketballRank != null)
-    {
-        <div class="col-3 mx-auto">
-            <p class="text-center">@BasketballRank.Position</p>
-            <p class="text-center">@BasketballRank.Sport</p>
-            <p class="text-center">@BasketballRank.Gender</p>
-        </div>
-    }
-    @if (BaseballRank != null)
-    {
-        <div class="col-3 mx-auto">
-            <p class="text-center">@BaseballRank.Position</p>
-            <p class="text-center">@BaseballRank.Sport</p>
-            <p class="text-center">@BaseballRank.Gender</p>
-        </div>
-    }
-    @if (HockeyRank != null)
-    {
-        <div class="col-3 mx-auto">
-            <p class="text-center">@HockeyRank.Position</p>
-            <p class="text-center">@HockeyRank.Sport</p>
-            <p class="text-center">@HockeyRank.Gender</p>
-        </div>
-    }
-    @if (GymnasticsRank != null)
-    {
-
-        <div class="col-3 mx-auto">
-            <p class="text-center">@GymnasticsRank.Position</p>
-            <p class="text-center">@GymnasticsRank.Sport</p>
-            <p class="text-center">@GymnasticsRank.Event</p>
-            <p class="text-center">@GymnasticsRank.Gender</p>
-        </div>
-    }
-    @if (CricketRank != null)
-    {
-        <div class="col-3 mx-auto">
-            <p class="text-center">@CricketRank.Position</p>
-            <p class="text-center">@CricketRank.Sport</p>
-            <p class="text-center">@CricketRank.Format</p>
-            <p class="text-center">@CricketRank.Gender</p>
-        </div>
-    }
-    @if (SoccerRank != null)
-    {
-        <div class="col-3 mx-auto">
-            <p class="text-center">@SoccerRank.Position</p>
-            <p class="text-center">@SoccerRank.Sport</p>
-            <p class="text-center">@SoccerRank.Gender</p>
-        </div>
-    }
-    @if (RugbyRank != null)
-    {
-        <div class="col-3 mx-auto">
-            <p class="text-center">@RugbyRank.Position</p>
-            <p class="text-center">@RugbyRank.Sport</p>
-            <p class="text-center">@RugbyRank.Gender</p>
-        </div>
-    }
+    
 </div>
 <div class="row">
     <CategoryCard></CategoryCard>
@@ -84,7 +27,7 @@
 </div>
 <div class="row justify-content-center">
     <div class="d-flex justify-content-center col-6">
-        <button @onclick="@(() => CycleCountriesAsync())">Cycle</button>
+        <button class="btn" @onclick="@(() => CycleCountriesAsync())">Cycle</button>
     </div>
     <div class="d-flex justify-content-center col-6">
         <button @onclick="@(() => GetBasketballRankAsync(DisplayCountry.ThreeLetterISORegionName))">Get Basketball Ranking</button>
@@ -106,6 +49,15 @@
     </div>
     <div class="d-flex justify-content-center col-6">
         <button @onclick="@(() => GetRugbyRankAsync(DisplayCountry.ThreeLetterISORegionName))">Get Rugby Ranking</button>
+    </div>
+    <div class="d-flex justify-content-center col-6">
+        <button @onclick="@(() => GetVolleyballRankAsync(DisplayCountry.ThreeLetterISORegionName))">Get Volleyball Ranking</button>
+    </div>
+    <div class="d-flex justify-content-center col-6">
+        <button @onclick="@(() => GetTennisRankAsync(DisplayCountry.ThreeLetterISORegionName))">Get Tennis Ranking</button>
+    </div>
+    <div class="d-flex justify-content-center col-6">
+        <button @onclick="@(() => GetBadmintonRankAsync(DisplayCountry.ThreeLetterISORegionName))">Get Badminton Ranking</button>
     </div>
     <div class="d-flex justify-content-center col-6">
         <button @onclick="@(() => GetRankings())">Get All Rankings</button>

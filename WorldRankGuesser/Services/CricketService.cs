@@ -29,8 +29,7 @@ namespace WorldRankGuesser.Services
                         rankings.Add(new CricketRank
                         {
                             Gender = Gender,
-                            Format = Sport,
-                            Sport = "Cricket",
+                            Sport = Sport,
                             ISO3 = "WI",
                             Position = position
                         });
@@ -42,8 +41,7 @@ namespace WorldRankGuesser.Services
                         rankings.Add(new CricketRank
                         {
                             Gender = Gender,
-                            Format = Sport,
-                            Sport = "Cricket",
+                            Sport = Sport,
                             ISO3 = ISO3,
                             Position = position
                         });

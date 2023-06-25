@@ -11,8 +11,8 @@ namespace WorldRankGuesser.Services
         {
             return Sport switch
             {
-                "Union" => ParseUnion(response),
-                "Sevens" => ParseSevens(response),
+                "Rugby Union" => ParseUnion(response),
+                "Rugby Sevens" => ParseSevens(response),
                 _ => new List<RugbyRank>()
             };
         }

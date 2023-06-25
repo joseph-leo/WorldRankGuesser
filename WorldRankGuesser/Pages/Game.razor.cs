@@ -43,6 +43,15 @@ namespace WorldRankGuesser.Pages
         [Inject]
         RugbyService RugbyService { get; set; } = default!;
 
+        [Inject]
+        VolleyballService VolleyballService { get; set; } = default!;
+
+        [Inject]
+        TennisService TennisService { get; set; } = default!;
+
+        [Inject]
+        BadmintonService BadmintonService { get; set; } = default!;
+
         private RegionInfo DisplayCountry { get; set; } = new RegionInfo("aa-DJ");
         private string Flag { get; set; } = string.Empty;
         private BasketballRank? BasketballRank { get; set; }
@@ -52,6 +61,9 @@ namespace WorldRankGuesser.Pages
         public CricketRank? CricketRank { get; set; }
         public SoccerRank? SoccerRank { get; set; }
         public RugbyRank? RugbyRank { get; set; }
+        public VolleyballRank? VolleyballRank { get; set; }
+        public TennisRank? TennisRank { get; set; }
+        public BadmintonRank? BadmintonRank { get; set; }
 
         private List<Rank> rankings = new List<Rank>();
 
@@ -121,6 +133,21 @@ namespace WorldRankGuesser.Pages
         private async Task GetRugbyRankAsync(string ISO3)
         {
             RugbyRank = await RugbyService.GetLowestRankAsync(ISO3);
+        }
+
+        private async Task GetVolleyballRankAsync(string ISO3)
+        {
+            VolleyballRank = await VolleyballService.GetLowestRankAsync(ISO3);
+        }
+
+        private async Task GetTennisRankAsync(string ISO3)
+        {
+            TennisRank = await TennisService.GetLowestRankAsync(ISO3);
+        }
+
+        private async Task GetBadmintonRankAsync(string ISO3)
+        {
+            BadmintonRank = await BadmintonService.GetLowestRankAsync(ISO3);
         }
 
         private List<Rank> GetRankings()
