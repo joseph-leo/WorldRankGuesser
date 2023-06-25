@@ -34,14 +34,14 @@
     }
   },
   "CricketRank": {
-    "Test": {
+    "Test Cricket": {
       "Men": "https://www.icc-cricket.com/rankings/mens/team-rankings/test"
     },
-    "ODI": {
+    "ODI Cricket": {
       "Men": "https://www.icc-cricket.com/rankings/mens/team-rankings/odi",
       "Women": "https://www.icc-cricket.com/rankings/womens/team-rankings/odi"
     },
-    "T20I": {
+    "T20I Cricket": {
       "Men": "https://www.icc-cricket.com/rankings/mens/team-rankings/t20i",
       "Women": "https://www.icc-cricket.com/rankings/womens/team-rankings/t20i"
     }
@@ -53,13 +53,36 @@
     }
   },
   "RugbyRank": {
-    "Union": {
+    "Rugby Union": {
       "Men": "https://api.wr-rims-prod.pulselive.com/rugby/v3/rankings/mru?language=en",
       "Women": "https://api.wr-rims-prod.pulselive.com/rugby/v3/rankings/wru?language=en"
     },
-    "Sevens": {
+    "Rugby Sevens": {
       "Men": "https://www.world.rugby/sevens-series/standings/mens?series=40",
       "Women": "https://www.world.rugby/sevens-series/standings/womens?series=41"
+    }
+  },
+  "VolleyballRank": {
+    "Volleyball": {
+      "Men": "https://en.volleyballworld.com/api/v1/worldranking/volleyball/1/0/100",
+      "Women": "https://en.volleyballworld.com/api/v1/worldranking/volleyball/0/0/100"
+    },
+    "Beach Volleyball": {
+      "Men": "https://en.volleyballworld.com/api/v1/worldranking/beachvolleyball/0/0/100",
+      "Women": "https://en.volleyballworld.com/api/v1/worldranking/beachvolleyball/1/0/100"
+    } 
+  },
+  "TennisRank": {
+    "Singles Tennis": {
+      "Both": "http://api.sportradar.us/tennis/trial/v3/en/rankings.json?api_key=REDACTED_SPORTRADAR_KEY"
+    },
+    "Doubles Tennis": {
+      "Both": "http://api.sportradar.us/tennis/trial/v3/en/double_competitors_rankings.json?api_key=REDACTED_SPORTRADAR_KEY"
+    }
+  },
+  "BadmintonRank": {
+    "All": {
+      "Both": "http://api.sportradar.us/badminton/trial/v2/en/rankings.json?api_key=REDACTED_SPORTRADAR_KEY_2"
     }
   }
 }

@@ -14,6 +14,9 @@ builder.Services.AddSingleton<GymnasticsService>();
 builder.Services.AddSingleton<CricketService>();
 builder.Services.AddSingleton<SoccerService>();
 builder.Services.AddSingleton<RugbyService>();
+builder.Services.AddSingleton<VolleyballService>();
+builder.Services.AddSingleton<TennisService>();
+builder.Services.AddSingleton<BadmintonService>();
 
 var app = builder.Build();
 
