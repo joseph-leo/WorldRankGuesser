@@ -16,7 +16,7 @@ namespace WorldRankGuesser.Services
             {
                 string? countryCode = result["federationCode"].Value<string>();
                 string? countryName = result["federationName"].Value<string>();
-                int position = result["rank"].Value<int>();
+                int position = result["rankToDisplay"].Value<int>();
 
                 rankings.Add(new VolleyballRank
                 {

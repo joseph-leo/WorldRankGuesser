@@ -2,64 +2,78 @@
 
 @using WorldRankGuesser.Components;
 @using WorldRankGuesser.Data;
+@using WorldRankGuesser.Services;
 
-
-<div class="row justify-content-center">
-    <div class="d-flex justify-content-center col-6">
-        <p class="flag mb-0">@Flag</p>
-    </div>
-    <div class="d-flex justify-content-center col-12">
-        <p>@DisplayCountry.EnglishName</p>
-    </div>
-    
+<div class="row">
+    @if (DisplayCountry != null)
+    {
+        <div class="d-flex justify-content-center col-12">
+            <p class="big-flag mb-0">@Flag</p>
+        </div>
+        <div class="d-flex justify-content-center col-12">
+            <p class="@(loading ? "text-white" : "") mb-0">@DisplayCountry.EnglishName</p>
+        </div>
+    }   
 </div>
 <div class="row">
-    <CategoryCard></CategoryCard>
-    <CategoryCard></CategoryCard>
-    <CategoryCard></CategoryCard>
-    <CategoryCard></CategoryCard>
-    <CategoryCard></CategoryCard>
-    <CategoryCard></CategoryCard>
-    <CategoryCard></CategoryCard>
-    <CategoryCard></CategoryCard>
-    <CategoryCard></CategoryCard>
-    <CategoryCard></CategoryCard>
-</div>
-<div class="row justify-content-center">
-    <div class="d-flex justify-content-center col-6">
-        <button class="btn" @onclick="@(() => CycleCountriesAsync())">Cycle</button>
+    <div class="col-6">
+        <CategoryCard 
+            Sport="Basketball" 
+            Flags="CardFlags"
+            IsDisabled="@loading"
+            GetRankCallback="@(async () => await GetRankAsync<BasketballService, BasketballRank, BasketballRank>(DisplayCountry))" />
+        <CategoryCard 
+            Sport="Baseball" 
+            Flags="CardFlags"
+            IsDisabled="@loading"
+            GetRankCallback="@(async () => await GetRankAsync<BaseballService, BaseballRank, BaseballRank>(DisplayCountry))" />
+        <CategoryCard 
+            Sport="Hockey" 
+            Flags="CardFlags"
+            IsDisabled="@loading"
+            GetRankCallback="@(async () => await GetRankAsync<HockeyService, HockeyRank, HockeyRank>(DisplayCountry))" />
+        <CategoryCard 
+            Sport="Gymnastics" 
+            Flags="CardFlags"
+            IsDisabled="@loading"
+            GetRankCallback="@(async () => await GetRankAsync<GymnasticsService, GymnasticsRank, GymnasticsRank>(DisplayCountry))" />
+        <CategoryCard 
+            Sport="Cricket" 
+            Flags="CardFlags"
+            IsDisabled="@loading"
+            GetRankCallback="@(async () => await GetRankAsync<CricketService, CricketRank, CricketRank>(DisplayCountry))" />
     </div>
-    <div class="d-flex justify-content-center col-6">
-        <button @onclick="@(() => GetBasketballRankAsync(DisplayCountry.ThreeLetterISORegionName))">Get Basketball Ranking</button>
+    <div class="col-6">
+        <CategoryCard 
+            Sport="Soccer" 
+            Flags="CardFlags"
+            IsDisabled="@loading"
+            GetRankCallback="@(async () => await GetRankAsync<SoccerService, SoccerRank, SoccerRank>(DisplayCountry))" />
+        <CategoryCard 
+            Sport="Rugby" 
+            Flags="CardFlags"
+            IsDisabled="@loading"
+            GetRankCallback="@(async () => await GetRankAsync<RugbyService, RugbyRank, RugbyRank>(DisplayCountry))" />
+        <CategoryCard 
+            Sport="Volleyball" 
+            Flags="CardFlags"
+            IsDisabled="@loading"
+            GetRankCallback="@(async () => await GetRankAsync<VolleyballService, VolleyballRank, VolleyballRank>(DisplayCountry))" />
+        <CategoryCard 
+            Sport="Tennis" 
+            Flags="CardFlags"
+            IsDisabled="@loading"
+            GetRankCallback="@(async () => await GetRankAsync<TennisService, TennisRank, TennisRank>(DisplayCountry))" />
+        <CategoryCard 
+            Sport="Badminton" 
+            Flags="CardFlags"
+            IsDisabled="@loading"
+            GetRankCallback="@(async () => await GetRankAsync<BadmintonService, BadmintonRank, BadmintonRank>(DisplayCountry))" />
     </div>
-    <div class="d-flex justify-content-center col-6">
-        <button @onclick="@(() => GetBaseballRankAsync(DisplayCountry.ThreeLetterISORegionName))">Get Baseball Ranking</button>
-    </div>
-    <div class="d-flex justify-content-center col-6">
-        <button @onclick="@(() => GetHockeyRankAsync(DisplayCountry.ThreeLetterISORegionName))">Get Hockey Ranking</button>
-    </div>
-    <div class="d-flex justify-content-center col-6">
-        <button @onclick="@(() => GetGymnasticsRankAsync(DisplayCountry.ThreeLetterISORegionName))">Get Gymnastics Ranking</button>
-    </div>
-    <div class="d-flex justify-content-center col-6">
-        <button @onclick="@(() => GetCricketRankAsync(DisplayCountry.ThreeLetterISORegionName))">Get Cricket Ranking</button>
-    </div>
-    <div class="d-flex justify-content-center col-6">
-        <button @onclick="@(() => GetSoccerRankAsync(DisplayCountry.ThreeLetterISORegionName))">Get Soccer Ranking</button>
-    </div>
-    <div class="d-flex justify-content-center col-6">
-        <button @onclick="@(() => GetRugbyRankAsync(DisplayCountry.ThreeLetterISORegionName))">Get Rugby Ranking</button>
-    </div>
-    <div class="d-flex justify-content-center col-6">
-        <button @onclick="@(() => GetVolleyballRankAsync(DisplayCountry.ThreeLetterISORegionName))">Get Volleyball Ranking</button>
-    </div>
-    <div class="d-flex justify-content-center col-6">
-        <button @onclick="@(() => GetTennisRankAsync(DisplayCountry.ThreeLetterISORegionName))">Get Tennis Ranking</button>
-    </div>
-    <div class="d-flex justify-content-center col-6">
-        <button @onclick="@(() => GetBadmintonRankAsync(DisplayCountry.ThreeLetterISORegionName))">Get Badminton Ranking</button>
-    </div>
-    <div class="d-flex justify-content-center col-6">
-        <button @onclick="@(() => GetRankings())">Get All Rankings</button>
-    </div>
+    @*<div>
+        @foreach (Type type in GetServiceTypes())
+        {
+            <p>@type.Name</p>
+        }       
+    </div>*@
 </div>

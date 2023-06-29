@@ -9,7 +9,7 @@ using WorldRankGuesser.Helpers;
 
 namespace WorldRankGuesser.Services
 {
-    public class ScrapeService<TRank, TRankModel> where TRank : Rank, new()
+    public abstract class ScrapeService<TRank, TRankModel> where TRank : Rank, new()
     {
         protected virtual Dictionary<string, Dictionary<string, string>> Urls { get => MapUrls(); }
         protected string? Sport { get; set; }
@@ -28,7 +28,7 @@ namespace WorldRankGuesser.Services
             return lowestRank;
         }
 
-        public async Task<List<TRank>> GetRankingsAsync(string ISO3)
+        private async Task<List<TRank>> GetRankingsAsync(string ISO3)
         {
             List<TRank> allRanks = new();
             List<TRank> countryRanks = new();
@@ -90,10 +90,7 @@ namespace WorldRankGuesser.Services
             return response;
         }
 
-        protected virtual List<TRank> ParseRanks(string response)
-        {
-            return new List<TRank>();
-        }
+        protected abstract List<TRank> ParseRanks(string response);
 
         private static Dictionary<string, Dictionary<string, string>> MapUrls()
         {
@@ -102,6 +99,26 @@ namespace WorldRankGuesser.Services
             var sportsDict = urlsDict[typeof(TRank).Name];
 
             return sportsDict;
+        }
+
+        public async Task<List<TRank>> GetAllRanksAsync()
+        {
+            List<TRank> allRanks = new();
+
+            foreach (KeyValuePair<string, Dictionary<string, string>> sport in Urls)
+            {
+                Sport = sport.Key;
+
+                foreach (KeyValuePair<string, string> gender in sport.Value)
+                {
+                    Gender = gender.Key;
+
+                    string? response = await CallUrlAsync(gender.Value);
+                    allRanks.AddRange(ParseRanks(response));
+                }
+            }
+
+            return allRanks;
         }
     }
 }

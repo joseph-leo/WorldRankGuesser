@@ -17,68 +17,36 @@ using WorldRankGuesser.Helpers;
 using System.Globalization;
 using WorldRankGuesser.Data;
 using WorldRankGuesser.Services;
+using System.Text.Json;
+using System.Diagnostics;
 
 namespace WorldRankGuesser.Pages
 {
     public partial class Game
     {
         [Inject]
-        BasketballService BasketballService { get; set; } = default!;
+        private NavigationManager NavigationManager { get; set; }
 
         [Inject]
-        BaseballService BaseballService { get; set; } = default!;
+        IJSRuntime JSRuntime { get; set; }
 
-        [Inject]
-        HockeyService HockeyService { get; set; } = default!;
-
-        [Inject]
-        GymnasticsService GymnasticsService { get; set; } = default!;
-
-        [Inject]
-        CricketService CricketService { get; set; } = default!;
-
-        [Inject]
-        SoccerService SoccerService { get; set; } = default!;
-
-        [Inject]
-        RugbyService RugbyService { get; set; } = default!;
-
-        [Inject]
-        VolleyballService VolleyballService { get; set; } = default!;
-
-        [Inject]
-        TennisService TennisService { get; set; } = default!;
-
-        [Inject]
-        BadmintonService BadmintonService { get; set; } = default!;
-
-        private RegionInfo DisplayCountry { get; set; } = new RegionInfo("aa-DJ");
+        private RegionInfo? DisplayCountry { get; set; }
         private string Flag { get; set; } = string.Empty;
-        private BasketballRank? BasketballRank { get; set; }
-        private BaseballRank? BaseballRank { get; set; }
-        private HockeyRank? HockeyRank { get; set; }
-        private GymnasticsRank? GymnasticsRank { get; set; }
-        public CricketRank? CricketRank { get; set; }
-        public SoccerRank? SoccerRank { get; set; }
-        public RugbyRank? RugbyRank { get; set; }
-        public VolleyballRank? VolleyballRank { get; set; }
-        public TennisRank? TennisRank { get; set; }
-        public BadmintonRank? BadmintonRank { get; set; }
 
-        private List<Rank> rankings = new List<Rank>();
-
+        private List<Rank> Rankings { get; set; } = new List<Rank>();
 
         private List<RegionInfo> countries = CountryUtil.GetCountries();
+        private Dictionary<string, string?> CardFlags { get; set; } = new();
 
-        protected override void OnInitialized()
+        private bool loading = false;
+
+        
+
+        protected override async Task OnInitializedAsync()
         {
-            RandomizeCountries();           
+            RandomizeCountries();
+            await CycleCountriesAsync();
         }
-
-        //protected override async Task OnInitializedAsync()
-        //{
-            
-        //}
 
         private void RandomizeCountries()
         {
@@ -88,6 +56,7 @@ namespace WorldRankGuesser.Pages
         }
         private async Task CycleCountriesAsync()
         {
+            loading = true;
             for (int i = 0; i < 50; i++)
             {
                 DisplayCountry = countries[i];
@@ -95,69 +64,54 @@ namespace WorldRankGuesser.Pages
                 StateHasChanged();
                 await Task.Delay(50);
             }
-            
             countries.Remove(DisplayCountry);
-            RandomizeCountries();
+            loading = false;
+
+            RandomizeCountries();            
         }
 
-        private async Task GetBasketballRankAsync(string ISO3)
+        private async Task GetRankAsync<TService, TRank, TModel>(RegionInfo country) where TService : ScrapeService<TRank, TModel> where TRank : Rank, new()
         {
-            BasketballRank = await BasketballService.GetLowestRankAsync(ISO3);
+            string sport = typeof(TRank).Name.Replace("Rank", string.Empty);
+            CardFlags[sport] = Flag;
+
+            if (CardFlags.Count < 10)
+            {
+                await CycleCountriesAsync();
+            }          
+
+            var service = Activator.CreateInstance<TService>();
+            TRank rank = await service.GetLowestRankAsync(country.ThreeLetterISORegionName);
+            rank.Flag = CardFlags[sport];
+            Rankings.Add(rank);
+
+            if (Rankings.Count == 10)
+            {
+                var serializedRankings = JsonSerializer.Serialize(Rankings);
+                await JSRuntime.InvokeVoidAsync("sessionStorage.setItem", "rankings", serializedRankings);
+
+                NavigationManager.NavigateTo("/rankings", forceLoad: true);
+            }
         }
 
-        private async Task GetBaseballRankAsync(string ISO3)
+        private async Task CheckUnrankedCountries<TService, TRank, TModel>() where TService : ScrapeService<TRank, TModel> where TRank : Rank, new()
         {
-            BaseballRank = await BaseballService.GetLowestRankAsync(ISO3);
+            
         }
 
-        private async Task GetHockeyRankAsync(string ISO3)
+        private List<Type> GetServiceTypes()
         {
-            HockeyRank = await HockeyService.GetLowestRankAsync(ISO3);
+            List<Type> services = new List<Type>();
+            foreach (Type rank in GetRankTypes())
+            {
+                services.AddRange(typeof(ScrapeService<Rank, Rank>).Assembly.GetTypes().Where(x => x.IsSubclassOf(typeof(ScrapeService<Rank, Rank>))).ToList());
+            }
+            return services;
         }
 
-        private async Task GetGymnasticsRankAsync(string ISO3)
+        private IEnumerable<Type> GetRankTypes()
         {
-            GymnasticsRank = await GymnasticsService.GetLowestRankAsync(ISO3);
-        }
-
-        private async Task GetCricketRankAsync(string ISO3)
-        {
-            CricketRank = await CricketService.GetLowestRankAsync(ISO3);
-        }
-
-        private async Task GetSoccerRankAsync(string ISO3)
-        {
-            SoccerRank = await SoccerService.GetLowestRankAsync(ISO3);
-        }
-
-        private async Task GetRugbyRankAsync(string ISO3)
-        {
-            RugbyRank = await RugbyService.GetLowestRankAsync(ISO3);
-        }
-
-        private async Task GetVolleyballRankAsync(string ISO3)
-        {
-            VolleyballRank = await VolleyballService.GetLowestRankAsync(ISO3);
-        }
-
-        private async Task GetTennisRankAsync(string ISO3)
-        {
-            TennisRank = await TennisService.GetLowestRankAsync(ISO3);
-        }
-
-        private async Task GetBadmintonRankAsync(string ISO3)
-        {
-            BadmintonRank = await BadmintonService.GetLowestRankAsync(ISO3);
-        }
-
-        private List<Rank> GetRankings()
-        {
-            rankings.Add(BasketballRank);
-            rankings.Add(BaseballRank);
-            rankings.Add(HockeyRank);
-            rankings.Add(GymnasticsRank);
-
-            return rankings;
+            return typeof(Rank).Assembly.GetTypes().Where(x => x.IsSubclassOf(typeof(Rank)));
         }
     }
 }

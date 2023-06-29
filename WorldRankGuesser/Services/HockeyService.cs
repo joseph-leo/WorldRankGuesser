@@ -16,6 +16,7 @@ namespace WorldRankGuesser.Services
                 "Ice Hockey" => ParseIceHockey(response),
                 _ => new List<HockeyRank>(),
             };
+            
         }
 
         private List<HockeyRank> ParseFieldHockey(string response)
