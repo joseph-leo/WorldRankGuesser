@@ -7,18 +7,6 @@ namespace WorldRankGuesser.Services
 {
     public class BaseballService : ScrapeService<BaseballRank, BaseballRank>
     {
-        //protected override List<string> Urls
-        //{
-        //    get
-        //    {
-        //        return new List<string>
-        //        {
-        //            "https://rankings.wbsc.org/list/baseball/men",
-        //            "https://rankings.wbsc.org/list/softball/women"
-        //        };
-        //    }
-        //}
-
         protected override List<BaseballRank> ParseRanks(string response)
         {
             HtmlDocument? htmlDocument = new();

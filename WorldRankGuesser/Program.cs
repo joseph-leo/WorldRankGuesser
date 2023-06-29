@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
+using Microsoft.JSInterop;
 using WorldRankGuesser.Services;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -7,16 +8,6 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
-builder.Services.AddSingleton<BasketballService>();
-builder.Services.AddSingleton<BaseballService>();
-builder.Services.AddSingleton<HockeyService>();
-builder.Services.AddSingleton<GymnasticsService>();
-builder.Services.AddSingleton<CricketService>();
-builder.Services.AddSingleton<SoccerService>();
-builder.Services.AddSingleton<RugbyService>();
-builder.Services.AddSingleton<VolleyballService>();
-builder.Services.AddSingleton<TennisService>();
-builder.Services.AddSingleton<BadmintonService>();
 
 var app = builder.Build();
 

@@ -1,10 +1,29 @@
-﻿<div class="col-6 mb-0">
-    <div class="d-flex justify-content-end col-6">
-        <div class="d-flex col-6" style="height: 8rem">
+﻿@using WorldRankGuesser.Data;
+
+<div class="d-flex col-12 justify-content-center">
+    @if (Flags.TryGetValue(Sport, out var flag) && flag != null)
+    {
+        <p class="flag mb-0">@flag</p>
+    }
+    else
+    {       
+        <div class="d-flex col-3 px-4 mb-2" style="height: 7rem; width: 14rem;">
+            <button class="flex-fill btn btn-outline-dark" disabled="@IsDisabled" @onclick="GetRankCallback">@Sport</button>
         </div>
-    </div>
+    }
 </div>
 
-@code {
 
+@code {
+    [Parameter]
+    public EventCallback<MouseEventArgs> GetRankCallback { get; set; }
+
+    [Parameter]
+    public Dictionary<string, string?> Flags { get; set; }
+
+    [Parameter]
+    public string? Sport { get; set; }
+
+    [Parameter]
+    public bool IsDisabled { get; set; }
 }

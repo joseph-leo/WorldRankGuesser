@@ -22,6 +22,7 @@ namespace WorldRankGuesser.Services
             {
                 List<string> cells = row.SelectNodes("td").Select(x => x.InnerText.Trim()).ToList();
                 string countryName = cells[1].Split('\n')[0].Trim();
+
                 if (int.TryParse(cells[0], out int position))
                 {
                     if (countryName == "West Indies")

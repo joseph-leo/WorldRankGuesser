@@ -68,5 +68,9 @@ a, .btn-link {
     }
 
 .flag {
-    font-size : 8rem;
+    font-size: 5rem;
+}
+
+.big-flag {
+    font-size: 10rem;
 }
