@@ -1,0 +1,90 @@
+﻿{
+  "URLs": {
+    "BasketballService": {
+      "Basketball": {
+        "Men": "https://www.fiba.basketball/rankingmen",
+        "Women": "https://www.fiba.basketball/rankingwomen"
+      }
+    },
+    "BaseballService": {
+      "Baseball": {
+        "Men": "https://rankings.wbsc.org/list/baseball/men",
+        "Women": "https://rankings.wbsc.org/list/baseball/women"
+      },
+      "Softball": {
+        "Men": "https://rankings.wbsc.org/list/softball/men",
+        "Women": "https://rankings.wbsc.org/list/softball/women"
+      }
+    },
+    "HockeyService": {
+      "Field Hockey": {
+        "Men": "https://www.fih.hockey/outdoor-hockey-rankings",
+        "Women": "wwwroot/remotehtml/outdoor-hockey-rankings-women.html"
+      },
+      "Ice Hockey": {
+        "Both": "https://www.iihf.com/en/worldranking"
+      }
+    },
+    "GymnasticsService": {
+      "Artistic Gymnastics": {
+        "Men": "wwwroot/remotehtml/ranking_mag.html",
+        "Women": "wwwroot/remotehtml/ranking_wag.html"
+      },
+      "Rythmic Gymnastics": {
+        "Women": "wwwroot/remotehtml/ranking_rg.html"
+      }
+    },
+    "CricketService": {
+      "Test Cricket": {
+        "Men": "https://www.icc-cricket.com/rankings/mens/team-rankings/test"
+      },
+      "ODI Cricket": {
+        "Men": "https://www.icc-cricket.com/rankings/mens/team-rankings/odi",
+        "Women": "https://www.icc-cricket.com/rankings/womens/team-rankings/odi"
+      },
+      "T20I Cricket": {
+        "Men": "https://www.icc-cricket.com/rankings/mens/team-rankings/t20i",
+        "Women": "https://www.icc-cricket.com/rankings/womens/team-rankings/t20i"
+      }
+    },
+    "SoccerService": {
+      "Soccer/Football": {
+        "Men": "https://www.fifa.com/api/ranking-overview?locale=en&dateId=id13974",
+        "Women": "https://www.fifa.com/api/ranking-overview?locale=en&dateId=ranking_20230609"
+      }
+    },
+    "RugbyService": {
+      "Rugby Union": {
+        "Men": "https://api.wr-rims-prod.pulselive.com/rugby/v3/rankings/mru?language=en",
+        "Women": "https://api.wr-rims-prod.pulselive.com/rugby/v3/rankings/wru?language=en"
+      },
+      "Rugby Sevens": {
+        "Men": "https://www.world.rugby/sevens-series/standings/mens?series=40",
+        "Women": "https://www.world.rugby/sevens-series/standings/womens?series=41"
+      }
+    },
+    "VolleyballService": {
+      "Volleyball": {
+        "Men": "https://en.volleyballworld.com/api/v1/worldranking/volleyball/1/0/100",
+        "Women": "https://en.volleyballworld.com/api/v1/worldranking/volleyball/0/0/100"
+      },
+      "Beach Volleyball": {
+        "Men": "https://en.volleyballworld.com/api/v1/worldranking/beachvolleyball/0/0/100",
+        "Women": "https://en.volleyballworld.com/api/v1/worldranking/beachvolleyball/1/0/100"
+      }
+    },
+    "TennisService": {
+      "Singles Tennis": {
+        "Both": "http://api.sportradar.us/tennis/trial/v3/en/rankings.json?api_key=mk2ss6djc7mvw6qcywub4xsj"
+      },
+      "Doubles Tennis": {
+        "Both": "http://api.sportradar.us/tennis/trial/v3/en/double_competitors_rankings.json?api_key=mk2ss6djc7mvw6qcywub4xsj"
+      }
+    },
+    "BadmintonService": {
+      "All": {
+        "Both": "http://api.sportradar.us/badminton/trial/v2/en/rankings.json?api_key=vezgkssun8hp4drmbm2pbyng"
+      }
+    }
+  }
+}
