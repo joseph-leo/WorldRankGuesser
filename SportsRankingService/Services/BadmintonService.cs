@@ -8,7 +8,7 @@ namespace SportsRankingService.Services
 {
     public class BadmintonService : ScrapeService
     {
-        public BadmintonService(ILogger<ScrapeService> logger) : base(logger)
+        public BadmintonService(ILogger<BadmintonService> logger) : base(logger)
         {
         }
 
@@ -17,7 +17,9 @@ namespace SportsRankingService.Services
             try
             {
                 JObject json = JObject.Parse(response);
-                List<JToken> leagues = json["rankings"].Children().ToList();
+                JToken? leagues = json["rankings"];
+
+                leagues.Children().ToList();
 
                 List<SportsRanking> rankings = new List<SportsRanking>();
                 foreach (JToken league in leagues)
@@ -37,7 +39,8 @@ namespace SportsRankingService.Services
                                 Gender = gender,
                                 ISO3 = countryCode,
                                 Position = position,
-                                Sport = sport
+                                Sport = sport,
+                                CountryName = CountryUtil.GetCountryName(countryCode)
                             });
                         }
                     }
@@ -47,7 +50,7 @@ namespace SportsRankingService.Services
             }
             catch (Exception ex)
             {
-                Log(ex, _logger);
+                //_logHelper.Log(ex);
                 return new List<SportsRanking>();
             }
             

@@ -6,7 +6,7 @@ namespace SportsRankingService.Services
 {
     public class BaseballService : ScrapeService
     {
-        public BaseballService(ILogger<ScrapeService> logger) : base(logger)
+        public BaseballService(ILogger<BaseballService> logger) : base(logger)
         {
         }
 
@@ -26,12 +26,16 @@ namespace SportsRankingService.Services
 
                     if (short.TryParse(cells[0], out short rank))
                     {
+                        string _ISO3 = CountryUtil.IOCToISO3(cells[2]);
+
                         rankings.Add(new SportsRanking
                         {
-                            ISO3 = CountryUtil.IOCToISO3(cells[2]),
+                            ISO3 = _ISO3,
                             Position = rank,
                             Sport = Sport,
-                            Gender = Gender
+                            Gender = Gender,
+                            RankDate = DateTime.Now,
+                            CountryName = CountryUtil.GetCountryName(_ISO3)
                         });
                     }
                 }
@@ -40,7 +44,7 @@ namespace SportsRankingService.Services
             }
             catch (Exception ex)
             {
-                Log(ex, _logger);
+                //_logHelper.Log(ex);
                 return new List<SportsRanking>();
             }           
         }

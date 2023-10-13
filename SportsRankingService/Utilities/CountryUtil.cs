@@ -49,6 +49,15 @@ namespace SportsRankingService.Utilities
             return country.ThreeLetterISORegionName;
         }
 
+        public static string GetISO3FromCode(string countryCode, string countryName)
+        {
+            List<RegionInfo> countries = GetCountries();
+            RegionInfo? country = countries.FirstOrDefault(x => x.ThreeLetterISORegionName == IOCToISO3(countryCode), null);
+            country ??= countries.FirstOrDefault(x => x.EnglishName.ToLower() == GetRegionMapping(countryName), null);
+
+            return country.ThreeLetterISORegionName;
+        }
+
         private static string GetRegionMapping(string countryName)
         {
             if (CountryMappings.TryGetValue(countryName.ToLower(), out var mappedName))
@@ -81,94 +90,97 @@ namespace SportsRankingService.Utilities
 
         public static string IOCToISO3(string IOC)
         {
-            Dictionary<string, string> dictionary = new();
-            dictionary.Add("ALG", "DZA");
-            dictionary.Add("ASA", "ASM");
-            dictionary.Add("ANG", "AGO");
-            dictionary.Add("ANT", "ATG");
-            dictionary.Add("ARU", "ABW");
-            dictionary.Add("BAH", "BHS");
-            dictionary.Add("BRN", "BHR");
-            dictionary.Add("BAN", "BGD");
-            dictionary.Add("BAR", "BRB");
-            dictionary.Add("BIZ", "BLZ");
-            dictionary.Add("BER", "BMU");
-            dictionary.Add("BHU", "BTN");
-            dictionary.Add("BOT", "BWA");
-            dictionary.Add("IVB", "VGB");
-            dictionary.Add("BRU", "BRN");
-            dictionary.Add("BUL", "BGR");
-            dictionary.Add("BUR", "BFA");
-            dictionary.Add("CAM", "KHM");
-            dictionary.Add("CAY", "CYM");
-            dictionary.Add("CHA", "TCD");
-            dictionary.Add("CHI", "CHL");
-            dictionary.Add("CGO", "COG");
-            dictionary.Add("CRC", "CRI");
-            dictionary.Add("CRO", "HRV");
-            dictionary.Add("DEN", "DNK");
-            dictionary.Add("ESA", "SLV");
-            dictionary.Add("GEQ", "GNQ");
-            dictionary.Add("FIJ", "FJI");
-            dictionary.Add("GAM", "GMB");
-            dictionary.Add("GER", "DEU");
-            dictionary.Add("GRE", "GRC");
-            dictionary.Add("GRN", "GRD");
-            dictionary.Add("GUA", "GTM");
-            dictionary.Add("GUI", "GIN");
-            dictionary.Add("GBS", "GNB");
-            dictionary.Add("HAI", "HTI");
-            dictionary.Add("HON", "HND");
-            dictionary.Add("INA", "IDN");
-            dictionary.Add("IRI", "IRN");
-            dictionary.Add("KUW", "KWT");
-            dictionary.Add("LAT", "LVA");
-            dictionary.Add("LIB", "LBN");
-            dictionary.Add("LES", "LSO");
-            dictionary.Add("LBA", "LBY");
-            dictionary.Add("MAD", "MDG");
-            dictionary.Add("MAW", "MWI");
-            dictionary.Add("MAS", "MYS");
-            dictionary.Add("MTN", "MRT");
-            dictionary.Add("MRI", "MUS");
-            dictionary.Add("MON", "MCO");
-            dictionary.Add("MGL", "MNG");
-            dictionary.Add("MYA", "MMR");
-            dictionary.Add("NEP", "NPL");
-            dictionary.Add("NED", "NLD");
-            dictionary.Add("NCA", "NIC");
-            dictionary.Add("NIG", "NER");
-            dictionary.Add("NGR", "NGA");
-            dictionary.Add("OMA", "OMN");
-            dictionary.Add("PLE", "PSE");
-            dictionary.Add("PAR", "PRY");
-            dictionary.Add("PHI", "PHL");
-            dictionary.Add("POR", "PRT");
-            dictionary.Add("PUR", "PRI");
-            dictionary.Add("SKN", "KNA");
-            dictionary.Add("VIN", "VCT");
-            dictionary.Add("SAM", "WSM");
-            dictionary.Add("KSA", "SAU");
-            dictionary.Add("SEY", "SYC");
-            dictionary.Add("SIN", "SGP");
-            dictionary.Add("SLO", "SVN");
-            dictionary.Add("SOL", "SLB");
-            dictionary.Add("RSA", "ZAF");
-            dictionary.Add("SRI", "LKA");
-            dictionary.Add("SUD", "SDN");
-            dictionary.Add("SUI", "CHE");
-            dictionary.Add("TPE", "TWN");
-            dictionary.Add("TAN", "TZA");
-            dictionary.Add("TOG", "TGO");
-            dictionary.Add("TGA", "TON");
-            dictionary.Add("TRI", "TTO");
-            dictionary.Add("UAE", "ARE");
-            dictionary.Add("ISV", "VIR");
-            dictionary.Add("URU", "URY");
-            dictionary.Add("VAN", "VUT");
-            dictionary.Add("VIE", "VNM");
-            dictionary.Add("ZAM", "ZMB");
-            dictionary.Add("ZIM", "ZWE");
+            Dictionary<string, string> dictionary = new()
+            {
+                { "ALG", "DZA" },
+                { "ASA", "ASM" },
+                { "ANG", "AGO" },
+                { "ANT", "ATG" },
+                { "ARU", "ABW" },
+                { "BAH", "BHS" },
+                { "BRN", "BHR" },
+                { "BAN", "BGD" },
+                { "BAR", "BRB" },
+                { "BIZ", "BLZ" },
+                { "BER", "BMU" },
+                { "BHU", "BTN" },
+                { "BOT", "BWA" },
+                { "IVB", "VGB" },
+                { "BRU", "BRN" },
+                { "BUL", "BGR" },
+                { "BUR", "BFA" },
+                { "CAM", "KHM" },
+                { "CAY", "CYM" },
+                { "CHA", "TCD" },
+                { "CHI", "CHL" },
+                { "CGO", "COG" },
+                { "CRC", "CRI" },
+                { "CRO", "HRV" },
+                { "DEN", "DNK" },
+                { "ESA", "SLV" },
+                { "GEQ", "GNQ" },
+                { "FIJ", "FJI" },
+                { "GAM", "GMB" },
+                { "GER", "DEU" },
+                { "GRE", "GRC" },
+                { "GRN", "GRD" },
+                { "GUA", "GTM" },
+                { "GUI", "GIN" },
+                { "GBS", "GNB" },
+                { "HAI", "HTI" },
+                { "HON", "HND" },
+                { "INA", "IDN" },
+                { "IRE", "IRL" },
+                { "IRI", "IRN" },
+                { "KUW", "KWT" },
+                { "LAT", "LVA" },
+                { "LIB", "LBN" },
+                { "LES", "LSO" },
+                { "LBA", "LBY" },
+                { "MAD", "MDG" },
+                { "MAW", "MWI" },
+                { "MAS", "MYS" },
+                { "MTN", "MRT" },
+                { "MRI", "MUS" },
+                { "MON", "MCO" },
+                { "MGL", "MNG" },
+                { "MYA", "MMR" },
+                { "NEP", "NPL" },
+                { "NED", "NLD" },
+                { "NCA", "NIC" },
+                { "NIG", "NER" },
+                { "NGR", "NGA" },
+                { "OMA", "OMN" },
+                { "PLE", "PSE" },
+                { "PAR", "PRY" },
+                { "PHI", "PHL" },
+                { "POR", "PRT" },
+                { "PUR", "PRI" },
+                { "SKN", "KNA" },
+                { "VIN", "VCT" },
+                { "SAM", "WSM" },
+                { "KSA", "SAU" },
+                { "SEY", "SYC" },
+                { "SIN", "SGP" },
+                { "SLO", "SVN" },
+                { "SOL", "SLB" },
+                { "RSA", "ZAF" },
+                { "SRI", "LKA" },
+                { "SUD", "SDN" },
+                { "SUI", "CHE" },
+                { "TPE", "TWN" },
+                { "TAN", "TZA" },
+                { "TOG", "TGO" },
+                { "TGA", "TON" },
+                { "TRI", "TTO" },
+                { "UAE", "ARE" },
+                { "ISV", "VIR" },
+                { "URU", "URY" },
+                { "VAN", "VUT" },
+                { "VIE", "VNM" },
+                { "ZAM", "ZMB" },
+                { "ZIM", "ZWE" }
+            };
 
             return dictionary.ContainsKey(IOC) ? dictionary[IOC] : IOC;
         }

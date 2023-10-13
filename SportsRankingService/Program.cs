@@ -12,7 +12,7 @@ IHost host = Host.CreateDefaultBuilder(args)
 
         IConfiguration configuration = hostContext.Configuration;
 
-        services.AddSingleton<BasketballService>();
+        services.AddSingleton<RugbyService>();
 
         services.AddDbContext<WorldRankGuesserContext>(
         options => options.UseSqlServer(configuration.GetConnectionString("WorldRankGuesserConnection") + ";Encrypt=False"));

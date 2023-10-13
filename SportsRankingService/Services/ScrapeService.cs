@@ -15,7 +15,7 @@ namespace SportsRankingService.Services
 {
     public abstract class ScrapeService
     {
-        protected virtual Dictionary<string, Dictionary<string, string>> Urls { get => MapUrls(); }
+        protected Dictionary<string, Dictionary<string, string>> Urls { get; set; }
         protected string? Sport { get; set; }
         protected string? Gender { get; set; }
 
@@ -26,11 +26,13 @@ namespace SportsRankingService.Services
         {
             _logger = logger;
             _config = new("serviceconfig");
+            Urls = MapUrls();
         }
 
         public async Task<List<SportsRanking>> GetSportRanksAsync()
         {
             List<SportsRanking> allRanks = new();
+            List<RegionInfo> countries = CountryUtil.GetCountries();
 
             foreach (KeyValuePair<string, Dictionary<string, string>> sport in Urls)
             {
@@ -43,7 +45,13 @@ namespace SportsRankingService.Services
                     Gender = gender.Key;
 
                     string? response = await CallUrlAsync(gender.Value);
-                    allRanks.AddRange(ParseRanks(response));
+                    List<SportsRanking> rankings = ParseRanks(response);
+                    rankings.ForEach(rank => {  if (rank.ISO3 != null) rank.CountryName = CountryUtil.GetCountryName(rank.ISO3); });
+
+                    allRanks.AddRange(rankings);
+
+
+                    
                 }
             }
 
@@ -67,16 +75,7 @@ namespace SportsRankingService.Services
             }
 
             return response;
-        }
-
-        protected static void Log(Exception ex, ILogger logger)
-        {
-            string InnerMessage = ex.InnerException is null ? string.Empty : ex.InnerException.Message;
-
-            logger.LogError("{StackTrace} | Source=({Source}) | Exception Message: '{Message}' | Inner Exception Message: '{InnerException}'", ex.StackTrace, ex.Source, ex.Message, InnerMessage);
-        }
-
-        
+        }     
 
         private Dictionary<string, Dictionary<string, string>> MapUrls()
         {
