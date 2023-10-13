@@ -41,7 +41,7 @@ namespace SportsRankingService.Services
                                 Position = position,
                                 Sport = Sport,
                                 RankDate = DateTime.Now,
-                                
+                                CountryName = CountryUtil.GetCountryName(countryCode)
                             });
                         }
                     }
@@ -51,7 +51,7 @@ namespace SportsRankingService.Services
             }
             catch (Exception ex)
             {
-                Log(ex, _logger);
+                //_logHelper.Log(ex);
                 return new List<SportsRanking>();
             }
         }

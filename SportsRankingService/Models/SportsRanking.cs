@@ -29,5 +29,5 @@ public partial class SportsRanking
     public short? Position { get; set; }
 
     [Column(TypeName = "date")]
-    public DateTime? RankDate { get; set; }
+    public DateTime? RankDate { get; set; } = DateTime.Now;
 }

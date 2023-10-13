@@ -13,7 +13,7 @@ namespace SportsRankingService.Services
 {
     public class BasketballService : ScrapeService
     {
-        public BasketballService(ILogger<ScrapeService> logger) : base(logger)
+        public BasketballService(ILogger<BasketballService> logger) : base(logger)
         {
         }
 
@@ -46,7 +46,7 @@ namespace SportsRankingService.Services
                                     Sport = Sport,
                                     Gender = Gender,
                                     RankDate = DateTime.Now,
-                                    CountryName = GetCountryName(_ISO3)
+                                    CountryName = CountryUtil.GetCountryName(_ISO3)
                                 });
                             }
                         }
@@ -57,7 +57,7 @@ namespace SportsRankingService.Services
             }
             catch (Exception ex)
             {
-                Log(ex, _logger);
+                //_logHelper.Log(ex);
                 return new List<SportsRanking>();
             }
             

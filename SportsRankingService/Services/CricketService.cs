@@ -9,7 +9,7 @@ namespace SportsRankingService.Services
 {
     public class CricketService : ScrapeService
     {
-        public CricketService(ILogger<ScrapeService> logger) : base(logger)
+        public CricketService(ILogger<CricketService> logger) : base(logger)
         {
         }
 
@@ -39,7 +39,9 @@ namespace SportsRankingService.Services
                                 Gender = Gender,
                                 Sport = Sport,
                                 ISO3 = "WI",
-                                Position = position
+                                Position = position,
+                                RankDate = DateTime.Now,
+                                CountryName = countryName
                             });
                         }
                         else
@@ -51,7 +53,8 @@ namespace SportsRankingService.Services
                                 Gender = Gender,
                                 Sport = Sport,
                                 ISO3 = ISO3,
-                                Position = position
+                                Position = position,
+                                CountryName = countryName                              
                             });
                         }
                     }
@@ -61,7 +64,7 @@ namespace SportsRankingService.Services
             }
             catch (Exception ex)
             {
-                Log(ex, _logger);
+                //_logHelper.Log(ex);
                 return new List<SportsRanking>();
             }
         }

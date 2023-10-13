@@ -12,13 +12,13 @@ namespace SportsRankingService
     {
         private readonly ILogger<Worker> _logger;
         private readonly IServiceProvider _serviceProvider;
-        private readonly BasketballService _basketballService;
+        private readonly RugbyService _rugbyService;
 
-        public Worker(ILogger<Worker> logger, IServiceProvider serviceProvider, BasketballService basketballService)
+        public Worker(ILogger<Worker> logger, IServiceProvider serviceProvider, RugbyService rugbyService)
         {
             _logger = logger;
             _serviceProvider = serviceProvider;
-            _basketballService = basketballService;
+            _rugbyService = rugbyService;
         }
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -29,7 +29,7 @@ namespace SportsRankingService
 
                 using (var scope = _serviceProvider.CreateScope())
                 {
-                    var ranks = await _basketballService.GetSportRanksAsync();
+                    var ranks = await _rugbyService.GetSportRanksAsync();
 
                     var dbContext = scope.ServiceProvider.GetRequiredService<WorldRankGuesserContext>();
 

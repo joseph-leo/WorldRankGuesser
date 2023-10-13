@@ -7,7 +7,7 @@ namespace SportsRankingService.Services
 {
     public class GymnasticsService : ScrapeService
     {
-        public GymnasticsService(ILogger<ScrapeService> logger) : base(logger)
+        public GymnasticsService(ILogger<GymnasticsService> logger) : base(logger)
         {
         }
 
@@ -35,9 +35,16 @@ namespace SportsRankingService.Services
                         string ISO3 = string.Empty;
 
                         if (cells[2].Contains(';'))
-                            ISO3 = CountryUtil.IOCToISO3(cells[2].Split(';')[1]);
+                        {
+                            string IOC = cells[2].Split(';')[1];
+                            ISO3 = CountryUtil.IOCToISO3(IOC);
+                        }
                         else
-                            ISO3 = CountryUtil.GetISO3FromCountry(cells[2]);
+                        {
+                            string countryName = cells[2];
+                            ISO3 = CountryUtil.GetISO3FromCountry(countryName);
+                        }
+                            
 
                         if (short.TryParse(cells[0], out short rank))
                         {
@@ -49,6 +56,7 @@ namespace SportsRankingService.Services
                                 ISO3 = ISO3,
                                 Position = rank,
                                 RankDate = DateTime.Now,
+                                CountryName = CountryUtil.GetCountryName(ISO3)
                             });
                         }
                     }
@@ -58,7 +66,7 @@ namespace SportsRankingService.Services
             }
             catch (Exception ex)
             {
-                Log(ex, _logger);
+                //_logHelper.Log(ex);
                 return new List<SportsRanking>();
             }
             

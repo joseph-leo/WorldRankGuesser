@@ -19,7 +19,7 @@
     "HockeyService": {
       "Field Hockey": {
         "Men": "https://www.fih.hockey/outdoor-hockey-rankings",
-        "Women": "wwwroot/remotehtml/outdoor-hockey-rankings-women.html"
+        "Women": "https://www.fih.hockey/datafeeds/static/json/en/OutdoorRanking/outdoorranking_f.json"
       },
       "Ice Hockey": {
         "Both": "https://www.iihf.com/en/worldranking"
