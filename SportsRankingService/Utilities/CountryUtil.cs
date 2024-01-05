@@ -29,7 +29,7 @@ namespace SportsRankingService.Utilities
 
         public static string? GetCountryName(string ISO3)
         {
-            List<RegionInfo> countries = CountryUtil.GetCountries();
+            List<RegionInfo> countries = GetCountries();
             RegionInfo? country = countries.FirstOrDefault(x => x.ThreeLetterISORegionName == ISO3);
             string? countryName = null;
 
@@ -44,7 +44,7 @@ namespace SportsRankingService.Utilities
         public static string GetISO3FromCountry(string countryName)
         {
             List<RegionInfo> countries = GetCountries();
-            RegionInfo? country = countries.FirstOrDefault(x => x.EnglishName.ToLower() == GetRegionMapping(countryName));
+            RegionInfo country = countries.FirstOrDefault(x => x.EnglishName.ToLower() == GetRegionMapping(countryName));
 
             return country.ThreeLetterISORegionName;
         }
@@ -88,7 +88,7 @@ namespace SportsRankingService.Utilities
             { "tahiti", "french polynesia" }
         };
 
-        public static string IOCToISO3(string IOC)
+        public static string IOCToISO3(this string IOC)
         {
             Dictionary<string, string> dictionary = new()
             {
@@ -182,7 +182,7 @@ namespace SportsRankingService.Utilities
                 { "ZIM", "ZWE" }
             };
 
-            return dictionary.ContainsKey(IOC) ? dictionary[IOC] : IOC;
+            return dictionary.TryGetValue(IOC, out string? value) ? value : IOC;
         }
     }
 }

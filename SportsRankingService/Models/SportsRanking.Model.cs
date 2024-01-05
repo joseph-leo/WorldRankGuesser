@@ -7,8 +7,7 @@ using SportsRankingService.Interfaces;
 
 namespace SportsRankingService.Models;
 
-[Table("SportsRankings_History")]
-public partial class SportsRankings_History : IRanking
+public partial class SportsRanking
 {
     [Key]
     public int ID { get; set; }
@@ -16,8 +15,8 @@ public partial class SportsRankings_History : IRanking
     [StringLength(3)]
     public string? ISO3 { get; set; }
 
-    [Column("CountryName")]
     [StringLength(50)]
+    [Column("CountryName")]
     public string? TeamName { get; set; }
 
     [StringLength(50)]
@@ -32,5 +31,5 @@ public partial class SportsRankings_History : IRanking
     public short Position { get; set; }
 
     [Column(TypeName = "date")]
-    public DateTime? RankDate { get; set; }
+    public DateTime? RankDate { get; set; } = DateTime.Now;
 }

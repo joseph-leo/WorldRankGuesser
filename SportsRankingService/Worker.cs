@@ -3,23 +3,21 @@ using Microsoft.Extensions.Options;
 using SportsRankingService.Models;
 using SportsRankingService.RankingsDb;
 using SportsRankingService.Utilities;
-using SportsRankingService.Services;
 using Microsoft.EntityFrameworkCore.Metadata;
+using SportsRankingService.Services.World;
+using SportsRankingService.Services;
+using SportsRankingService.Enums;
+using SportsRankingService.Factories;
+using SportsRankingService.Interfaces;
 
 namespace SportsRankingService
 {
-    public class Worker : BackgroundService
+    public class Worker(ILogger<Worker> logger, IServiceScopeFactory serviceScopeFactory) : BackgroundService
     {
-        private readonly ILogger<Worker> _logger;
-        private readonly IServiceProvider _serviceProvider;
-        private readonly RugbyService _rugbyService;
-
-        public Worker(ILogger<Worker> logger, IServiceProvider serviceProvider, RugbyService rugbyService)
-        {
-            _logger = logger;
-            _serviceProvider = serviceProvider;
-            _rugbyService = rugbyService;
-        }
+        private readonly ILogger<Worker> _logger = logger;
+        //private readonly IServiceProvider _serviceProvider = serviceProvider;
+        //private readonly RankingUpdater _rankingUpdater = rankingUpdater;
+        private readonly IServiceScopeFactory _serviceScopeFactory = serviceScopeFactory;
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
@@ -27,22 +25,33 @@ namespace SportsRankingService
             {
                 _logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
 
-                using (var scope = _serviceProvider.CreateScope())
-                {
-                    var ranks = await _rugbyService.GetSportRanksAsync();
+                await DoWorkAsync();
 
-                    var dbContext = scope.ServiceProvider.GetRequiredService<WorldRankGuesserContext>();
+                //using (var scope = _serviceProvider.CreateScope())
+                //{
+                //    var ranks = await _scrapeService.GetSportRanksAsync();
 
-                    await dbContext.AddRangeAsync(ranks, stoppingToken);
-                    dbContext.SaveChanges();
+                //    var dbContext = scope.ServiceProvider.GetRequiredService<WorldRankGuesserContext>();
 
-                    string? tableName = GetTableName<SportsRanking>(dbContext);
-                    _logger.LogInformation("{RowCount} rows inserted to {db}", ranks.Count, tableName);
-                }
+                //    await dbContext.AddRangeAsync(ranks, stoppingToken);
+                //    dbContext.SaveChanges();
 
-                await Task.Delay(10000, stoppingToken);
+                //    string? tableName = GetTableName<SportsRanking>(dbContext);
+                //    _logger.LogInformation("{RowCount} rows inserted to {db}", ranks.Count, tableName);
+                //}
+
+                await Task.Delay(100000, stoppingToken);
             }
         }
+
+        private async Task DoWorkAsync()
+        {
+            using IServiceScope scope = _serviceScopeFactory.CreateScope();
+            IRankingUpdater? rankingUpdater = scope.ServiceProvider.GetService<IRankingUpdater>();
+
+            await rankingUpdater.UpdateWorldRankAsync(WorldSports.Rugby);
+        }
+
 
         private static string GetTableName<TEntity>(DbContext context) where TEntity : class
         {
