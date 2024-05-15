@@ -1,8 +1,9 @@
 ﻿using BenchmarkDotNet.Attributes;
 using Microsoft.Extensions.Logging;
-using SportsRankingService.Interfaces;
+using SportsRankingService.Factories;
 using SportsRankingService.Models;
-using SportsRankingService.Services.World;
+using SportsRankingService.Parsers;
+using SportsRankingService.Services;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -15,17 +16,35 @@ namespace SportsRankingService.Benchmark
     [MemoryDiagnoser]
     public class ScrapeServiceBenchmark
     {
-        private WorldRankService _rugbyService;
+        private IScrapeServiceFactory _scrapeServiceFactory;
         public ScrapeServiceBenchmark() 
         {
-            var logger = new LoggerFactory().CreateLogger<BaseballService>();
-            _rugbyService = new BaseballService(logger);
+            var logger = new LoggerFactory().CreateLogger<WorldRankService>();
+            var rugbyLogger = new LoggerFactory().CreateLogger<RugbyParser>();
+            var cricketLogger = new LoggerFactory().CreateLogger<CricketParser>();
+            var tennisLogger = new LoggerFactory().CreateLogger<TennisParser>();
+
+            IEnumerable<IParser> parsers = new List<IParser>()
+            {
+                new RugbyParser(rugbyLogger),
+                new CricketParser(cricketLogger),
+                new TennisParser(tennisLogger)
+            };
+
+            IParserFactory parserFactory = new ParserFactory(() => parsers);
+
+            IEnumerable<IScrapeService> scrapeServices = new List<IScrapeService>()
+            {
+                new WorldRankService(logger, parserFactory)
+            };
+            _scrapeServiceFactory = new ScrapeServiceFactory(() => scrapeServices);
         }
 
         [Benchmark]
         public async Task GetSportRanksAsyncBenchmark()
         {
-            await _rugbyService.GetSportRanksAsync();
+            IScrapeService rankService = _scrapeServiceFactory.Create(Enums.RankingType.World);
+            await rankService.GetSportRanksAsync(Enums.WorldSports.Rugby);
         }
     }
 }

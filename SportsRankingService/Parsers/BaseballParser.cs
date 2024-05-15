@@ -1,13 +1,14 @@
 ﻿using HtmlAgilityPack;
 using SportsRankingService.Utilities;
 using SportsRankingService.Models;
-using SportsRankingService.Interfaces;
 
-namespace SportsRankingService.Services.World
+namespace SportsRankingService.Parsers
 {
-    public class BaseballService(ILogger<BaseballService> logger) : WorldRankService(logger)
+    public class BaseballParser(ILogger<BaseballParser> logger) : IParser
     {
-        public override List<SportsRanking> ParseResponse(string response, IRanking prototype)
+        private readonly ILogger<BaseballParser> _logger = logger;
+
+        public IEnumerable<IRanking> ParseResponse(string response, RankingItem rankingItem)
         {
             try
             {
@@ -24,24 +25,18 @@ namespace SportsRankingService.Services.World
                     List<string> cells = listItems.Select(x => x.InnerText.Trim()).ToList().NotNullOrEmpty();
 
                     short position = short.Parse(cells[0]);
-                    string _ISO3 = cells[2].IOCToISO3();
+                    string _ISO3 = cells[2].Trim().IOCToISO3();
 
-                    rankings.Add(new SportsRanking
-                    {
-                        ISO3 = _ISO3,
-                        Position = position,
-                        Sport = rankInfo.Sport,
-                        Event = rankInfo.Event,
-                        Gender = rankInfo.Gender,
-                        //CountryName = CountryUtil.GetCountryName(_ISO3)
-                    });
+                    SportsRanking sportsRanking = new(rankingItem.Gender, rankingItem.Event, rankingItem.Sport, position, _ISO3);
+
+                    rankings.Add(sportsRanking);
                 }
 
                 return rankings;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "{Message}", rankInfo.Sport);
+                _logger.LogError(ex, "{Message}", rankingItem.Sport);
                 return [];
             }
         }

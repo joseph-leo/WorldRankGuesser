@@ -1,26 +1,27 @@
 ﻿using HtmlAgilityPack;
 using Newtonsoft.Json.Linq;
-using SportsRankingService.Interfaces;
 using SportsRankingService.Models;
 using SportsRankingService.Utilities;
 using System.Linq;
 using System.Reflection;
 
-namespace SportsRankingService.Services.World
+namespace SportsRankingService.Parsers
 {
-    public class HockeyService(ILogger<HockeyService> logger) : WorldRankService(logger)
+    public class HockeyParser(ILogger<HockeyParser> logger) : IParser
     {
-        public override List<SportsRanking> ParseResponse(string response, IRanking prototype)
+        private readonly ILogger<HockeyParser> _logger = logger;
+
+        public IEnumerable<IRanking> ParseResponse(string response, RankingItem rankingItem)
         {
-            return rankInfo.Sport switch
+            return rankingItem.Sport switch
             {
-                "Field Hockey" => ParseFieldHockey(response, rankInfo),
-                "Ice Hockey" => ParseIceHockey(response, rankInfo.Sport),
+                "Field Hockey" => ParseFieldHockey(response, rankingItem),
+                "Ice Hockey" => ParseIceHockey(response, rankingItem.Sport),
                 _ => [],
             };
         }
 
-        private List<SportsRanking> ParseFieldHockey(string response, WorldRankInfo rankInfo)
+        private List<SportsRanking> ParseFieldHockey(string response, RankingItem rankingItem)
         {
             try
             {
@@ -36,21 +37,16 @@ namespace SportsRankingService.Services.World
 
                     string ISO3 = countryCode.IOCToISO3();
 
-                    rankings.Add(new SportsRanking
-                    {
-                        ISO3 = ISO3,
-                        Position = position,
-                        Sport = rankInfo.Sport,
-                        Event = rankInfo.Event,
-                        Gender = rankInfo.Gender
-                    });
+                    SportsRanking sportsRanking = new(rankingItem.Gender, rankingItem.Event, rankingItem.Sport, position, ISO3);
+
+                    rankings.Add(sportsRanking);
                 }
 
                 return rankings;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "{Message}", rankInfo.Sport);
+                _logger.LogError(ex, "{Message}", rankingItem.Sport);
                 return [];
             }
 
@@ -87,15 +83,11 @@ namespace SportsRankingService.Services.World
                     string countryCode = row.SelectSingleNode("td/a/span[@class=\"show-small\"]").InnerText;
 
                     short position = short.Parse(cells[0]);
-                    string ISO3 = countryCode.IOCToISO3();
+                    string ISO3 = countryCode.Trim().IOCToISO3();
 
-                    rankings.Add(new SportsRanking
-                    {
-                        ISO3 = ISO3,
-                        Position = position,
-                        Sport = sport,
-                        Gender = gender
-                    });
+                    SportsRanking sportsRanking = new(sport, null, sport, position, ISO3);
+
+                    rankings.Add(sportsRanking);
                 }
 
                 return rankings;

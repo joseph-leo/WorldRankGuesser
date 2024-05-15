@@ -1,0 +1,128 @@
+﻿{
+  "URLs": {
+    "BadmintonService": {
+      "Badminton": {
+        "Singles": {
+          "Men": "https://www.bwfshuttleapi.com/rankings/api/MS/150",
+          "Women": "https://www.bwfshuttleapi.com/rankings/api/WS/150"
+        },
+        "Doubles": {
+          "Men": "https://www.bwfshuttleapi.com/rankings/api/MD/150",
+          "Women": "https://www.bwfshuttleapi.com/rankings/api/WD/150",
+          "Mixed": "https://www.bwfshuttleapi.com/rankings/api/XD/150"
+        }
+      }
+    },
+    "BaseballService": {
+      "Baseball": {
+        "N/A": {
+          "Men": "https://rankings.wbsc.org/list/baseball/men",
+          "Women": "https://rankings.wbsc.org/list/baseball/women"
+        }
+      },
+      "Softball": {
+        "N/A": {
+          "Men": "https://rankings.wbsc.org/list/softball/men",
+          "Women": "https://rankings.wbsc.org/list/softball/women"
+        }
+      }
+    },
+    "BasketballService": {
+      "Basketball": {
+        "N/A": {
+          "Men": "https://www.fiba.basketball/rankingmen",
+          "Women": "https://www.fiba.basketball/rankingwomen"
+        }
+      }
+    },
+    "CricketService": {
+      "Cricket": {
+        "Test": {
+          "Men": "https://assets-icc.sportz.io/cricket/v1/ranking?client_id=tPZJbRgIub3Vua93%2FDWtyQ%3D%3D&comp_type=test&feed_format=json&lang=en&type=team"
+        },
+        "ODI": {
+          "Men": "https://assets-icc.sportz.io/cricket/v1/ranking?client_id=tPZJbRgIub3Vua93%2FDWtyQ%3D%3D&comp_type=odi&feed_format=json&lang=en&type=team",
+          "Women": "https://assets-icc.sportz.io/cricket/v1/ranking?client_id=tPZJbRgIub3Vua93%2FDWtyQ%3D%3D&comp_type=odiw&feed_format=json&lang=en&type=team"
+        },
+        "T20I": {
+          "Men": "https://assets-icc.sportz.io/cricket/v1/ranking?client_id=tPZJbRgIub3Vua93%2FDWtyQ%3D%3D&comp_type=t20&feed_format=json&lang=en&type=team",
+          "Women": "https://assets-icc.sportz.io/cricket/v1/ranking?client_id=tPZJbRgIub3Vua93%2FDWtyQ%3D%3D&comp_type=t20w&feed_format=json&lang=en&type=team"
+        }
+      }
+    },
+    "GymnasticsService": {
+      "Artistic Gymnastics": {
+        "N/A": {
+          "Men": "https://www.gymnastics.sport/site/rankings/ranking_mag_table.php",
+          "Women": "https://www.gymnastics.sport/site/rankings/ranking_wag_table.php"
+        }
+      },
+      "Rythmic Gymnastics": {
+        "N/A": {
+          "Women": "https://www.gymnastics.sport/site/rankings/ranking_rg_table.php"
+        }
+      }
+    },
+    "HockeyService": {
+      "Field Hockey": {
+        "Indoor": {
+          "Men": "https://www.fih.hockey/datafeeds/static/json/en/indoorranking/indoorranking_m.json",
+          "Women": "https://www.fih.hockey/datafeeds/static/json/en/indoorranking/indoorranking_f.json"
+        },
+        "Outdoor": {
+          "Men": "https://www.fih.hockey/datafeeds/static/json/en/OutdoorRanking/outdoorranking_m.json",
+          "Women": "https://www.fih.hockey/datafeeds/static/json/en/OutdoorRanking/outdoorranking_f.json"
+        }
+      },
+      "Ice Hockey": {
+        "N/A": {
+          "Both": "https://www.iihf.com/en/worldranking"
+        }
+      }
+    },
+    "RugbyService": {
+      "Rugby": {
+        "Union": {
+          "Men": "https://api.wr-rims-prod.pulselive.com/rugby/v3/rankings/mru?language=en",
+          "Women": "https://api.wr-rims-prod.pulselive.com/rugby/v3/rankings/wru?language=en"
+        },
+        "Sevens": {
+          "Men": "https://www.svns.com/en/standings",
+          "Women": "https://www.svns.com/en/standings"
+        }
+      }
+    },
+    "SoccerService": {
+      "Soccer/Football": {
+        "N/A": {
+          "Men": "https://www.fifa.com/api/ranking-overview?locale=en&dateId={0}",
+          "Women": "https://www.fifa.com/api/ranking-overview?locale=en&dateId={0}"
+        }
+      }
+    },
+    "TennisService": {
+      "Tennis": {
+        "Singles": {
+          "Men": "https://site.web.api.espn.com/apis/site/v2/sports/tennis/atp/rankings?region=us&lang=en",
+          "Women": "https://site.web.api.espn.com/apis/site/v2/sports/tennis/wta/rankings?region=us&lang=en"
+        },
+        "Doubles": {
+          "Men": "https://www.atptour.com/en/rankings/doubles",
+          "Women": "https://api.wtatennis.com/tennis/players/ranked?page=0&pageSize=100&type=rankDoubles&sort=asc&name=&metric=DOUBLES"
+        }
+      }
+    },
+    "VolleyballService": {
+      "Volleyball": {
+        "N/A": {
+          "Men": "https://en.volleyballworld.com/api/v1/worldranking/volleyball/1/0/100",
+          "Women": "https://en.volleyballworld.com/api/v1/worldranking/volleyball/0/0/100"
+        },
+        "Beach": {
+          "Men": "https://en.volleyballworld.com/api/v1/worldranking/beachvolleyball/0/0/100",
+          "Women": "https://en.volleyballworld.com/api/v1/worldranking/beachvolleyball/1/0/100"
+        }
+      }
+    }
+  }
+}

@@ -4,15 +4,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace SportsRankingService.Interfaces
+namespace SportsRankingService.Models
 {
     public interface IRanking
     {
         short Position { get; set; }
         string? TeamName { get; set; }
+        string? ISO3 { get; set; }
         string? Sport { get; set; }
         string? Gender { get; set; }
-        IRanking ShallowCopy();
-        void AddRemaingProps(short position, string teamCode);
     }
 }

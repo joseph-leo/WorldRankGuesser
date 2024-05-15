@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using SportsRankingService.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,11 +10,10 @@ namespace SportsRankingService.Utilities
 {
     public class ConfigHelper
     {
-        public Dictionary<string, Dictionary<string, Dictionary<string, Dictionary<string, string>>>>? Urls;
-
+        private IConfigurationRoot _config;
         public ConfigHelper(string configName)
         {
-            Urls = ParseConfig(GetConfig(configName));
+            _config = GetConfig(configName);
         }
 
         public static IConfigurationRoot GetConfig(string configName)
@@ -26,9 +26,9 @@ namespace SportsRankingService.Utilities
             return config;
         }
 
-        private static Dictionary<string, Dictionary<string, Dictionary<string, Dictionary<string, string>>>> ParseConfig(IConfigurationRoot config)
+        public List<RankingItem> GetRankingSection(string sport)
         {
-            var urls = config.GetSection("URLs").Get<Dictionary<string, Dictionary<string, Dictionary<string, Dictionary<string, string>>>>>();
+            var urls = _config.GetSection(sport).Get<List<RankingItem>>();
 
             return urls;
         }
@@ -43,23 +43,23 @@ namespace SportsRankingService.Utilities
         //    return ConvertToNestedDictionaries(rootObject);
         //}
 
-        static Dictionary<string, object> ConvertToNestedDictionaries(Dictionary<string, object> dictionary)
-        {
-            var result = new Dictionary<string, object>();
+        //static Dictionary<string, object> ConvertToNestedDictionaries(Dictionary<string, object> dictionary)
+        //{
+        //    var result = new Dictionary<string, object>();
 
-            foreach (var kvp in dictionary)
-            {
-                if (kvp.Value is Dictionary<string, object> nestedDict)
-                {
-                    result[kvp.Key] = ConvertToNestedDictionaries(nestedDict);
-                }
-                else
-                {
-                    result[kvp.Key] = kvp.Value;
-                }
-            }
+        //    foreach (var kvp in dictionary)
+        //    {
+        //        if (kvp.Value is Dictionary<string, object> nestedDict)
+        //        {
+        //            result[kvp.Key] = ConvertToNestedDictionaries(nestedDict);
+        //        }
+        //        else
+        //        {
+        //            result[kvp.Key] = kvp.Value;
+        //        }
+        //    }
 
-            return result;
-        }
+        //    return result;
+        //}
     }
 }
