@@ -1,22 +1,19 @@
 ﻿using HtmlAgilityPack;
-using SportsRankingService.Interfaces;
 using SportsRankingService.Models;
 using SportsRankingService.Utilities;
 using System.Net;
 
-namespace SportsRankingService.Services.World
+namespace SportsRankingService.Parsers
 {
-    public class GymnasticsService : WorldRankService
+    public class GymnasticsParser(ILogger<GymnasticsParser> logger) : IParser
     {
-        public GymnasticsService(ILogger<GymnasticsService> logger) : base(logger)
-        {
-        }
+        private readonly ILogger<GymnasticsParser> _logger = logger;
 
-        public override List<SportsRanking> ParseResponse(string response, IRanking prototype)
+        public IEnumerable<IRanking> ParseResponse(string response, RankingItem rankingItem)
         {
             try
             {
-                List<SportsRanking> ranks = [];
+                List<SportsRanking> rankings = [];
 
                 HtmlDocument? htmlDocument = new();
                 htmlDocument.LoadHtml(response);
@@ -26,7 +23,7 @@ namespace SportsRankingService.Services.World
                 {
                     HtmlNodeCollection headerRows = table.SelectNodes("thead/tr").NotNullOrEmpty();
 
-                    rankInfo.Event = headerRows[0].InnerText.Trim().Split('(')[0].Trim();
+                    rankingItem.Event = headerRows[0].InnerText.Trim().Split('(')[0].Trim();
 
                     HtmlNodeCollection rows = table.SelectNodes("tbody/tr").NotNullOrEmpty();
 
@@ -40,7 +37,7 @@ namespace SportsRankingService.Services.World
                         if (cells[2].Contains(';'))
                         {
                             countryCode = cells[2].Split(';')[1];
-                            countryCode = countryCode.IOCToISO3();
+                            countryCode = countryCode.Trim().IOCToISO3();
                             countryName = CountryUtil.GetCountryName(countryCode);
                         }
                         else
@@ -50,23 +47,17 @@ namespace SportsRankingService.Services.World
                         }
                         short position = short.Parse(cells[0]);
 
-                        ranks.Add(new SportsRanking
-                        {
-                            Event = rankInfo.Event,
-                            Sport = rankInfo.Sport,
-                            Gender = rankInfo.Gender,
-                            ISO3 = countryCode,
-                            Position = position,
-                            //CountryName = countryName
-                        });
+                        SportsRanking sportsRanking = new(rankingItem.Gender, rankingItem.Event, rankingItem.Sport, position, countryCode);
+
+                        rankings.Add(sportsRanking);
                     }
                 }
 
-                return ranks;
+                return rankings;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "{Message}", rankInfo.Sport);
+                _logger.LogError(ex, "{Message}", rankingItem.Sport);
                 return [];
             }
         }

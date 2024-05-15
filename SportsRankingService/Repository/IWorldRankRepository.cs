@@ -1,4 +1,4 @@
-﻿using SportsRankingService.Interfaces;
+﻿using SportsRankingService.Models;
 
 namespace SportsRankingService.Repository
 {

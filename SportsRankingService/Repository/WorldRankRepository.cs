@@ -1,4 +1,4 @@
-﻿using SportsRankingService.Interfaces;
+﻿using SportsRankingService.Models;
 using SportsRankingService.RankingsDb;
 using System;
 using System.Collections.Generic;

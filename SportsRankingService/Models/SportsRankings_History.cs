@@ -3,12 +3,11 @@ using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
-using SportsRankingService.Interfaces;
 
 namespace SportsRankingService.Models;
 
 [Table("SportsRankings_History")]
-public partial class SportsRankings_History : IRanking
+public partial class SportsRankings_History
 {
     [Key]
     public int ID { get; set; }

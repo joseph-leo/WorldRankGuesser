@@ -19,7 +19,7 @@ namespace SportsRankingService.Utilities
         {
             if (obj is ICollection collection)
             {
-                if (collection.Count == 0) return true;
+                return collection.Count == 0;
             }
 
             return false;

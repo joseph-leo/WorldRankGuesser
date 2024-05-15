@@ -1,23 +1,17 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
-using SportsRankingService.Models;
-using SportsRankingService.RankingsDb;
-using SportsRankingService.Utilities;
 using Microsoft.EntityFrameworkCore.Metadata;
-using SportsRankingService.Services.World;
 using SportsRankingService.Services;
 using SportsRankingService.Enums;
-using SportsRankingService.Factories;
-using SportsRankingService.Interfaces;
+using SportsRankingService.Models;
 
 namespace SportsRankingService
 {
-    public class Worker(ILogger<Worker> logger, IServiceScopeFactory serviceScopeFactory) : BackgroundService
+    public class Worker(ILogger<Worker> logger, IRankingUpdater rankingUpdater) : BackgroundService
     {
         private readonly ILogger<Worker> _logger = logger;
         //private readonly IServiceProvider _serviceProvider = serviceProvider;
-        //private readonly RankingUpdater _rankingUpdater = rankingUpdater;
-        private readonly IServiceScopeFactory _serviceScopeFactory = serviceScopeFactory;
+        private readonly IRankingUpdater _rankingUpdater = rankingUpdater;
+        //private readonly IServiceScopeFactory _serviceScopeFactory = serviceScopeFactory;
 
         protected override async Task ExecuteAsync(CancellationToken stoppingToken)
         {
@@ -25,7 +19,7 @@ namespace SportsRankingService
             {
                 _logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
 
-                await DoWorkAsync();
+                await DoWorkAsync(stoppingToken);
 
                 //using (var scope = _serviceProvider.CreateScope())
                 //{
@@ -44,26 +38,23 @@ namespace SportsRankingService
             }
         }
 
-        private async Task DoWorkAsync()
+        private async Task DoWorkAsync(CancellationToken stoppingToken)
         {
-            using IServiceScope scope = _serviceScopeFactory.CreateScope();
-            IRankingUpdater? rankingUpdater = scope.ServiceProvider.GetService<IRankingUpdater>();
-
-            await rankingUpdater.UpdateWorldRankAsync(WorldSports.Rugby);
+            await _rankingUpdater.UpdateRankingsAsync(RankingType.World, stoppingToken);
         }
 
 
-        private static string GetTableName<TEntity>(DbContext context) where TEntity : class
-        {
-            string tableName = string.Empty;
+        //private static string GetTableName(DbContext context)
+        //{
+        //    string tableName = string.Empty;
 
-            if (context is not null)
-            {
-                IEntityType? entityType = context.Model.FindEntityType(typeof(TEntity));
-                tableName = entityType?.GetTableName() ?? string.Empty;
-            }
+        //    if (context is not null)
+        //    {
+        //        IEntityType? entityType = context.Model.FindEntityType(typeof(TEntity));
+        //        tableName = entityType?.GetTableName() ?? string.Empty;
+        //    }
             
-            return tableName;
-        }
+        //    return tableName;
+        //}
     }
 }
