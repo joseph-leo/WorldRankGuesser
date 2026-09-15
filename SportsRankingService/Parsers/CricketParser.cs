@@ -30,7 +30,7 @@ namespace SportsRankingService.Parsers
                 {
                     short position = rank["no"].NotNullOrEmpty().Value<short>();
                     string countryCode = rank["shortname"].NotNullOrEmpty().Value<string>().NotNullOrEmpty();
-                    string ISO3 = countryCode.Trim().IOCToISO3();
+                    string ISO3 = ToISO3(countryCode);
 
                     SportsRanking sportsRanking = new(rankingItem.Gender, rankingItem.Event, rankingItem.Sport, position, ISO3);
 
@@ -46,5 +46,31 @@ namespace SportsRankingService.Parsers
             }
 
         }
+
+        /// <summary>
+        /// ICC "shortname" is a team code, not a country code: women's teams carry a "-W" suffix
+        /// and a few teams use two-letter abbreviations. West Indies (WI) has no ISO3 code and is kept as-is.
+        /// </summary>
+        private static string ToISO3(string iccShortName)
+        {
+            string code = iccShortName.Trim().ToUpperInvariant();
+
+            int suffix = code.IndexOf('-');
+            if (suffix > 0)
+            {
+                code = code[..suffix];
+            }
+
+            return IccCodes.TryGetValue(code, out string? iso3) ? iso3 : code.IOCToISO3();
+        }
+
+        private static readonly Dictionary<string, string> IccCodes = new()
+        {
+            { "SA", "ZAF" },
+            { "NZ", "NZL" },
+            { "SL", "LKA" },
+            { "HK", "HKG" },
+            { "SRL", "LKA" },
+        };
     }
 }

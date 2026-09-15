@@ -8,13 +8,9 @@ using System.Threading.Tasks;
 
 namespace SportsRankingService.Utilities
 {
-    public class ConfigHelper
+    public class ConfigHelper(string configName)
     {
-        private IConfigurationRoot _config;
-        public ConfigHelper(string configName)
-        {
-            _config = GetConfig(configName);
-        }
+        private IConfigurationRoot _config = GetConfig(configName);
 
         public static IConfigurationRoot GetConfig(string configName)
         {
@@ -26,9 +22,9 @@ namespace SportsRankingService.Utilities
             return config;
         }
 
-        public List<RankingItem> GetRankingSection(string sport)
+        public T? GetConfigSection<T>(string sport) where T : class
         {
-            var urls = _config.GetSection(sport).Get<List<RankingItem>>();
+            T? urls = _config.GetSection(sport).Get<T>();
 
             return urls;
         }

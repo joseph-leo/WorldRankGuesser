@@ -169,12 +169,12 @@
     {
       "Gender": "Men",
       "Sport": "Soccer/Football",
-      "Url": "https://www.fifa.com/api/ranking-overview?locale=en&dateId={0}"
+      "Url": "https://inside.fifa.com/api/ranking-overview?locale=en&dateId={0}"
     },
     {
       "Gender": "Women",
       "Sport": "Soccer/Football",
-      "Url": "https://www.fifa.com/api/ranking-overview?locale=en&dateId={0}"
+      "Url": "https://inside.fifa.com/api/ranking-overview?locale=en&dateId={0}"
     }
   ],
   "Tennis": [
