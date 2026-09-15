@@ -129,35 +129,36 @@ namespace SportsRankingService.Services
             return rankingItems;
         }
 
-        private async Task<List<SoccerRankDate>> GetRankDatesAndIds(string url)
-        {
-            string response = (await CallUrlAsync(url)).NotNullOrEmpty();
-            HtmlDocument html = new();
-            html.LoadHtml(response);
-
-            string scriptContent = html.DocumentNode.SelectSingleNode("//script[contains(., \"dates\")]/text()").NotNullOrEmpty().InnerText;
-
-            JObject scriptJson = JObject.Parse(scriptContent);
-            JToken props = scriptJson["props"].NotNullOrEmpty();
-            JToken pageProps = props["pageProps"].NotNullOrEmpty();
-            JToken pageData = pageProps["pageData"].NotNullOrEmpty();
-            JToken ranking = pageData["ranking"].NotNullOrEmpty();
-            JToken dates = ranking["dates"].NotNullOrEmpty();
-            JToken currentYearDates = dates.First();
-            JArray datesInner = JArray.Parse(currentYearDates["dates"].ToString());
-
-            List<SoccerRankDate> rankDate = JsonSerializer.Deserialize<List<SoccerRankDate>>(datesInner.ToString()).NotNullOrEmpty();
-
-            return rankDate;
-        }
-
         private async Task<string> GetLatestId(string gender)
         {
             string url = gender == "Men" ? menRankDateURL : womenRankDateURL;
-            List<SoccerRankDate> soccerRankDates = await GetRankDatesAndIds(url);
-            string id = soccerRankDates.First().id;
+            string page = (await CallUrlAsync(url)).NotNullOrEmpty();
 
-            return id;
+            return ExtractLatestDateId(page);
+        }
+
+        /// <summary>
+        /// Reads the ranking dates that FIFA's ranking page embeds as Next.js page data
+        /// (props.pageProps.pageData.ranking.dates, grouped by year) and returns the id of the
+        /// newest one by its ISO timestamp. Throws if the page has no such data.
+        /// </summary>
+        internal static string ExtractLatestDateId(string html)
+        {
+            HtmlDocument document = new();
+            document.LoadHtml(html);
+
+            string pageData = document.DocumentNode.SelectSingleNode("//script[@id=\"__NEXT_DATA__\"]").NotNullOrEmpty().InnerText;
+
+            JToken yearGroups = JObject.Parse(pageData)
+                .SelectToken("props.pageProps.pageData.ranking.dates")
+                .NotNullOrEmpty();
+
+            List<SoccerRankDate> dates = yearGroups
+                .SelectMany(year => year["dates"]?.ToObject<List<SoccerRankDate>>() ?? [])
+                .ToList()
+                .NotNullOrEmpty();
+
+            return dates.MaxBy(d => DateTimeOffset.Parse(d.iso, CultureInfo.InvariantCulture))!.id;
         }
     }
 }

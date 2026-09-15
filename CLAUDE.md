@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-A .NET 8 Worker Service that scrapes world sports rankings (FIFA, ICC, World Rugby, BWF, etc.) from public web pages and JSON APIs, normalizes them to `SportsRanking` rows (sport / event / gender / position / ISO3 country code), and inserts them into a SQL Server database (`WorldRankGuesser`). A second project holds BenchmarkDotNet benchmarks. There are no unit tests.
+A .NET 8 Worker Service that scrapes world sports rankings (FIFA, ICC, World Rugby, BWF, etc.) from public web pages and JSON APIs, normalizes them to `SportsRanking` rows (sport / event / gender / position / ISO3 country code), and inserts them into a SQL Server database (`WorldRankGuesser`). `WebScrapingBenchmarks` holds BenchmarkDotNet benchmarks and `SportsRankingService.Tests` holds xUnit tests.
 
 ## Commands
 
@@ -14,7 +14,10 @@ All commands run from the repo root unless noted.
 dotnet build SportsRankingService.sln          # build both projects (warnings are expected; 0 errors)
 dotnet run --project SportsRankingService       # run the worker (needs SQL Server; see below)
 dotnet run --project WebScrapingBenchmarks --configuration Release   # run benchmarks (or WebScrapingBenchmarks\RunBenchmark.bat)
+dotnet test SportsRankingService.Tests          # parser and FIFA date-id tests against saved fixtures; no network
 ```
+
+**Tests are fixture-based.** `SportsRankingService.Tests/Fixtures/` holds one real response per feed with its source URL and capture date in `FIXTURES.md`. Parser tests are pure: construct the parser with `NullLogger<T>.Instance`, pass the fixture text and a `RankingItem`, assert count and known positions. Expect some tests to be **red or skipped on purpose**: a red test with a fixture is the spec for a feed whose site changed markup (write the new parser to make it pass); a skipped test names a feed whose source is dead or blocks scripted clients (find a new source first, then capture a fixture). Never make a red test pass by weakening its assertions, and re-capture a fixture only when the federation changes its format. `InternalsVisibleTo` exposes internals to the test and benchmark projects.
 
 Run the worker from the `SportsRankingService` directory (or via `--project`) — `ConfigHelper` loads `serviceconfig.json` from `Directory.GetCurrentDirectory()`, and it is **not** copied to the output folder. The file is loaded with `optional: true`, so running from the wrong directory silently yields zero ranking items.
 
@@ -41,7 +44,7 @@ Connection string `WorldRankGuesserConnection` in `appsettings.json` points at a
 
 **Config files.** `serviceconfig.json` is keyed by `WorldSports` name → array of `RankingItem`. `serviceconfig_test.json` is a scratch copy for experimenting. An earlier experiment with a generic key-driven JSON converter (`jsonkeys.json`, `JsonKeys`, `RankInfo`, `RankListConverter`) was removed in September 2026 because a recursive first-match key search cannot handle object-wrapped feeds; if a generic JSON path is wanted, use typed DTOs per feed or explicit JSON paths, not key search.
 
-**Soccer is special.** FIFA's ranking API needs a date id; `WorldRankService.GetLatestId` scrapes the FIFA ranking page's embedded page-data `<script>` (the one containing `"dates"`, walking `props.pageProps.pageData.ranking.dates`) for the latest id and `string.Format`s it into the configured URL. `SoccerRankDate` mirrors that JSON.
+**Soccer is special.** FIFA's ranking API needs a date id; `WorldRankService.ExtractLatestDateId` reads the ranking page's `__NEXT_DATA__` script (`props.pageProps.pageData.ranking.dates`, grouped by year), picks the newest entry by ISO timestamp, and `GetLatestId` `string.Format`s it into the configured URL. `SoccerRankDate` mirrors that JSON. As of September 2026 the overview API returns an empty list for the newest `FRS_*` ids and data only for older `id#####` ids; the replacement endpoint has not been found yet.
 
 **Null handling idiom.** `NotNullOrEmpty()` (in `Utilities/NullOrEmptyExtension.cs`) is used everywhere in place of null checks: it throws `ArgumentNullException` with the caller expression if the value is null or an empty collection. Parsers wrap their body in try/catch, log with the sport name, and return an empty list on failure so one bad source does not abort the other sports.
 
