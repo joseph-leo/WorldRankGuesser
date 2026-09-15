@@ -19,42 +19,22 @@ namespace SportsRankingService
             {
                 _logger.LogInformation("Worker running at: {time}", DateTimeOffset.Now);
 
-                await DoWorkAsync(stoppingToken);
-
-                //using (var scope = _serviceProvider.CreateScope())
-                //{
-                //    var ranks = await _scrapeService.GetSportRanksAsync();
-
-                //    var dbContext = scope.ServiceProvider.GetRequiredService<WorldRankGuesserContext>();
-
-                //    await dbContext.AddRangeAsync(ranks, stoppingToken);
-                //    dbContext.SaveChanges();
-
-                //    string? tableName = GetTableName<SportsRanking>(dbContext);
-                //    _logger.LogInformation("{RowCount} rows inserted to {db}", ranks.Count, tableName);
-                //}
+                try
+                {
+                    await _rankingUpdater.UpdateRankingsAsync(RankingType.World, stoppingToken);
+                }
+                catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+                {
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    // A failed tick must not stop the host (BackgroundServiceExceptionBehavior.StopHost is the default).
+                    _logger.LogError(ex, "Ranking update tick failed");
+                }
 
                 await Task.Delay(100000, stoppingToken);
             }
         }
-
-        private async Task DoWorkAsync(CancellationToken stoppingToken)
-        {
-            await _rankingUpdater.UpdateRankingsAsync(RankingType.World, stoppingToken);
-        }
-
-
-        //private static string GetTableName(DbContext context)
-        //{
-        //    string tableName = string.Empty;
-
-        //    if (context is not null)
-        //    {
-        //        IEntityType? entityType = context.Model.FindEntityType(typeof(TEntity));
-        //        tableName = entityType?.GetTableName() ?? string.Empty;
-        //    }
-            
-        //    return tableName;
-        //}
     }
 }

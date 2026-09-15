@@ -1,4 +1,3 @@
-﻿using HtmlAgilityPack;
 using Newtonsoft.Json.Linq;
 using SportsRankingService.Models;
 using SportsRankingService.Utilities;
@@ -12,7 +11,6 @@ namespace SportsRankingService.Parsers
 
         public IEnumerable<IRanking> ParseResponse(string response, RankingItem rankingItem)
         {
-
             try
             {
                 List<SportsRanking> rankings = [];
@@ -32,7 +30,6 @@ namespace SportsRankingService.Parsers
                         break;
 
                     short position = rank.Value;
-                    string countryName = team["name"].NotNullOrEmpty().Value<string>().NotNullOrEmpty();
                     string countryCode = team["countryCode"].NotNullOrEmpty().Value<string>().NotNullOrEmpty();
                     string ISO3 = countryCode.Trim().IOCToISO3();
 
@@ -48,7 +45,6 @@ namespace SportsRankingService.Parsers
                 _logger.LogError(ex, "{sport}|{event}|{gender}", rankingItem.Sport, rankingItem.Event, rankingItem.Gender);
                 return [];
             }
-
         }
     }
 }

@@ -24,8 +24,9 @@ namespace SportsRankingService.Services
         private readonly IParserFactory _parserFactory = parserFactory;
         private readonly ConfigHelper _config = new("serviceconfig");
 
-        private readonly string menRankDateURL = "https://www.fifa.com/fifa-world-ranking/men";
-        private readonly string womenRankDateURL = "https://www.fifa.com/fifa-world-ranking/women";
+        // www.fifa.com/fifa-world-ranking/* now redirects here; the page still embeds the ranking dates as page data.
+        private const string menRankDateURL = "https://inside.fifa.com/fifa-rankings/world-ranking/men";
+        private const string womenRankDateURL = "https://inside.fifa.com/fifa-rankings/world-ranking/women";
 
         public async Task<IEnumerable<IRanking>> GetSportRanksAsync(WorldSports sport)
         {
@@ -47,62 +48,94 @@ namespace SportsRankingService.Services
             return allRanks;
         }
 
-        public virtual async Task<string> CallUrlAsync(string url)
+        // Several federation sites (ATP, FIBA, IIHF) return 403 to a request with no browser User-Agent.
+        private const string UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0 Safari/537.36";
+
+        /// <summary>
+        /// Fetches <paramref name="url"/> and returns the body, or null on a non-success status or a transport failure.
+        /// Never throws for a network problem so that one bad source cannot fault the whole tick.
+        /// </summary>
+        public virtual async Task<string?> CallUrlAsync(string url)
         {
-            _logger.LogInformation("Fetching. {Time}", Environment.CurrentManagedThreadId);
+            _logger.LogInformation("Fetching {Url}", url);
 
-            HttpClient httpClient = new();
-
-            using var response = await httpClient.GetAsync(url);
-            if (response.IsSuccessStatusCode)
+            try
             {
-                return await response.Content.ReadAsStringAsync();
-            }
+                using HttpClient httpClient = new() { Timeout = TimeSpan.FromSeconds(30) };
+                httpClient.DefaultRequestHeaders.UserAgent.ParseAdd(UserAgent);
+                httpClient.DefaultRequestHeaders.Accept.ParseAdd("*/*");
 
-            return null;
+                using var response = await httpClient.GetAsync(url);
+                if (response.IsSuccessStatusCode)
+                {
+                    return await response.Content.ReadAsStringAsync();
+                }
+
+                _logger.LogWarning("Fetch failed. {Url} returned {StatusCode}", url, (int)response.StatusCode);
+                return null;
+            }
+            catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException)
+            {
+                _logger.LogError(ex, "Fetch failed. {Url}", url);
+                return null;
+            }
         }
 
         private async Task<IEnumerable<IRanking>> FetchAndParseAsync(RankingItem rankingItem, IParser parser)
         {
-            string url = rankingItem.Url;
-
-            if (rankingItem.Sport == "Soccer/Football")
+            try
             {
-                string id = await GetLatestId(rankingItem.Gender);
+                string url = rankingItem.Url;
 
-                url = string.Format(url, id);
+                if (rankingItem.Sport == "Soccer/Football")
+                {
+                    string id = await GetLatestId(rankingItem.Gender.NotNullOrEmpty());
+
+                    url = string.Format(url, id);
+                }
+
+                string? response = await CallUrlAsync(url);
+
+                if (response is null)
+                {
+                    return [];
+                }
+
+                _logger.LogInformation("Fetched {Sport} {Event} {Gender}", rankingItem.Sport, rankingItem.Event, rankingItem.Gender);
+
+                IEnumerable<IRanking> rankings = parser.ParseResponse(response, rankingItem);
+
+                _logger.LogInformation("Parsed {Count} rows for {Sport} {Event} {Gender}", rankings.Count(), rankingItem.Sport, rankingItem.Event, rankingItem.Gender);
+
+                return rankings;
             }
-
-            string response = await CallUrlAsync(url);
-            _logger.LogInformation("Fetched. {ClassName} {Time}", rankingItem.Sport + " " + rankingItem.Event, Environment.CurrentManagedThreadId);
-
-            IEnumerable<IRanking> rankings = parser.ParseResponse(response, rankingItem);
-            _logger.LogInformation("Parsed. {ClassName} {Time}", rankingItem.Sport + " " + rankingItem.Event, Environment.CurrentManagedThreadId);
-
-            IEnumerable<IRanking> bad = rankings.Where(x => x.ISO3.Length > 3);
-
-            if (bad.Any())
+            catch (Exception ex)
             {
-
+                _logger.LogError(ex, "Failed to fetch or parse {Sport} {Event} {Gender}", rankingItem.Sport, rankingItem.Event, rankingItem.Gender);
+                return [];
             }
-
-            return rankings;
         }
 
         private List<RankingItem> GetRankingItems(WorldSports sport)
         {
-            List<RankingItem> rankingItems = _config.GetRankingSection(sport.ToString());
+            return GetRankingItems(sport.ToString());
+        }
+
+        private List<RankingItem> GetRankingItems(string sport)
+        {
+            var rankingItems = _config.GetConfigSection<List<RankingItem>>(sport);
+            rankingItems ??= [];
 
             return rankingItems;
         }
 
         private async Task<List<SoccerRankDate>> GetRankDatesAndIds(string url)
         {
-            string response = await CallUrlAsync(url);
+            string response = (await CallUrlAsync(url)).NotNullOrEmpty();
             HtmlDocument html = new();
             html.LoadHtml(response);
 
-            string scriptContent = html.DocumentNode.SelectSingleNode("//script[contains(., \"dates\")]/text()").InnerText;
+            string scriptContent = html.DocumentNode.SelectSingleNode("//script[contains(., \"dates\")]/text()").NotNullOrEmpty().InnerText;
 
             JObject scriptJson = JObject.Parse(scriptContent);
             JToken props = scriptJson["props"].NotNullOrEmpty();
@@ -110,8 +143,10 @@ namespace SportsRankingService.Services
             JToken pageData = pageProps["pageData"].NotNullOrEmpty();
             JToken ranking = pageData["ranking"].NotNullOrEmpty();
             JToken dates = ranking["dates"].NotNullOrEmpty();
+            JToken currentYearDates = dates.First();
+            JArray datesInner = JArray.Parse(currentYearDates["dates"].ToString());
 
-            List<SoccerRankDate> rankDate = JsonSerializer.Deserialize<List<SoccerRankDate>>(dates.ToString()).NotNullOrEmpty();
+            List<SoccerRankDate> rankDate = JsonSerializer.Deserialize<List<SoccerRankDate>>(datesInner.ToString()).NotNullOrEmpty();
 
             return rankDate;
         }

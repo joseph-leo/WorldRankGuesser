@@ -32,24 +32,37 @@ namespace SportsRankingService.Services
                     await UpdateAllWorldRanks(stoppingToken);
                     break;
             }
-            _logger.LogInformation("Finished inserting to {table}", typeof(SportsRanking));
-
-           _logger.LogInformation("{count} total inserted to {table}", count, typeof(SportsRanking));
+            _logger.LogInformation("{Count} rows inserted to {Table} since startup", count, nameof(SportsRanking));
         }
 
         public async Task UpdateWorldRankAsync(WorldSports sport, CancellationToken stoppingToken)
         {
-            IScrapeService service = _scrapeServiceFactory.Create(RankingType.World);
-            IEnumerable<IRanking> rankings = await service.GetSportRanksAsync(sport);
+            try
+            {
+                IScrapeService service = _scrapeServiceFactory.Create(RankingType.World);
+                List<IRanking> rankings = (await service.GetSportRanksAsync(sport)).ToList();
 
+                if (rankings.Count == 0)
+                {
+                    _logger.LogWarning("No rankings parsed for {Sport}; nothing inserted", sport);
+                    return;
+                }
 
-
-            using var scope = _serviceScopeFactory.CreateScope();
-            var dbContext = scope.ServiceProvider.GetService<WorldRankGuesserContext>().NotNullOrEmpty();
-            await dbContext.AddRangeAsync(rankings, stoppingToken);
-            await dbContext.SaveChangesAsync(stoppingToken);
-            _logger.LogInformation("{count} inserted to {table}", rankings.Count(), typeof(SportsRanking));
-            count += rankings.Count();
+                using var scope = _serviceScopeFactory.CreateScope();
+                var dbContext = scope.ServiceProvider.GetRequiredService<WorldRankGuesserContext>();
+                await dbContext.AddRangeAsync(rankings, stoppingToken);
+                await dbContext.SaveChangesAsync(stoppingToken);
+                _logger.LogInformation("{Count} {Sport} rows inserted to {Table}", rankings.Count, sport, nameof(SportsRanking));
+                Interlocked.Add(ref count, rankings.Count);
+            }
+            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+            {
+                throw;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Updating {Sport} failed; other sports are unaffected", sport);
+            }
         }
 
         private async Task UpdateAllWorldRanks(CancellationToken stoppingToken)

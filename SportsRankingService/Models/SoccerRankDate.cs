@@ -12,7 +12,10 @@ namespace SportsRankingService.Models
         //[JsonProperty("id")]
         public string id { get; set; }
 
-        //[JsonProperty("text")]
-        public string text { get; set; }
+        public string iso { get; set; }
+
+        //[JsonProperty(s)]
+        public string dateText { get; set; }
+
     }
 }

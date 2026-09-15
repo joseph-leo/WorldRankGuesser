@@ -14,10 +14,10 @@ namespace SportsRankingService.Factories
 
         public IParser Create(WorldSports sport)
         {
-            var set = _factory();
+            var parsers = _factory();
 
             string sportName = sport.ToString();
-            IParser service = set.First(x => x.GetType().Name.Contains(sportName));
+            IParser service = parsers.First(x => x.GetType().Name.Contains(sportName));
 
             return service;
         }

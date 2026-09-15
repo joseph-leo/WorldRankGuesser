@@ -1,9 +1,7 @@
-﻿using HtmlAgilityPack;
+using HtmlAgilityPack;
 using Newtonsoft.Json.Linq;
 using SportsRankingService.Models;
 using SportsRankingService.Utilities;
-using System.Linq;
-using System.Reflection;
 
 namespace SportsRankingService.Parsers
 {
@@ -35,7 +33,7 @@ namespace SportsRankingService.Parsers
                     string countryCode = team["team_short_code"].NotNullOrEmpty().Value<string>().NotNullOrEmpty();
                     short position = team["rank"].NotNullOrEmpty().Value<short>();
 
-                    string ISO3 = countryCode.IOCToISO3();
+                    string ISO3 = countryCode.Trim().IOCToISO3();
 
                     SportsRanking sportsRanking = new(rankingItem.Gender, rankingItem.Event, rankingItem.Sport, position, ISO3);
 
@@ -49,24 +47,31 @@ namespace SportsRankingService.Parsers
                 _logger.LogError(ex, "{Message}", rankingItem.Sport);
                 return [];
             }
-
         }
 
         private List<SportsRanking> ParseIceHockey(string response, string sport)
         {
-            List<SportsRanking> rankings = [];
+            try
+            {
+                List<SportsRanking> rankings = [];
 
-            HtmlDocument htmlDocument = new();
-            htmlDocument.LoadHtml(response);
-            var tables = htmlDocument.DocumentNode.SelectNodes("//table");
+                HtmlDocument htmlDocument = new();
+                htmlDocument.LoadHtml(response);
+                HtmlNodeCollection tables = htmlDocument.DocumentNode.SelectNodes("//table").NotNullOrEmpty();
 
-            HtmlNode mensTable = tables[0];
-            rankings.AddRange(ParseIceHockeyTable(mensTable, sport, "Men"));
+                HtmlNode mensTable = tables[0];
+                rankings.AddRange(ParseIceHockeyTable(mensTable, sport, "Men"));
 
-            HtmlNode womensTable = tables[1];
-            rankings.AddRange(ParseIceHockeyTable(womensTable, sport, "Women"));
+                HtmlNode womensTable = tables[1];
+                rankings.AddRange(ParseIceHockeyTable(womensTable, sport, "Women"));
 
-            return rankings;
+                return rankings;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "{Message}", sport);
+                return [];
+            }
         }
 
         private List<SportsRanking> ParseIceHockeyTable(HtmlNode table, string sport, string gender)
@@ -80,12 +85,12 @@ namespace SportsRankingService.Parsers
                 foreach (var row in rows)
                 {
                     List<string> cells = row.SelectNodes("td").NotNullOrEmpty().Select(x => x.InnerText.Trim()).ToList();
-                    string countryCode = row.SelectSingleNode("td/a/span[@class=\"show-small\"]").InnerText;
+                    string countryCode = row.SelectSingleNode("td/a/span[@class=\"show-small\"]").NotNullOrEmpty().InnerText;
 
                     short position = short.Parse(cells[0]);
                     string ISO3 = countryCode.Trim().IOCToISO3();
 
-                    SportsRanking sportsRanking = new(sport, null, sport, position, ISO3);
+                    SportsRanking sportsRanking = new(gender, null, sport, position, ISO3);
 
                     rankings.Add(sportsRanking);
                 }

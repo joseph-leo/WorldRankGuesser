@@ -11,7 +11,7 @@ namespace SportsRankingService.Services
     public interface IScrapeService
     {
         public Task<IEnumerable<IRanking>> GetSportRanksAsync(WorldSports sport);
-        public Task<string> CallUrlAsync(string url);
+        public Task<string?> CallUrlAsync(string url);
 
     }
 }

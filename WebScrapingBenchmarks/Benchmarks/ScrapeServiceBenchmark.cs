@@ -23,20 +23,22 @@ namespace SportsRankingService.Benchmark
             var rugbyLogger = new LoggerFactory().CreateLogger<RugbyParser>();
             var cricketLogger = new LoggerFactory().CreateLogger<CricketParser>();
             var tennisLogger = new LoggerFactory().CreateLogger<TennisParser>();
+            var soccerLogger = new LoggerFactory().CreateLogger<SoccerParser>();
 
             IEnumerable<IParser> parsers = new List<IParser>()
             {
                 new RugbyParser(rugbyLogger),
                 new CricketParser(cricketLogger),
-                new TennisParser(tennisLogger)
+                new TennisParser(tennisLogger),
+                new SoccerParser(soccerLogger)
             };
 
             IParserFactory parserFactory = new ParserFactory(() => parsers);
 
-            IEnumerable<IScrapeService> scrapeServices = new List<IScrapeService>()
-            {
+            IEnumerable<IScrapeService> scrapeServices =
+            [
                 new WorldRankService(logger, parserFactory)
-            };
+            ];
             _scrapeServiceFactory = new ScrapeServiceFactory(() => scrapeServices);
         }
 
@@ -44,7 +46,7 @@ namespace SportsRankingService.Benchmark
         public async Task GetSportRanksAsyncBenchmark()
         {
             IScrapeService rankService = _scrapeServiceFactory.Create(Enums.RankingType.World);
-            await rankService.GetSportRanksAsync(Enums.WorldSports.Rugby);
+            await rankService.GetSportRanksAsync(Enums.WorldSports.Soccer);
         }
     }
 }
