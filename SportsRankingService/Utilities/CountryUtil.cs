@@ -17,8 +17,8 @@ namespace SportsRankingService.Utilities
 
         public static List<RegionInfo> GetCountries() => Regions.Value;
 
-        public static string? GetCountryName(string ISO3) =>
-            Regions.Value.FirstOrDefault(x => x.ThreeLetterISORegionName == ISO3)?.EnglishName;
+        public static string? GetCountryName(string iso3) =>
+            Regions.Value.FirstOrDefault(x => x.ThreeLetterISORegionName == iso3)?.EnglishName;
 
         /// <summary>Resolves a country name, slug ("cote-divoire") or alias ("usa", "England") to ISO3.</summary>
         public static bool TryGetISO3FromCountry(string? countryName, out string? iso3)
@@ -40,8 +40,8 @@ namespace SportsRankingService.Utilities
                 ? iso3!
                 : throw new ArgumentException($"No ISO3 mapping for country name '{countryName}'", nameof(countryName));
 
-        public static string IOCToISO3(this string IOC) =>
-            IocToIso3.TryGetValue(IOC, out string? value) ? value : IOC;
+        public static string IOCToISO3(this string ioc) =>
+            IocToIso3.GetValueOrDefault(ioc, ioc);
 
         private static List<RegionInfo> LoadRegions()
         {
