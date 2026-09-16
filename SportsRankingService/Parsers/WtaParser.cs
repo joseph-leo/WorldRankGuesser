@@ -1,0 +1,16 @@
+using SportsRankingService.Parsing;
+using SportsRankingService.Utilities;
+
+namespace SportsRankingService.Parsers;
+
+/// <summary>WTA players API (used for women's doubles). The response is a top-level array.</summary>
+public sealed class WtaParser : JsonRankingParser<List<WtaParser.Entry>>
+{
+    public override string SourceName => "Wta";
+
+    public sealed record Entry(short Ranking, Player Player);
+    public sealed record Player(string CountryCode, string? FullName);
+
+    protected override IEnumerable<RankEntry> Map(List<Entry> root) =>
+        root.Select(e => new RankEntry(e.Ranking, e.Player.CountryCode.Trim().IOCToISO3(), e.Player.FullName));
+}

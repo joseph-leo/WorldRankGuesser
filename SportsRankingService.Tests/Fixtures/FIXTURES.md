@@ -36,3 +36,5 @@ Replacement sources found on 2026-09-15 (endpoints located by the project owner 
 | Svns_Standings_Men.json / _Women.json | https://api.wr-rims-prod.pulselive.com/rugby/v3/series/{id}/standings | `entries[].{position, team.abbreviation}`; `team.countryCode` is null |
 
 Still not capturable: IIHF world ranking (403) and the ATP doubles page (Cloudflare challenge, 403 even with `?rankRange=0-5000`).
+
+BWF caveat: the fixtures above were captured with curl. The same URL returns 403 to .NET `HttpClient`, whether through `SocketsHttpHandler` or `WinHttpHandler`, with any header set tried, so the live feed is disabled in serviceconfig.json even though the parser passes its tests.

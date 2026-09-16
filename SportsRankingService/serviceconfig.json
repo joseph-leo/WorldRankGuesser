@@ -1,230 +1,89 @@
-﻿{
-  "Badminton": [
-    {
-      "Gender": "Men",
-      "Event": "Singles",
-      "Sport": "Badminton",
-      "Url": "https://www.bwfshuttleapi.com/rankings/api/MS/150"
-    },
-    {
-      "Gender": "Women",
-      "Event": "Singles",
-      "Sport": "Badminton",
-      "Url": "https://www.bwfshuttleapi.com/rankings/api/WS/150"
-    },
-    {
-      "Gender": "Men",
-      "Event": "Doubles",
-      "Sport": "Badminton",
-      "Url": "https://www.bwfshuttleapi.com/rankings/api/MD/150"
-    },
-    {
-      "Gender": "Women",
-      "Event": "Doubles",
-      "Sport": "Badminton",
-      "Url": "https://www.bwfshuttleapi.com/rankings/api/WD/150"
-    },
-    {
-      "Gender": "Mixed",
-      "Event": "Doubles",
-      "Sport": "Badminton",
-      "Url": "https://www.bwfshuttleapi.com/rankings/api/XD/150"
-    }
-  ],
-  "Baseball": [
-    {
-      "Gender": "Men",
-      "Sport": "Baseball",
-      "Url": "https://rankings.wbsc.org/list/baseball/men"
-    },
-    {
-      "Gender": "Women",
-      "Sport": "Baseball",
-      "Url": "https://rankings.wbsc.org/list/baseball/women"
-    },
-    {
-      "Gender": "Men",
-      "Sport": "Softball",
-      "Url": "https://rankings.wbsc.org/list/softball/men"
-    },
-    {
-      "Gender": "Women",
-      "Sport": "Softball",
-      "Url": "https://rankings.wbsc.org/list/softball/women"
-    }
-  ],
-  "Basketball": [
-    {
-      "Gender": "Women",
-      "Sport": "Basketball",
-      "Url": "https://www.fiba.basketball/rankingwomen"
-    },
-    {
-      "Gender": "Men",
-      "Sport": "Basketball",
-      "Url": "https://www.fiba.basketball/rankingmen"
-    }
-  ],
-  "Cricket": [
-    {
-      "Gender": "Men",
-      "Event": "Test",
-      "Sport": "Cricket",
-      "Url": "https://assets-icc.sportz.io/cricket/v1/ranking?client_id=tPZJbRgIub3Vua93%2FDWtyQ%3D%3D&comp_type=test&feed_format=json&lang=en&type=team"
-    },
-    {
-      "Gender": "Men",
-      "Event": "T20I",
-      "Sport": "Cricket",
-      "Url": "https://assets-icc.sportz.io/cricket/v1/ranking?client_id=tPZJbRgIub3Vua93%2FDWtyQ%3D%3D&comp_type=t20&feed_format=json&lang=en&type=team"
-    },
-    {
-      "Gender": "Women",
-      "Event": "T20I",
-      "Sport": "Cricket",
-      "Url": "https://assets-icc.sportz.io/cricket/v1/ranking?client_id=tPZJbRgIub3Vua93%2FDWtyQ%3D%3D&comp_type=t20w&feed_format=json&lang=en&type=team"
-    },
-    {
-      "Gender": "Men",
-      "Event": "ODI",
-      "Sport": "Cricket",
-      "Url": "https://assets-icc.sportz.io/cricket/v1/ranking?client_id=tPZJbRgIub3Vua93%2FDWtyQ%3D%3D&comp_type=odi&feed_format=json&lang=en&type=team"
-    },
-    {
-      "Gender": "Women",
-      "Event": "ODI",
-      "Sport": "Cricket",
-      "Url": "https://assets-icc.sportz.io/cricket/v1/ranking?client_id=tPZJbRgIub3Vua93%2FDWtyQ%3D%3D&comp_type=odiw&feed_format=json&lang=en&type=team"
-    }
-  ],
-  "Gymnastics": [
-    {
-      "Gender": "Men",
-      "Sport": "Artistic Gymnastics",
-      "Url": "https://www.gymnastics.sport/site/rankings/ranking_mag_table.php"
-    },
-    {
-      "Gender": "Women",
-      "Sport": "Artistic Gymnastics",
-      "Url": "https://www.gymnastics.sport/site/rankings/ranking_wag_table.php"
-    },
-    {
-      "Gender": "Women",
-      "Sport": "Rythmic Gymnastics",
-      "Url": "https://www.gymnastics.sport/site/rankings/ranking_rg_table.php"
-    }
-  ],
-  "Hockey": [
-    {
-      "Gender": "Men",
-      "Event": "Indoor",
-      "Sport": "Field Hockey",
-      "Url": "https://www.fih.hockey/datafeeds/static/json/en/indoorranking/indoorranking_m.json"
-    },
-    {
-      "Gender": "Women",
-      "Event": "Indoor",
-      "Sport": "Field Hockey",
-      "Url": "https://www.fih.hockey/datafeeds/static/json/en/indoorranking/indoorranking_f.json"
-    },
-    {
-      "Gender": "Men",
-      "Event": "Outdoor",
-      "Sport": "Field Hockey",
-      "Url": "https://www.fih.hockey/datafeeds/static/json/en/OutdoorRanking/outdoorranking_m.json"
-    },
-    {
-      "Gender": "Women",
-      "Event": "Outdoor",
-      "Sport": "Field Hockey",
-      "Url": "https://www.fih.hockey/datafeeds/static/json/en/OutdoorRanking/outdoorranking_f.json"
-    },
-    {
-      "Gender": "Both",
-      "Sport": "Ice Hockey",
-      "Url": "https://www.iihf.com/en/worldranking"
-    }
-  ],
-  "Rugby": [
-    {
-      "Gender": "Men",
-      "Event": "Union",
-      "Sport": "Rugby",
-      "Url": "https://api.wr-rims-prod.pulselive.com/rugby/v3/rankings/mru?language=en"
-    },
-    {
-      "Gender": "Women",
-      "Event": "Union",
-      "Sport": "Rugby",
-      "Url": "https://api.wr-rims-prod.pulselive.com/rugby/v3/rankings/wru?language=en"
-    },
-    {
-      "Gender": "Both",
-      "Event": "Sevens",
-      "Sport": "Rugby",
-      "Url": "https://www.svns.com/en/standings"
-    }
-  ],
-  "Soccer": [
-    {
-      "Gender": "Men",
-      "Sport": "Soccer/Football",
-      "Url": "https://inside.fifa.com/api/ranking-overview?locale=en&dateId={0}"
-    },
-    {
-      "Gender": "Women",
-      "Sport": "Soccer/Football",
-      "Url": "https://inside.fifa.com/api/ranking-overview?locale=en&dateId={0}"
-    }
-  ],
-  "Tennis": [
-    {
-      "Gender": "Men",
-      "Event": "Singles",
-      "Sport": "Tennis",
-      "Url": "https://site.web.api.espn.com/apis/site/v2/sports/tennis/atp/rankings?region=us&lang=en"
-    },
-    {
-      "Gender": "Women",
-      "Event": "Singles",
-      "Sport": "Tennis",
-      "Url": "https://site.web.api.espn.com/apis/site/v2/sports/tennis/wta/rankings?region=us&lang=en"
-    },
-    {
-      "Gender": "Men",
-      "Event": "Doubles",
-      "Sport": "Tennis",
-      "Url": "https://www.atptour.com/en/rankings/doubles"
-    },
-    {
-      "Gender": "Women",
-      "Event": "Doubles",
-      "Sport": "Tennis",
-      "Url": "https://api.wtatennis.com/tennis/players/ranked?page=0&pageSize=100&type=rankDoubles&sort=asc&name=&metric=DOUBLES"
-    }
-  ],
-  "Volleyball": [
-    {
-      "Gender": "Men",
-      "Sport": "Volleyball",
-      "Url": "https://en.volleyballworld.com/api/v1/worldranking/volleyball/1/0/100"
-    },
-    {
-      "Gender": "Women",
-      "Sport": "Volleyball",
-      "Url": "https://en.volleyballworld.com/api/v1/worldranking/volleyball/0/0/100"
-    },
-    {
-      "Gender": "Men",
-      "Event": "Beach",
-      "Sport": "Volleyball",
-      "Url": "https://en.volleyballworld.com/api/v1/worldranking/beachvolleyball/0/0/100"
-    },
-    {
-      "Gender": "Women",
-      "Event": "Beach",
-      "Sport": "Volleyball",
-      "Url": "https://en.volleyballworld.com/api/v1/worldranking/beachvolleyball/1/0/100"
-    }
+{
+  "Rankings": [
+    { "Sport": "Badminton", "Event": "Singles", "Gender": "Men", "Source": "Bwf", "Enabled": false,
+      "Note": "Cloudflare returns 403 to .NET HttpClient (SslStream and WinHTTP) while curl with the same User-Agent passes (2026-09-15). Parser and fixtures are ready.",
+      "Url": "https://extranet-lv.bwfbadminton.com/api/vue-rankingtable?rankId=2&catId=6&publicationId=0&doubles=false&searchKey=&pageKey=150&page=1" },
+    { "Sport": "Badminton", "Event": "Singles", "Gender": "Women", "Source": "Bwf", "Enabled": false,
+      "Note": "Cloudflare returns 403 to .NET HttpClient (SslStream and WinHTTP) while curl with the same User-Agent passes (2026-09-15). Parser and fixtures are ready.",
+      "Url": "https://extranet-lv.bwfbadminton.com/api/vue-rankingtable?rankId=2&catId=7&publicationId=0&doubles=false&searchKey=&pageKey=150&page=1" },
+    { "Sport": "Badminton", "Event": "Doubles", "Gender": "Men", "Source": "Bwf", "Enabled": false,
+      "Note": "Cloudflare returns 403 to .NET HttpClient (SslStream and WinHTTP) while curl with the same User-Agent passes (2026-09-15). Parser and fixtures are ready.",
+      "Url": "https://extranet-lv.bwfbadminton.com/api/vue-rankingtable?rankId=2&catId=8&publicationId=0&doubles=true&searchKey=&pageKey=150&page=1" },
+    { "Sport": "Badminton", "Event": "Doubles", "Gender": "Women", "Source": "Bwf", "Enabled": false,
+      "Note": "Cloudflare returns 403 to .NET HttpClient (SslStream and WinHTTP) while curl with the same User-Agent passes (2026-09-15). Parser and fixtures are ready.",
+      "Url": "https://extranet-lv.bwfbadminton.com/api/vue-rankingtable?rankId=2&catId=9&publicationId=0&doubles=true&searchKey=&pageKey=150&page=1" },
+    { "Sport": "Badminton", "Event": "Doubles", "Gender": "Mixed", "Source": "Bwf", "Enabled": false,
+      "Note": "Cloudflare returns 403 to .NET HttpClient (SslStream and WinHTTP) while curl with the same User-Agent passes (2026-09-15). Parser and fixtures are ready.",
+      "Url": "https://extranet-lv.bwfbadminton.com/api/vue-rankingtable?rankId=2&catId=10&publicationId=0&doubles=true&searchKey=&pageKey=150&page=1" },
+
+    { "Sport": "Baseball", "Gender": "Men", "Source": "Wbsc", "UrlResolver": "WbscReleaseDate",
+      "Url": "https://www.wbsc.org/api/v1/rankings/sport/show?sportId=baseball-m&date={0}&fullView=1&preview=&lang=en" },
+    { "Sport": "Baseball", "Gender": "Women", "Source": "Wbsc", "UrlResolver": "WbscReleaseDate",
+      "Url": "https://www.wbsc.org/api/v1/rankings/sport/show?sportId=baseball-w&date={0}&fullView=1&preview=&lang=en" },
+    { "Sport": "Softball", "Gender": "Men", "Source": "Wbsc", "UrlResolver": "WbscReleaseDate",
+      "Url": "https://www.wbsc.org/api/v1/rankings/sport/show?sportId=softball-m&date={0}&fullView=1&preview=&lang=en" },
+    { "Sport": "Softball", "Gender": "Women", "Source": "Wbsc", "UrlResolver": "WbscReleaseDate",
+      "Url": "https://www.wbsc.org/api/v1/rankings/sport/show?sportId=softball-w&date={0}&fullView=1&preview=&lang=en" },
+    { "Sport": "Baseball5", "Gender": "Mixed", "Source": "Wbsc", "UrlResolver": "WbscReleaseDate",
+      "Url": "https://www.wbsc.org/api/v1/rankings/sport/show?sportId=baseball5-coed&date={0}&fullView=1&preview=&lang=en" },
+
+    { "Sport": "Basketball", "Gender": "Men", "Source": "Fiba", "Url": "https://www.fiba.basketball/en/ranking/men" },
+    { "Sport": "Basketball", "Gender": "Women", "Source": "Fiba", "Url": "https://www.fiba.basketball/en/ranking/women" },
+
+    { "Sport": "Cricket", "Event": "Test", "Gender": "Men", "Source": "Icc",
+      "Url": "https://assets-icc.sportz.io/cricket/v1/ranking?client_id=tPZJbRgIub3Vua93%2FDWtyQ%3D%3D&comp_type=test&feed_format=json&lang=en&type=team" },
+    { "Sport": "Cricket", "Event": "ODI", "Gender": "Men", "Source": "Icc",
+      "Url": "https://assets-icc.sportz.io/cricket/v1/ranking?client_id=tPZJbRgIub3Vua93%2FDWtyQ%3D%3D&comp_type=odi&feed_format=json&lang=en&type=team" },
+    { "Sport": "Cricket", "Event": "ODI", "Gender": "Women", "Source": "Icc",
+      "Url": "https://assets-icc.sportz.io/cricket/v1/ranking?client_id=tPZJbRgIub3Vua93%2FDWtyQ%3D%3D&comp_type=odiw&feed_format=json&lang=en&type=team" },
+    { "Sport": "Cricket", "Event": "T20I", "Gender": "Men", "Source": "Icc",
+      "Url": "https://assets-icc.sportz.io/cricket/v1/ranking?client_id=tPZJbRgIub3Vua93%2FDWtyQ%3D%3D&comp_type=t20&feed_format=json&lang=en&type=team" },
+    { "Sport": "Cricket", "Event": "T20I", "Gender": "Women", "Source": "Icc",
+      "Url": "https://assets-icc.sportz.io/cricket/v1/ranking?client_id=tPZJbRgIub3Vua93%2FDWtyQ%3D%3D&comp_type=t20w&feed_format=json&lang=en&type=team" },
+
+    { "Sport": "Field Hockey", "Event": "Outdoor", "Gender": "Men", "Source": "Fih",
+      "Url": "https://www.fih.hockey/datafeeds/static/json/en/OutdoorRanking/outdoorranking_m.json" },
+    { "Sport": "Field Hockey", "Event": "Outdoor", "Gender": "Women", "Source": "Fih",
+      "Url": "https://www.fih.hockey/datafeeds/static/json/en/OutdoorRanking/outdoorranking_f.json" },
+    { "Sport": "Field Hockey", "Event": "Indoor", "Gender": "Men", "Source": "Fih",
+      "Url": "https://www.fih.hockey/datafeeds/static/json/en/indoorranking/indoorranking_m.json" },
+    { "Sport": "Field Hockey", "Event": "Indoor", "Gender": "Women", "Source": "Fih",
+      "Url": "https://www.fih.hockey/datafeeds/static/json/en/indoorranking/indoorranking_f.json" },
+    { "Sport": "Ice Hockey", "Gender": "Men", "Source": "Iihf", "Enabled": false,
+      "Note": "https://www.iihf.com/en/worldranking returns 403 to scripted clients (2026-09-15). No parser yet; needs a new source.",
+      "Url": "https://www.iihf.com/en/worldranking" },
+
+    { "Sport": "Rugby", "Event": "Union", "Gender": "Men", "Source": "WorldRugby",
+      "Url": "https://api.wr-rims-prod.pulselive.com/rugby/v3/rankings/mru?language=en" },
+    { "Sport": "Rugby", "Event": "Union", "Gender": "Women", "Source": "WorldRugby",
+      "Url": "https://api.wr-rims-prod.pulselive.com/rugby/v3/rankings/wru?language=en" },
+    { "Sport": "Rugby", "Event": "Sevens", "Gender": "Men", "Source": "Svns", "UrlResolver": "SvnsSeries",
+      "Url": "https://api.wr-rims-prod.pulselive.com/rugby/v3/series/{0}/standings" },
+    { "Sport": "Rugby", "Event": "Sevens", "Gender": "Women", "Source": "Svns", "UrlResolver": "SvnsSeries",
+      "Url": "https://api.wr-rims-prod.pulselive.com/rugby/v3/series/{0}/standings" },
+
+    { "Sport": "Soccer/Football", "Gender": "Men", "Source": "FifaV3", "UrlResolver": "FifaDateId",
+      "Url": "https://api.fifa.com/api/v3/fifarankings/rankings/rankingsbyschedule?rankingScheduleId={0}&language=en" },
+    { "Sport": "Soccer/Football", "Gender": "Women", "Source": "FifaV3", "UrlResolver": "FifaDateId",
+      "Url": "https://api.fifa.com/api/v3/fifarankings/rankings/rankingsbyschedule?rankingScheduleId={0}&language=en" },
+
+    { "Sport": "Tennis", "Event": "Singles", "Gender": "Men", "Source": "EspnTennis",
+      "Url": "https://site.web.api.espn.com/apis/site/v2/sports/tennis/atp/rankings?region=us&lang=en" },
+    { "Sport": "Tennis", "Event": "Singles", "Gender": "Women", "Source": "EspnTennis",
+      "Url": "https://site.web.api.espn.com/apis/site/v2/sports/tennis/wta/rankings?region=us&lang=en" },
+    { "Sport": "Tennis", "Event": "Doubles", "Gender": "Men", "Source": "AtpDoubles", "Enabled": false,
+      "Note": "https://www.atptour.com/en/rankings/doubles sits behind a Cloudflare challenge (2026-09-15). No parser yet; needs a new source.",
+      "Url": "https://www.atptour.com/en/rankings/doubles?rankRange=0-5000" },
+    { "Sport": "Tennis", "Event": "Doubles", "Gender": "Women", "Source": "Wta",
+      "Url": "https://api.wtatennis.com/tennis/players/ranked?page=0&pageSize=100&type=rankDoubles&sort=asc&name=&metric=DOUBLES" },
+
+    { "Sport": "Volleyball", "Gender": "Men", "Source": "VolleyballWorld",
+      "Url": "https://en.volleyballworld.com/api/v1/worldranking/volleyball/1/0/100" },
+    { "Sport": "Volleyball", "Gender": "Women", "Source": "VolleyballWorld",
+      "Url": "https://en.volleyballworld.com/api/v1/worldranking/volleyball/0/0/100" },
+    { "Sport": "Volleyball", "Event": "Beach", "Gender": "Men", "Source": "VolleyballWorld",
+      "Url": "https://en.volleyballworld.com/api/v1/worldranking/beachvolleyball/0/0/100" },
+    { "Sport": "Volleyball", "Event": "Beach", "Gender": "Women", "Source": "VolleyballWorld",
+      "Url": "https://en.volleyballworld.com/api/v1/worldranking/beachvolleyball/1/0/100" }
   ]
 }
