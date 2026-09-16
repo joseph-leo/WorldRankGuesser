@@ -4,7 +4,8 @@ namespace SportsRankingService.Parsing;
 
 /// <summary>
 /// Base for feeds that return JSON. Subclasses declare a small DTO type holding only the
-/// properties they need (unknown JSON properties are ignored) and map it to entries.
+/// properties they need (unknown JSON properties are ignored), map it to entries, and may
+/// override <see cref="GetRankingDate"/> when the feed publishes a ranking date.
 /// </summary>
 public abstract class JsonRankingParser<TRoot> : IRankingParser
 {
@@ -15,7 +16,10 @@ public abstract class JsonRankingParser<TRoot> : IRankingParser
 
     protected abstract IEnumerable<RankEntry> Map(TRoot root);
 
-    public IReadOnlyList<RankEntry> Parse(string response)
+    /// <summary>The federation's ranking date, or null when the feed has none. Throw <see cref="ParseException"/> for an unreadable value.</summary>
+    protected virtual DateOnly? GetRankingDate(TRoot root) => null;
+
+    public ParsedRanking Parse(string response)
     {
         TRoot root;
         try
@@ -28,6 +32,6 @@ public abstract class JsonRankingParser<TRoot> : IRankingParser
             throw new ParseException(SourceName, "response is not the expected JSON shape", ex);
         }
 
-        return Map(root).ToList();
+        return new ParsedRanking(Map(root).ToList(), GetRankingDate(root));
     }
 }

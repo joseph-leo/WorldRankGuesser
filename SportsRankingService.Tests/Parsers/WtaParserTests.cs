@@ -9,7 +9,7 @@ public class WtaParserTests
     [Fact]
     public void Parses_the_doubles_ranking()
     {
-        var rows = _parser.Parse(Fixture.Read("Wta_Doubles.json"));
+        var rows = _parser.Parse(Fixture.Read("Wta_Doubles.json")).Entries;
 
         Assert.Equal(100, rows.Count);
         Assert.Equal("CZE", rows.Single(r => r.Position == 1).ISO3);

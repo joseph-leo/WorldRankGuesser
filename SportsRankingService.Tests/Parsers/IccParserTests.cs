@@ -9,7 +9,7 @@ public class IccParserTests
     [Fact]
     public void Test_rankings_parse_every_team()
     {
-        var rows = _parser.Parse(Fixture.Read("Icc_Test_Men.json"));
+        var rows = _parser.Parse(Fixture.Read("Icc_Test_Men.json")).Entries;
 
         Assert.Equal(10, rows.Count);
         Assert.Equal("AUS", rows.Single(r => r.Position == 1).ISO3);
@@ -19,7 +19,7 @@ public class IccParserTests
     [Fact]
     public void Two_letter_team_codes_map_to_ISO3()
     {
-        var codes = _parser.Parse(Fixture.Read("Icc_Test_Men.json")).Select(r => r.ISO3).ToList();
+        var codes = _parser.Parse(Fixture.Read("Icc_Test_Men.json")).Entries.Select(r => r.ISO3).ToList();
 
         Assert.Contains("ZAF", codes);   // SA
         Assert.Contains("NZL", codes);   // NZ
@@ -32,7 +32,7 @@ public class IccParserTests
     [Fact]
     public void West_Indies_has_no_ISO3_and_is_kept_as_WI()
     {
-        var codes = _parser.Parse(Fixture.Read("Icc_Test_Men.json")).Select(r => r.ISO3).ToList();
+        var codes = _parser.Parse(Fixture.Read("Icc_Test_Men.json")).Entries.Select(r => r.ISO3).ToList();
 
         Assert.Contains("WI", codes);
     }
@@ -40,7 +40,7 @@ public class IccParserTests
     [Fact]
     public void Womens_team_codes_drop_the_W_suffix()
     {
-        var rows = _parser.Parse(Fixture.Read("Icc_T20_Women.json"));
+        var rows = _parser.Parse(Fixture.Read("Icc_T20_Women.json")).Entries;
 
         Assert.Equal(80, rows.Count);
         Assert.Equal("AUS", rows.First(r => r.Position == 1).ISO3);

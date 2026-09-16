@@ -9,7 +9,7 @@ public class WorldRugbyParserTests
     [Fact]
     public void Parses_every_ranked_team()
     {
-        var rows = _parser.Parse(Fixture.Read("WorldRugby_Union_Men.json"));
+        var rows = _parser.Parse(Fixture.Read("WorldRugby_Union_Men.json")).Entries;
 
         Assert.Equal(114, rows.Count);
         Assert.Equal("ZAF", rows.Single(r => r.Position == 1).ISO3);

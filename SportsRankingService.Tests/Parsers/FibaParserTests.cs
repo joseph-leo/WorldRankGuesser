@@ -14,7 +14,7 @@ public class FibaParserTests
     [Fact]
     public void Parses_country_from_the_team_link_slug()
     {
-        var rows = _parser.Parse(Fixture.Read("Fiba_Ranking_Men.html"));
+        var rows = _parser.Parse(Fixture.Read("Fiba_Ranking_Men.html")).Entries;
 
         Assert.Equal("USA", rows.First(r => r.Position == 1).ISO3);
         Assert.Equal("DEU", rows.First(r => r.Position == 2).ISO3);
@@ -24,7 +24,7 @@ public class FibaParserTests
     [Fact]
     public void Every_row_has_a_three_letter_code_and_a_positive_position()
     {
-        var rows = _parser.Parse(Fixture.Read("Fiba_Ranking_Men.html"));
+        var rows = _parser.Parse(Fixture.Read("Fiba_Ranking_Men.html")).Entries;
 
         Assert.True(rows.Count >= 150, $"expected the full ranking, got {rows.Count} rows");
         Assert.All(rows, r =>

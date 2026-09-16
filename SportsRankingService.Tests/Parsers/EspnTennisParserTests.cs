@@ -9,7 +9,7 @@ public class EspnTennisParserTests
     [Fact]
     public void Parses_the_singles_ranking()
     {
-        var rows = _parser.Parse(Fixture.Read("Espn_Atp_Singles.json"));
+        var rows = _parser.Parse(Fixture.Read("Espn_Atp_Singles.json")).Entries;
 
         Assert.Equal(150, rows.Count);
         Assert.Equal("ITA", rows.Single(r => r.Position == 1).ISO3);

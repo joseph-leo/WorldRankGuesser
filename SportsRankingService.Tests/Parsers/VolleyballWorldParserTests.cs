@@ -9,7 +9,7 @@ public class VolleyballWorldParserTests
     [Fact]
     public void Parses_every_ranked_team()
     {
-        var rows = _parser.Parse(Fixture.Read("VolleyballWorld_Men.json"));
+        var rows = _parser.Parse(Fixture.Read("VolleyballWorld_Men.json")).Entries;
 
         Assert.Equal(100, rows.Count);
         Assert.Equal("POL", rows.Single(r => r.Position == 1).ISO3);
