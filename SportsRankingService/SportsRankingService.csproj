@@ -1,6 +1,7 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Worker">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <OutputType>Exe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -8,8 +9,16 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- Loaded from AppContext.BaseDirectory at startup, so it must sit next to the binaries. -->
-    <None Update="serviceconfig.json" CopyToOutputDirectory="PreserveNewest" />
+    <!-- The Worker SDK used to add these global usings; the generic host is still the DI/config/logging container. -->
+    <Using Include="Microsoft.Extensions.Configuration" />
+    <Using Include="Microsoft.Extensions.DependencyInjection" />
+    <Using Include="Microsoft.Extensions.Hosting" />
+    <Using Include="Microsoft.Extensions.Logging" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Loaded from the content root (AppContext.BaseDirectory) at startup, so they must sit next to the binaries. -->
+    <None Update="appsettings.json;appsettings.Development.json;serviceconfig.json" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>
