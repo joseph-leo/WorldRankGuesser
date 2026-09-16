@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Time.Testing;
 using SportsRankingService.Models;
 using SportsRankingService.Parsers;
 using SportsRankingService.Parsing;
@@ -8,10 +9,12 @@ using SportsRankingService.Services.UrlResolvers;
 namespace SportsRankingService.Tests.Services;
 
 /// <summary>
-/// End-to-end for one configured item without the network: resolve the URL, fetch, parse, stamp.
+/// End-to-end for one configured item without the network: resolve the URL, fetch, parse, stamp, date.
 /// </summary>
 public class RankingSourceRunnerTests
 {
+    private static readonly DateTimeOffset Now = new(2026, 9, 15, 12, 0, 0, TimeSpan.Zero);
+
     private sealed class FakeFetcher(Dictionary<string, string> pages) : IHttpFetcher
     {
         public List<string> Requested { get; } = [];
@@ -27,6 +30,7 @@ public class RankingSourceRunnerTests
         new(fetcher,
             [new FihParser(), new FifaV3Parser()],
             [new IdentityUrlResolver(), new FifaDateIdResolver(fetcher)],
+            new FakeTimeProvider(Now),
             NullLogger<RankingSourceRunner>.Instance);
 
     [Fact]
@@ -35,15 +39,31 @@ public class RankingSourceRunnerTests
         var fetcher = new FakeFetcher(new() { ["http://fih/outdoor_m.json"] = Fixture.Read("Fih_Outdoor_Men.json") });
         var item = new RankingItem { Sport = "Field Hockey", Event = "Outdoor", Gender = "Men", Url = "http://fih/outdoor_m.json", Source = "Fih" };
 
-        var rows = await Runner(fetcher).RunAsync(item, CancellationToken.None);
+        RankingSnapshot? snapshot = await Runner(fetcher).RunAsync(item, CancellationToken.None);
 
-        Assert.Equal(104, rows.Count);
-        Assert.All(rows, r => Assert.Equal("Field Hockey", r.Sport));
-        Assert.Equal("DEU", rows.Single(r => r.Position == 1).ISO3);
+        Assert.NotNull(snapshot);
+        Assert.Equal("Field Hockey", snapshot.Sport);
+        Assert.Equal("Outdoor", snapshot.Event);
+        Assert.Equal("Men", snapshot.Gender);
+        Assert.Equal(104, snapshot.Entries.Count);
+        Assert.Equal("DEU", snapshot.Entries.Single(e => e.Position == 1).ISO3);
     }
 
     [Fact]
-    public async Task Resolver_runs_its_preliminary_request_before_the_ranking_request()
+    public async Task A_dateless_feed_gets_todays_date_flagged_as_not_the_federations()
+    {
+        var fetcher = new FakeFetcher(new() { ["http://fih/outdoor_m.json"] = Fixture.Read("Fih_Outdoor_Men.json") });
+        var item = new RankingItem { Sport = "Field Hockey", Event = "Outdoor", Gender = "Men", Url = "http://fih/outdoor_m.json", Source = "Fih" };
+
+        RankingSnapshot? snapshot = await Runner(fetcher).RunAsync(item, CancellationToken.None);
+
+        Assert.NotNull(snapshot);
+        Assert.Equal(new DateOnly(2026, 9, 15), snapshot.RankingDate);
+        Assert.False(snapshot.IsFederationDate);
+    }
+
+    [Fact]
+    public async Task Resolver_runs_its_preliminary_request_and_supplies_the_ranking_date()
     {
         var fetcher = new FakeFetcher(new()
         {
@@ -52,21 +72,24 @@ public class RankingSourceRunnerTests
         });
         var item = new RankingItem { Sport = "Soccer", Gender = "Men", Url = "http://fifa/api?id={0}", Source = "FifaV3", UrlResolver = "FifaDateId" };
 
-        var rows = await Runner(fetcher).RunAsync(item, CancellationToken.None);
+        RankingSnapshot? snapshot = await Runner(fetcher).RunAsync(item, CancellationToken.None);
 
-        Assert.Equal(211, rows.Count);
+        Assert.NotNull(snapshot);
+        Assert.Equal(211, snapshot.Entries.Count);
+        Assert.Equal(new DateOnly(2026, 7, 20), snapshot.RankingDate);
+        Assert.True(snapshot.IsFederationDate);
         Assert.Equal(["https://inside.fifa.com/fifa-rankings/world-ranking/men", "http://fifa/api?id=FRS_Male_Football_20260611"], fetcher.Requested);
     }
 
     [Fact]
-    public async Task Failed_fetch_yields_no_rows_and_does_not_throw()
+    public async Task Failed_fetch_yields_null_and_does_not_throw()
     {
         var fetcher = new FakeFetcher([]);
         var item = new RankingItem { Sport = "Field Hockey", Gender = "Men", Url = "http://down", Source = "Fih" };
 
-        var rows = await Runner(fetcher).RunAsync(item, CancellationToken.None);
+        RankingSnapshot? snapshot = await Runner(fetcher).RunAsync(item, CancellationToken.None);
 
-        Assert.Empty(rows);
+        Assert.Null(snapshot);
     }
 
     [Fact]

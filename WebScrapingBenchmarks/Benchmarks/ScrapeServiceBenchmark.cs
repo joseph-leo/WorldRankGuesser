@@ -38,7 +38,7 @@ namespace SportsRankingService.Benchmark
             int rows = 0;
             foreach (RankingItem item in _items)
             {
-                rows += (await _runner.RunAsync(item, CancellationToken.None)).Count;
+                rows += (await _runner.RunAsync(item, CancellationToken.None))?.Entries.Count ?? 0;
             }
 
             return rows;
