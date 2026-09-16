@@ -19,7 +19,7 @@ IHost host = Host.CreateDefaultBuilder(args)
         services.Configure<RankingSourcesOptions>(configuration);
 
         services.AddDbContext<WorldRankGuesserContext>(
-            options => options.UseSqlServer(configuration.GetConnectionString("WorldRankGuesserConnection") + ";Encrypt=False"));
+            options => options.UseSqlServer(configuration.GetConnectionString("WorldRankGuesserConnection")));
 
         services.AddRankingPipeline();
     })
