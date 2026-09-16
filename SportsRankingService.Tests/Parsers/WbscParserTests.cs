@@ -27,4 +27,10 @@ public class WbscParserTests
         Assert.DoesNotContain("GER", codes);
         Assert.DoesNotContain("NED", codes);
     }
+
+    [Fact]
+    public void Carries_the_release_date_of_the_rows()
+    {
+        Assert.Equal(new DateOnly(2026, 3, 26), _parser.Parse(Fixture.Read("Wbsc_Baseball_Men.json")).RankingDate);
+    }
 }

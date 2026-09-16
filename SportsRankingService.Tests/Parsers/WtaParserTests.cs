@@ -16,4 +16,10 @@ public class WtaParserTests
         Assert.Equal("ROU", rows.Single(r => r.Position == 100).ISO3);
         Assert.All(rows, r => Assert.Matches("^[A-Z]{3}$", r.ISO3));
     }
+
+    [Fact]
+    public void Carries_the_rankedAt_date()
+    {
+        Assert.Equal(new DateOnly(2026, 9, 14), _parser.Parse(Fixture.Read("Wta_Doubles.json")).RankingDate);
+    }
 }

@@ -33,4 +33,10 @@ public class FibaParserTests
             Assert.True(r.Position > 0);
         });
     }
+
+    [Fact]
+    public void Carries_the_selected_ranking_date()
+    {
+        Assert.Equal(new DateOnly(2026, 9, 1), _parser.Parse(Fixture.Read("Fiba_Ranking_Men.html")).RankingDate);
+    }
 }

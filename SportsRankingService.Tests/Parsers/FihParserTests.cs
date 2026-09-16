@@ -24,4 +24,10 @@ public class FihParserTests
         Assert.All(rows, r => Assert.Matches("^[A-Z]{3}$", r.ISO3));
         Assert.DoesNotContain(rows, r => r.ISO3 == "GER");
     }
+
+    [Fact]
+    public void Has_no_federation_ranking_date()
+    {
+        Assert.Null(_parser.Parse(Fixture.Read("Fih_Outdoor_Men.json")).RankingDate);
+    }
 }

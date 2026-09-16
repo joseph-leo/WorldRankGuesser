@@ -16,4 +16,10 @@ public class VolleyballWorldParserTests
         Assert.Equal("BIH", rows.Single(r => r.Position == 100).ISO3);
         Assert.All(rows, r => Assert.Matches("^[A-Z]{3}$", r.ISO3));
     }
+
+    [Fact]
+    public void Has_no_federation_ranking_date()
+    {
+        Assert.Null(_parser.Parse(Fixture.Read("VolleyballWorld_Men.json")).RankingDate);
+    }
 }
