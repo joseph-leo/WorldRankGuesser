@@ -154,11 +154,16 @@ View `CurrentRankings`: for each (`Sport`, `Event`, `Gender`) the release with t
 `IsFederationDate`, `Position`, `ISO3`, `TeamName`. Not mapped in EF; it is the planned
 consumer's read model.
 
-Content hash: `RankingContentHash.Compute(IReadOnlyList<RankEntry>)` returns SHA-256 over the
-UTF-8 text `"{Position}\t{ISO3}\t{TeamName}\n"` per entry in order (`TeamName` empty when null).
-Only the rows participate, not the date, so a feed that only re-stamps its date does not create
-a release. (If a federation republishes identical standings under a new date, the stored
-`RankingDate` stays the older one; accepted.)
+Content hash: `RankingContentHash.Compute(RankingSnapshot)` returns SHA-256 over UTF-8 text made
+of a header line followed by one line per entry in order:
+
+- header: `"{RankingDate:yyyy-MM-dd}\n"` when `IsFederationDate` is true, otherwise `"\n"`;
+- entry: `"{Position}\t{ISO3}\t{TeamName}\n"` (`TeamName` empty when null).
+
+So a federation republishing identical standings under a new date produces a new release
+(history and current rankings both carry the correct date), while a dateless feed re-scraped on
+a later day with the same rows stays `Unchanged`. A feed that gains or loses a federation date
+between runs also produces a new release, which is the honest outcome.
 
 ```csharp
 public enum SaveOutcome { Inserted, Unchanged }
@@ -214,7 +219,9 @@ as today.
 - Repository tests on SQLite in-memory (`Microsoft.EntityFrameworkCore.Sqlite`, `EnsureCreated`):
   first save inserts a release with N rows; identical save returns `Unchanged`, bumps
   `LastSeenAt`, adds nothing; changed content returns `Inserted` and the feed now has two
-  releases; two entries at the same position are both stored; different feeds do not interfere.
+  releases; same rows under a new federation date returns `Inserted`; same rows under a new
+  scrape date returns `Unchanged`; two entries at the same position are both stored; different
+  feeds do not interfere.
   The SQL view is not covered by these tests.
 - One-time verification in the implementing session against the compose container: apply the
   migration, run the app, `SELECT COUNT(*) FROM CurrentRankings`, run again and confirm no new
