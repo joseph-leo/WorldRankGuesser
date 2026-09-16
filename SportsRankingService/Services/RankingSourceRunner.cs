@@ -49,8 +49,8 @@ public sealed class RankingSourceRunner
             return [];
         }
 
-        IReadOnlyList<RankEntry> entries = parser.Parse(response);
-        List<SportsRanking> rows = RankingMapper.ToSportsRankings(entries, item);
+        ParsedRanking parsed = parser.Parse(response);
+        List<SportsRanking> rows = RankingMapper.ToSportsRankings(parsed.Entries, item);
 
         _logger.LogInformation("Parsed {Count} rows for {Item}", rows.Count, Describe(item));
 

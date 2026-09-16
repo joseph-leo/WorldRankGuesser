@@ -15,7 +15,7 @@ public class BwfParserTests
     [Fact]
     public void Singles_yield_one_entry_per_player()
     {
-        var rows = _parser.Parse(Fixture.Read("Bwf_MensSingles.json"));
+        var rows = _parser.Parse(Fixture.Read("Bwf_MensSingles.json")).Entries;
 
         Assert.Equal(100, rows.Count);
         Assert.Equal("IDN", rows.Single(r => r.Position == 1).ISO3);
@@ -26,7 +26,7 @@ public class BwfParserTests
     [Fact]
     public void Doubles_yield_one_entry_per_partner_with_the_pairs_position()
     {
-        var rows = _parser.Parse(Fixture.Read("Bwf_MensDoubles.json"));
+        var rows = _parser.Parse(Fixture.Read("Bwf_MensDoubles.json")).Entries;
 
         Assert.Equal(new[] { "KOR", "KOR" }, rows.Where(r => r.Position == 1).Select(r => r.ISO3));
         Assert.Equal(new[] { "KOR", "MYS" }, rows.Where(r => r.Position == 37).Select(r => r.ISO3).Order());
@@ -37,7 +37,7 @@ public class BwfParserTests
     public void Neutral_athletes_are_dropped()
     {
         // The doubles fixture contains "Athlete Independent Neutral" players; the singles one does not.
-        var rows = _parser.Parse(Fixture.Read("Bwf_MensDoubles.json"));
+        var rows = _parser.Parse(Fixture.Read("Bwf_MensDoubles.json")).Entries;
 
         Assert.InRange(rows.Count, 190, 199);
     }
