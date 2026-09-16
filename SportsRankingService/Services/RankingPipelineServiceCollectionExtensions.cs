@@ -1,4 +1,5 @@
 using System.Net.Http.Headers;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using SportsRankingService.Parsers;
 using SportsRankingService.Parsing;
 using SportsRankingService.Services.UrlResolvers;
@@ -39,6 +40,7 @@ public static class RankingPipelineServiceCollectionExtensions
         services.AddSingleton<IUrlResolver, SvnsSeriesResolver>();
         services.AddSingleton<IUrlResolver, WbscReleaseDateResolver>();
 
+        services.TryAddSingleton(TimeProvider.System);
         services.AddSingleton<RankingSourceRunner>();
         services.AddTransient<IRankingUpdater, RankingUpdater>();
 

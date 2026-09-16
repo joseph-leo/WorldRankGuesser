@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using SportsRankingService;
 using SportsRankingService.Configuration;
-using SportsRankingService.RankingsDb;
+using SportsRankingService.Persistence;
 using SportsRankingService.Services;
 
 IHost host = Host.CreateDefaultBuilder(args)
@@ -18,8 +18,9 @@ IHost host = Host.CreateDefaultBuilder(args)
         services.Configure<WorkerOptions>(configuration.GetSection("Worker"));
         services.Configure<RankingSourcesOptions>(configuration);
 
-        services.AddDbContext<WorldRankGuesserContext>(
+        services.AddDbContext<RankingsDbContext>(
             options => options.UseSqlServer(configuration.GetConnectionString("WorldRankGuesserConnection")));
+        services.AddScoped<IRankingRepository, RankingRepository>();
 
         services.AddRankingPipeline();
     })
