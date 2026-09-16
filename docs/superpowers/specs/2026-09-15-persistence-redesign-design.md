@@ -48,7 +48,7 @@ database (it no longer exists), fetch workarounds for BWF / IIHF / ATP.
 `Program.cs` no longer appends `;Encrypt=False`. The `Worker` section is removed.
 
 Setup from a clean checkout: `docker compose up -d`, `dotnet tool restore`,
-`dotnet ef database update --project SportsRankingService`, `dotnet run --project SportsRankingService`.
+`dotnet ef database update --project SportsRankingService --startup-project SportsRankingService`, `dotnet run --project SportsRankingService`.
 The migration creates the database when it does not exist.
 
 ## 2. EF tooling
@@ -89,8 +89,8 @@ public interface IRankingParser
   `HtmlRankingParser` gets `protected virtual DateOnly? GetRankingDate(HtmlDocument document) => null;`
   Overrides: `Icc` (`rank_date`), `Wta` (`rankedAt` of the first entry), `EspnTennis`
   (`update` on the ranking group), `Wbsc` (row `date`), `Fiba` (first option of the
-  `rankingDatesselect` dropdown), `Bwf` (publication date if the payload has one; otherwise
-  none). FIH and Volleyball World expose only file-generation time, so they return null.
+  `rankingDatesselect` dropdown), `Bwf` (none: the payload carries only a publication id, so it
+  returns null). FIH and Volleyball World expose only file-generation time, so they return null.
 - A date that fails to parse throws `ParseException` naming the value, same policy as country codes.
 
 ```csharp
@@ -104,7 +104,7 @@ public interface IUrlResolver
 }
 ```
 
-- `FifaDateIdResolver` returns the `iso` date of the schedule entry it picked.
+- `FifaDateIdResolver` returns the UTC date of the `iso` timestamp of the schedule entry it picked (the digits in the id, e.g. `FRS_Male_Football_20260611` with iso 2026-07-20, are not the date FIFA displays).
   `WbscReleaseDateResolver` returns the release date it picked. `Identity` and `SvnsSeries` return null.
 
 ```csharp
@@ -139,7 +139,10 @@ Entities (plain classes, configured with `IEntityTypeConfiguration<T>`):
 | `LastSeenAt` | datetimeoffset not null | bumped on every unchanged re-scrape |
 | `Rows` | | navigation to `RankingRow` |
 
-Index `IX_RankingReleases_Feed` on (`Sport`, `Event`, `Gender`, `FirstSeenAt` DESC).
+Index `IX_RankingReleases_Feed` on (`Sport`, `Event`, `Gender`). "Newest release for a feed" is
+the greatest `Id` (identity order is insertion order), never an ordering on `FirstSeenAt`: that
+works on every provider, including the SQLite used by the repository tests, which cannot order
+by `DateTimeOffset`.
 
 | `RankingRow` | SQL | Notes |
 |---|---|---|
@@ -150,7 +153,7 @@ Index `IX_RankingReleases_Feed` on (`Sport`, `Event`, `Gender`, `FirstSeenAt` DE
 | `TeamName` | nvarchar(100) null | |
 
 View `CurrentRankings`: for each (`Sport`, `Event`, `Gender`) the release with the greatest
-`FirstSeenAt`, joined to its rows; columns `Sport`, `Event`, `Gender`, `RankingDate`,
+`Id`, joined to its rows; columns `Sport`, `Event`, `Gender`, `RankingDate`,
 `IsFederationDate`, `Position`, `ISO3`, `TeamName`. Not mapped in EF; it is the planned
 consumer's read model.
 
@@ -176,7 +179,7 @@ public interface IRankingRepository
 
 `RankingRepository(RankingsDbContext db, TimeProvider clock)`:
 
-1. Load the newest release for the snapshot's feed (`OrderByDescending(FirstSeenAt).FirstOrDefault()`), header only.
+1. Load the newest release for the snapshot's feed (`OrderByDescending(Id).FirstOrDefault()`), header only.
 2. Compute the hash. If it equals the newest release's hash: set `LastSeenAt = now`, save, return `Unchanged`.
 3. Otherwise add a `RankingRelease` with `FirstSeenAt = LastSeenAt = now` and one `RankingRow`
    per entry (`Ordinal` = index), save, return `Inserted`.
@@ -212,7 +215,7 @@ as today.
 - Parser tests: `Parse(...).Entries` replaces the bare list; feeds with a date assert
   `RankingDate` (ICC `2026-09-12`, WTA `2026-09-14`, ESPN `2026-09-10`, WBSC `2026-03-26`,
   FIBA `2026-09-01`); FIH and Volleyball World assert null.
-- Resolver tests: FIFA asserts `2026-06-11` from the men's page; WBSC asserts the picked date.
+- Resolver tests: FIFA asserts `2026-07-20` from the men's page; WBSC asserts the picked date.
 - Runner tests: a fixed `TimeProvider` (`FakeTimeProvider` from
   `Microsoft.Extensions.TimeProvider.Testing`) checks the fallback date and
   `IsFederationDate = false` for FIH, and `true` with the FIFA resolver's date.
