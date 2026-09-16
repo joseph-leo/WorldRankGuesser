@@ -47,4 +47,10 @@ public class IccParserTests
         Assert.All(rows, r => Assert.DoesNotContain("-", r.ISO3));
         Assert.Contains("HKG", rows.Select(r => r.ISO3));   // HK-W
     }
+
+    [Fact]
+    public void Carries_the_ICC_rank_date()
+    {
+        Assert.Equal(new DateOnly(2026, 9, 12), _parser.Parse(Fixture.Read("Icc_Test_Men.json")).RankingDate);
+    }
 }

@@ -9,7 +9,7 @@ public sealed class EspnTennisParser : JsonRankingParser<EspnTennisParser.Root>
     public override string SourceName => "EspnTennis";
 
     public sealed record Root(List<Ranking> Rankings);
-    public sealed record Ranking(List<Rank> Ranks);
+    public sealed record Ranking(List<Rank> Ranks, string? Update);
     public sealed record Rank(short Current, Athlete Athlete);
     public sealed record Athlete(string CitizenshipCountry, string? DisplayName);
 
@@ -21,4 +21,7 @@ public sealed class EspnTennisParser : JsonRankingParser<EspnTennisParser.Root>
         return ranking.Ranks.Select(r =>
             new RankEntry(r.Current, r.Athlete.CitizenshipCountry.Trim().ToUpperInvariant().IOCToISO3(), r.Athlete.DisplayName));
     }
+
+    protected override DateOnly? GetRankingDate(Root root) =>
+        root.Rankings.FirstOrDefault()?.Update is string update ? IsoDate.Parse(SourceName, update) : null;
 }

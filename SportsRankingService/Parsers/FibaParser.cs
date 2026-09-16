@@ -41,6 +41,15 @@ public sealed partial class FibaParser : HtmlRankingParser
         return new RankEntry(position, iso3!, link.InnerText.Trim());
     }
 
+    /// <summary>The page's ranking-date dropdown lists releases newest first with the current one selected.</summary>
+    protected override DateOnly? GetRankingDate(HtmlDocument document)
+    {
+        HtmlNode? option = document.DocumentNode.SelectSingleNode("//select[@name='rankingDatesselect']/option[@selected]")
+            ?? document.DocumentNode.SelectSingleNode("//select[@name='rankingDatesselect']/option[1]");
+
+        return option is null ? null : IsoDate.Parse(SourceName, option.GetAttributeValue("value", null));
+    }
+
     [GeneratedRegex(@"/teams/\d+-([a-z0-9-]+)")]
     private static partial Regex TeamSlug();
 }

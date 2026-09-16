@@ -11,11 +11,13 @@ public sealed class IccParser : JsonRankingParser<IccParser.Root>
 
     public sealed record Root(Data Data);
     public sealed record Data([property: JsonPropertyName("bat-rank")] BatRank BatRank);
-    public sealed record BatRank(List<Entry> Rank);
+    public sealed record BatRank(List<Entry> Rank, [property: JsonPropertyName("rank_date")] string? RankDate);
     public sealed record Entry(short No, string Shortname, [property: JsonPropertyName("team_name")] string? TeamName);
 
     protected override IEnumerable<RankEntry> Map(Root root) =>
         root.Data.BatRank.Rank.Select(e => new RankEntry(e.No, ToISO3(e.Shortname), e.TeamName));
+
+    protected override DateOnly? GetRankingDate(Root root) => IsoDate.Parse(SourceName, root.Data.BatRank.RankDate);
 
     /// <summary>
     /// ICC "shortname" is a team code, not a country code: women's teams carry a "-W" suffix
