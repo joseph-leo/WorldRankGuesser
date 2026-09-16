@@ -17,6 +17,14 @@ public class FifaDateIdTests
     }
 
     [Fact]
+    public void Picks_the_newest_womens_date_id_from_the_womens_page()
+    {
+        string id = WorldRankService.ExtractLatestDateId(Fixture.Read("Fifa_WorldRanking_Women.html"));
+
+        Assert.Equal("FRS_Female_Football_20260419", id);
+    }
+
+    [Fact]
     public void Picks_by_iso_date_not_by_position_in_the_list()
     {
         const string html = """

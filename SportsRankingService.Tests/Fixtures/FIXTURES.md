@@ -20,4 +20,19 @@ the same commit.
 | Wbsc_Rankings.html | https://rankings.wbsc.org/ | markup changed: the ranking table is empty in the HTML and its `data-page` JSON holds only translations, so rows come from a separate Inertia request |
 | Svns_Standings.html | https://www.svns.com/en/standings | rendered client-side; no ranking data in the HTML. Embeds `seriesIds":[{"id":1574166` for the World Rugby pulselive API |
 
-Not capturable on 2026-09-15: BWF (`bwfshuttleapi.com` unreachable), IIHF world ranking (403), ATP doubles page (403).
+Replacement sources found on 2026-09-15 (endpoints located by the project owner in a browser, verified from a scripted client):
+
+| File | Source URL | Notes |
+|---|---|---|
+| Fifa_V3_Men_FRS_20260611.json | https://api.fifa.com/api/v3/fifarankings/rankings/rankingsbyschedule?rankingScheduleId=FRS_Male_Football_20260611&language=en | current FIFA API; `Results[].{Rank, IdCountry}`; serves the new `FRS_*` ids that ranking-overview does not |
+| Fifa_V3_Women_FRS_20260419.json | same endpoint with `FRS_Female_Football_20260419` | same shape |
+| Fifa_WorldRanking_Women.html | https://inside.fifa.com/fifa-rankings/world-ranking/women | its own `ranking.dates` holds the `FRS_Female_*` ids |
+| Bwf_MensSingles.json | https://extranet-lv.bwfbadminton.com/api/vue-rankingtable?rankId=2&catId=6&publicationId=0&doubles=false&searchKey=&pageKey=100&page=1 | Laravel-style pagination (`results.{data,total,per_page,last_page}`); `pageKey=2000` is honored; country is a name only (`p1_country_model.name`), no code |
+| Bwf_MensDoubles.json | same with `catId=8&doubles=true` | two players, each with their own country; pairs can be mixed-nationality |
+| Wbsc_Baseball_Men.json | https://www.wbsc.org/api/v1/rankings/sport/show?sportId=baseball-m&date=2026-03-26&fullView=1&preview=&lang=en | `rankings[].{position, ioc}`; the `date` must be an exact release date or `rankings` is empty |
+| Wbsc_Rankings.html | https://rankings.wbsc.org/ | embeds the release-date list as `{"date","sport","year","formatted"}` objects; take the max date per `sport` id |
+| Svns_Standings.html | https://www.svns.com/en/standings | `data-series-ids="<men guid>,<women guid>"` on the `series-standings` section; ids change each season |
+| Svns_Series_Men.json / _Women.json | https://api.wr-rims-prod.pulselive.com/rugby/v3/series/{id} | `sport` is `mrs` (men) or `wrs` (women) |
+| Svns_Standings_Men.json / _Women.json | https://api.wr-rims-prod.pulselive.com/rugby/v3/series/{id}/standings | `entries[].{position, team.abbreviation}`; `team.countryCode` is null |
+
+Still not capturable: IIHF world ranking (403) and the ATP doubles page (Cloudflare challenge, 403 even with `?rankRange=0-5000`).
