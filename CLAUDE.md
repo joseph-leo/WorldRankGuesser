@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-A .NET 8 Worker Service that scrapes world sports rankings (FIFA, ICC, World Rugby, BWF, etc.) from public web pages and JSON APIs, normalizes them to `SportsRanking` rows (sport / event / gender / position / ISO3 country code), and inserts them into a SQL Server database (`WorldRankGuesser`). `WebScrapingBenchmarks` holds BenchmarkDotNet benchmarks and `SportsRankingService.Tests` holds xUnit tests.
+A .NET 8 run-once console app that scrapes world sports rankings (FIFA, ICC, World Rugby, BWF, etc.) from public web pages and JSON APIs, normalizes each feed to a `RankingSnapshot` (sport / event / gender / ranking date / entries of position + ISO3 country code), and stores it in SQL Server (`WorldRankGuesser`) as an immutable release only when the feed's content or federation date changed. `WebScrapingBenchmarks` holds BenchmarkDotNet benchmarks and `SportsRankingService.Tests` holds xUnit tests.
 
 ## Commands
 
