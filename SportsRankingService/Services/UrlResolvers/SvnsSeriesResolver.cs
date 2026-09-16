@@ -18,7 +18,7 @@ public sealed class SvnsSeriesResolver(IHttpFetcher fetcher) : IUrlResolver
 
     public string Name => ResolverName;
 
-    public async Task<string> ResolveAsync(RankingItem item, CancellationToken cancellationToken)
+    public async Task<ResolvedUrl> ResolveAsync(RankingItem item, CancellationToken cancellationToken)
     {
         string wanted = item.Gender == "Women" ? "wrs" : "mrs";
 
@@ -30,7 +30,7 @@ public sealed class SvnsSeriesResolver(IHttpFetcher fetcher) : IUrlResolver
             string? series = await fetcher.GetStringAsync(string.Format(SeriesApi, id), cancellationToken);
             if (series is not null && ReadSportCode(series) == wanted)
             {
-                return string.Format(item.Url, id);
+                return new ResolvedUrl(string.Format(item.Url, id));
             }
         }
 

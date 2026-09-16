@@ -1,3 +1,5 @@
+using SportsRankingService.Models;
+using SportsRankingService.Services;
 using SportsRankingService.Services.UrlResolvers;
 
 namespace SportsRankingService.Tests.Services;
@@ -23,5 +25,23 @@ public class WbscReleaseDateResolverTests
     public void Throws_when_the_sport_has_no_dates()
     {
         Assert.ThrowsAny<Exception>(() => WbscReleaseDateResolver.ExtractLatestReleaseDate(Fixture.Read("Wbsc_Rankings.html"), "cricket-m"));
+    }
+
+    [Fact]
+    public async Task Resolve_formats_the_newest_date_into_the_url_and_returns_it()
+    {
+        var fetcher = new FakeFetcher(new() { ["https://rankings.wbsc.org/"] = Fixture.Read("Wbsc_Rankings.html") });
+        var item = new RankingItem { Sport = "Baseball", Gender = "Men", Url = "http://wbsc/api?sportId=baseball-m&date={0}", Source = "Wbsc", UrlResolver = "WbscReleaseDate" };
+
+        ResolvedUrl resolved = await new WbscReleaseDateResolver(fetcher).ResolveAsync(item, CancellationToken.None);
+
+        Assert.Equal("http://wbsc/api?sportId=baseball-m&date=2026-03-26", resolved.Url);
+        Assert.Equal(new DateOnly(2026, 3, 26), resolved.RankingDate);
+    }
+
+    private sealed class FakeFetcher(Dictionary<string, string> pages) : IHttpFetcher
+    {
+        public Task<string?> GetStringAsync(string url, CancellationToken cancellationToken) =>
+            Task.FromResult(pages.GetValueOrDefault(url));
     }
 }

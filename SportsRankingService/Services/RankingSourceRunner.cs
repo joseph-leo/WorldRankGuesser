@@ -41,8 +41,8 @@ public sealed class RankingSourceRunner
             throw new InvalidOperationException($"No URL resolver registered for '{item.UrlResolver}' ({Describe(item)}). Known: {string.Join(", ", _resolvers.Keys)}");
         }
 
-        string url = await resolver.ResolveAsync(item, cancellationToken);
-        string? response = await _fetcher.GetStringAsync(url, cancellationToken);
+        ResolvedUrl resolved = await resolver.ResolveAsync(item, cancellationToken);
+        string? response = await _fetcher.GetStringAsync(resolved.Url, cancellationToken);
 
         if (response is null)
         {
