@@ -12,5 +12,5 @@ public interface IUrlResolver
 {
     string Name { get; }
 
-    Task<string> ResolveAsync(RankingItem item, CancellationToken cancellationToken);
+    Task<ResolvedUrl> ResolveAsync(RankingItem item, CancellationToken cancellationToken);
 }

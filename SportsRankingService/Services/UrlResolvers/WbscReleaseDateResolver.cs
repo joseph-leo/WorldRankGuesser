@@ -17,7 +17,7 @@ public sealed partial class WbscReleaseDateResolver(IHttpFetcher fetcher) : IUrl
 
     public string Name => ResolverName;
 
-    public async Task<string> ResolveAsync(RankingItem item, CancellationToken cancellationToken)
+    public async Task<ResolvedUrl> ResolveAsync(RankingItem item, CancellationToken cancellationToken)
     {
         Match sport = SportIdQuery().Match(item.Url);
         if (!sport.Success)
@@ -28,7 +28,11 @@ public sealed partial class WbscReleaseDateResolver(IHttpFetcher fetcher) : IUrl
         string html = (await fetcher.GetStringAsync(RankingsPage, cancellationToken))
             ?? throw new InvalidOperationException($"WBSC rankings page {RankingsPage} could not be fetched");
 
-        return string.Format(CultureInfo.InvariantCulture, item.Url, ExtractLatestReleaseDate(html, sport.Groups[1].Value));
+        string releaseDate = ExtractLatestReleaseDate(html, sport.Groups[1].Value);
+
+        return new ResolvedUrl(
+            string.Format(CultureInfo.InvariantCulture, item.Url, releaseDate),
+            DateOnly.ParseExact(releaseDate, "yyyy-MM-dd", CultureInfo.InvariantCulture));
     }
 
     internal static string ExtractLatestReleaseDate(string html, string sportId)

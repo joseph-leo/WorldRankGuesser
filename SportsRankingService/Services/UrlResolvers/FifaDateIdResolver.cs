@@ -19,20 +19,22 @@ public sealed class FifaDateIdResolver(IHttpFetcher fetcher) : IUrlResolver
 
     public string Name => ResolverName;
 
-    public async Task<string> ResolveAsync(RankingItem item, CancellationToken cancellationToken)
+    public async Task<ResolvedUrl> ResolveAsync(RankingItem item, CancellationToken cancellationToken)
     {
         string page = item.Gender == "Women" ? WomenPage : MenPage;
         string html = (await fetcher.GetStringAsync(page, cancellationToken))
             ?? throw new InvalidOperationException($"FIFA ranking page {page} could not be fetched");
 
-        return string.Format(CultureInfo.InvariantCulture, item.Url, ExtractLatestDateId(html));
+        SoccerRankDate latest = ExtractLatestDate(html);
+
+        return new ResolvedUrl(string.Format(CultureInfo.InvariantCulture, item.Url, latest.id), ToRankingDate(latest));
     }
 
     /// <summary>
     /// Reads props.pageProps.pageData.ranking.dates (grouped by year) from the __NEXT_DATA__ script
-    /// and returns the id of the newest entry by ISO timestamp. Throws if the page has no such data.
+    /// and returns the newest entry by ISO timestamp. Throws if the page has no such data.
     /// </summary>
-    internal static string ExtractLatestDateId(string html)
+    internal static SoccerRankDate ExtractLatestDate(string html)
     {
         HtmlDocument document = new();
         document.LoadHtml(html);
@@ -48,6 +50,12 @@ public sealed class FifaDateIdResolver(IHttpFetcher fetcher) : IUrlResolver
             .ToList()
             .NotNullOrEmpty();
 
-        return dates.MaxBy(d => DateTimeOffset.Parse(d.iso, CultureInfo.InvariantCulture))!.id;
+        return dates.MaxBy(d => DateTimeOffset.Parse(d.iso, CultureInfo.InvariantCulture))!;
     }
+
+    internal static string ExtractLatestDateId(string html) => ExtractLatestDate(html).id;
+
+    /// <summary>The date FIFA displays for a release is its iso timestamp's UTC date; the digits in the id are not the ranking date.</summary>
+    internal static DateOnly ToRankingDate(SoccerRankDate date) =>
+        DateOnly.FromDateTime(DateTimeOffset.Parse(date.iso, CultureInfo.InvariantCulture).UtcDateTime);
 }

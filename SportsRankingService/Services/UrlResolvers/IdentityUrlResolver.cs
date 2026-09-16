@@ -9,5 +9,6 @@ public sealed class IdentityUrlResolver : IUrlResolver
 
     public string Name => ResolverName;
 
-    public Task<string> ResolveAsync(RankingItem item, CancellationToken cancellationToken) => Task.FromResult(item.Url);
+    public Task<ResolvedUrl> ResolveAsync(RankingItem item, CancellationToken cancellationToken) =>
+        Task.FromResult(new ResolvedUrl(item.Url));
 }
