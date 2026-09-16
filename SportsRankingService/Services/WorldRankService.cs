@@ -134,31 +134,7 @@ namespace SportsRankingService.Services
             string url = gender == "Men" ? menRankDateURL : womenRankDateURL;
             string page = (await CallUrlAsync(url)).NotNullOrEmpty();
 
-            return ExtractLatestDateId(page);
-        }
-
-        /// <summary>
-        /// Reads the ranking dates that FIFA's ranking page embeds as Next.js page data
-        /// (props.pageProps.pageData.ranking.dates, grouped by year) and returns the id of the
-        /// newest one by its ISO timestamp. Throws if the page has no such data.
-        /// </summary>
-        internal static string ExtractLatestDateId(string html)
-        {
-            HtmlDocument document = new();
-            document.LoadHtml(html);
-
-            string pageData = document.DocumentNode.SelectSingleNode("//script[@id=\"__NEXT_DATA__\"]").NotNullOrEmpty().InnerText;
-
-            JToken yearGroups = JObject.Parse(pageData)
-                .SelectToken("props.pageProps.pageData.ranking.dates")
-                .NotNullOrEmpty();
-
-            List<SoccerRankDate> dates = yearGroups
-                .SelectMany(year => year["dates"]?.ToObject<List<SoccerRankDate>>() ?? [])
-                .ToList()
-                .NotNullOrEmpty();
-
-            return dates.MaxBy(d => DateTimeOffset.Parse(d.iso, CultureInfo.InvariantCulture))!.id;
+            return UrlResolvers.FifaDateIdResolver.ExtractLatestDateId(page);
         }
     }
 }

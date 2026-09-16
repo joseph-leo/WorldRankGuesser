@@ -1,10 +1,8 @@
-﻿using SportsRankingService.Enums;
-
 namespace SportsRankingService.Services
 {
     public interface IRankingUpdater
     {
-        Task UpdateRankingsAsync(RankingType rankingType, CancellationToken stoppingToken);
-        Task UpdateWorldRankAsync(WorldSports sport, CancellationToken stoppingToken);
+        /// <summary>Fetches every enabled feed and inserts its rows. One failing feed does not affect the others.</summary>
+        Task UpdateAllAsync(CancellationToken cancellationToken);
     }
 }

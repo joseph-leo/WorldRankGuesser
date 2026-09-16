@@ -1,52 +1,47 @@
-﻿using BenchmarkDotNet.Attributes;
+using BenchmarkDotNet.Attributes;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using SportsRankingService.Factories;
+using Microsoft.Extensions.Options;
+using SportsRankingService.Configuration;
 using SportsRankingService.Models;
-using SportsRankingService.Parsers;
 using SportsRankingService.Services;
-using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SportsRankingService.Benchmark
 {
+    /// <summary>Fetches and parses every enabled feed in serviceconfig.json through the real pipeline (live URLs, no database).</summary>
     [MemoryDiagnoser]
     public class ScrapeServiceBenchmark
     {
-        private IScrapeServiceFactory _scrapeServiceFactory;
-        public ScrapeServiceBenchmark() 
+        private readonly RankingSourceRunner _runner;
+        private readonly List<RankingItem> _items;
+
+        public ScrapeServiceBenchmark()
         {
-            var logger = new LoggerFactory().CreateLogger<WorldRankService>();
-            var rugbyLogger = new LoggerFactory().CreateLogger<RugbyParser>();
-            var cricketLogger = new LoggerFactory().CreateLogger<CricketParser>();
-            var tennisLogger = new LoggerFactory().CreateLogger<TennisParser>();
-            var soccerLogger = new LoggerFactory().CreateLogger<SoccerParser>();
+            IConfiguration configuration = new ConfigurationBuilder()
+                .AddJsonFile(Path.Combine(AppContext.BaseDirectory, "serviceconfig.json"), optional: false)
+                .Build();
 
-            IEnumerable<IParser> parsers = new List<IParser>()
-            {
-                new RugbyParser(rugbyLogger),
-                new CricketParser(cricketLogger),
-                new TennisParser(tennisLogger),
-                new SoccerParser(soccerLogger)
-            };
+            ServiceCollection services = new();
+            services.AddLogging(b => b.SetMinimumLevel(LogLevel.Warning));
+            services.Configure<RankingSourcesOptions>(configuration);
+            services.AddRankingPipeline();
 
-            IParserFactory parserFactory = new ParserFactory(() => parsers);
-
-            IEnumerable<IScrapeService> scrapeServices =
-            [
-                new WorldRankService(logger, parserFactory)
-            ];
-            _scrapeServiceFactory = new ScrapeServiceFactory(() => scrapeServices);
+            ServiceProvider provider = services.BuildServiceProvider();
+            _runner = provider.GetRequiredService<RankingSourceRunner>();
+            _items = provider.GetRequiredService<IOptions<RankingSourcesOptions>>().Value.Rankings.Where(i => i.Enabled).ToList();
         }
 
         [Benchmark]
-        public async Task GetSportRanksAsyncBenchmark()
+        public async Task<int> FetchAndParseAllFeeds()
         {
-            IScrapeService rankService = _scrapeServiceFactory.Create(Enums.RankingType.World);
-            await rankService.GetSportRanksAsync(Enums.WorldSports.Soccer);
+            int rows = 0;
+            foreach (RankingItem item in _items)
+            {
+                rows += (await _runner.RunAsync(item, CancellationToken.None)).Count;
+            }
+
+            return rows;
         }
     }
 }

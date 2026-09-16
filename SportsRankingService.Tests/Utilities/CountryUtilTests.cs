@@ -1,0 +1,40 @@
+using SportsRankingService.Utilities;
+
+namespace SportsRankingService.Tests.Utilities;
+
+public class CountryUtilTests
+{
+    [Theory]
+    [InlineData("GER", "DEU")]
+    [InlineData("NED", "NLD")]
+    [InlineData("RSA", "ZAF")]
+    [InlineData("USA", "USA")]   // already ISO3
+    [InlineData("ENG", "ENG")]   // not an IOC code; passes through unchanged
+    public void IOCToISO3_maps_IOC_codes_and_passes_others_through(string ioc, string expected)
+    {
+        Assert.Equal(expected, ioc.IOCToISO3());
+    }
+
+    [Theory]
+    [InlineData("Germany", "DEU")]
+    [InlineData("usa", "USA")]
+    [InlineData("Korea", "KOR")]
+    [InlineData("Hong Kong China", "HKG")]
+    [InlineData("Chinese Taipei", "TWN")]
+    [InlineData("England", "GBR")]
+    [InlineData("Scotland", "GBR")]
+    public void TryGetISO3FromCountry_resolves_names_through_the_region_mapping(string name, string expected)
+    {
+        Assert.True(CountryUtil.TryGetISO3FromCountry(name, out string? iso3));
+        Assert.Equal(expected, iso3);
+    }
+
+    [Theory]
+    [InlineData("Athlete Independent Neutral")]
+    [InlineData("")]
+    [InlineData("Not A Country")]
+    public void TryGetISO3FromCountry_returns_false_for_unknown_names(string name)
+    {
+        Assert.False(CountryUtil.TryGetISO3FromCountry(name, out _));
+    }
+}

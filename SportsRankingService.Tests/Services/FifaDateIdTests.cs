@@ -1,9 +1,9 @@
-using SportsRankingService.Services;
+using SportsRankingService.Services.UrlResolvers;
 
 namespace SportsRankingService.Tests.Services;
 
 /// <summary>
-/// FIFA's ranking page embeds the available ranking dates as Next.js page data.
+/// FIFA's ranking pages embed the available ranking dates as Next.js page data.
 /// The worker needs the id of the newest date to build the API URL.
 /// </summary>
 public class FifaDateIdTests
@@ -11,7 +11,7 @@ public class FifaDateIdTests
     [Fact]
     public void Picks_the_newest_date_id_from_the_real_page()
     {
-        string id = WorldRankService.ExtractLatestDateId(Fixture.Read("Fifa_WorldRanking_Men.html"));
+        string id = FifaDateIdResolver.ExtractLatestDateId(Fixture.Read("Fifa_WorldRanking_Men.html"));
 
         Assert.Equal("FRS_Male_Football_20260611", id);
     }
@@ -19,7 +19,7 @@ public class FifaDateIdTests
     [Fact]
     public void Picks_the_newest_womens_date_id_from_the_womens_page()
     {
-        string id = WorldRankService.ExtractLatestDateId(Fixture.Read("Fifa_WorldRanking_Women.html"));
+        string id = FifaDateIdResolver.ExtractLatestDateId(Fixture.Read("Fifa_WorldRanking_Women.html"));
 
         Assert.Equal("FRS_Female_Football_20260419", id);
     }
@@ -39,12 +39,12 @@ public class FifaDateIdTests
             </script></body></html>
             """;
 
-        Assert.Equal("newest", WorldRankService.ExtractLatestDateId(html));
+        Assert.Equal("newest", FifaDateIdResolver.ExtractLatestDateId(html));
     }
 
     [Fact]
     public void Throws_when_the_page_has_no_dates()
     {
-        Assert.ThrowsAny<Exception>(() => WorldRankService.ExtractLatestDateId("<html><body>nothing here</body></html>"));
+        Assert.ThrowsAny<Exception>(() => FifaDateIdResolver.ExtractLatestDateId("<html><body>nothing here</body></html>"));
     }
 }

@@ -1,0 +1,16 @@
+using SportsRankingService.Parsing;
+using SportsRankingService.Utilities;
+
+namespace SportsRankingService.Parsers;
+
+/// <summary>WBSC rankings API (baseball, softball, Baseball5). Requires an exact release date in the URL.</summary>
+public sealed class WbscParser : JsonRankingParser<WbscParser.Root>
+{
+    public override string SourceName => "Wbsc";
+
+    public sealed record Root(List<Row> Rankings);
+    public sealed record Row(short Position, string Ioc);
+
+    protected override IEnumerable<RankEntry> Map(Root root) =>
+        root.Rankings.Select(r => new RankEntry(r.Position, r.Ioc.Trim().IOCToISO3()));
+}

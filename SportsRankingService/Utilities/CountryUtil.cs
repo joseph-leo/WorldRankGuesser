@@ -1,188 +1,261 @@
-﻿using System;
-using System.Collections.Generic;
+using System.Collections.Frozen;
 using System.Globalization;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace SportsRankingService.Utilities
 {
+    /// <summary>
+    /// Country code helpers. Feeds identify countries three ways: ISO3 codes, IOC codes
+    /// (<see cref="IOCToISO3"/>), or names in various spellings (<see cref="TryGetISO3FromCountry"/>).
+    /// Name lookup is by a normalized key (lower case, diacritics and punctuation removed, "&amp;" as "and")
+    /// against every region the runtime knows plus an alias table for spellings federations use.
+    /// </summary>
     internal static class CountryUtil
     {
-        public static List<RegionInfo> GetCountries()
+        private static readonly Lazy<List<RegionInfo>> Regions = new(LoadRegions);
+        private static readonly Lazy<FrozenDictionary<string, string>> NameIndex = new(BuildNameIndex);
+
+        public static List<RegionInfo> GetCountries() => Regions.Value;
+
+        public static string? GetCountryName(string ISO3) =>
+            Regions.Value.FirstOrDefault(x => x.ThreeLetterISORegionName == ISO3)?.EnglishName;
+
+        /// <summary>Resolves a country name, slug ("cote-divoire") or alias ("usa", "England") to ISO3.</summary>
+        public static bool TryGetISO3FromCountry(string? countryName, out string? iso3)
         {
-            List<RegionInfo> regionInfoList = new();
-            CultureInfo[] cultureInfo = CultureInfo.GetCultures(CultureTypes.SpecificCultures);
+            iso3 = null;
 
-            foreach (CultureInfo culture in cultureInfo)
+            if (string.IsNullOrWhiteSpace(countryName))
             {
-                RegionInfo regionInfo = new(culture.Name);
+                return false;
+            }
 
-                if (!regionInfoList.Any(x => x.Name == regionInfo.Name) && !regionInfo.TwoLetterISORegionName.Any(char.IsDigit))
+            string key = Normalize(countryName);
+
+            return Aliases.TryGetValue(key, out iso3) || NameIndex.Value.TryGetValue(key, out iso3);
+        }
+
+        public static string GetISO3FromCountry(string countryName) =>
+            TryGetISO3FromCountry(countryName, out string? iso3)
+                ? iso3!
+                : throw new ArgumentException($"No ISO3 mapping for country name '{countryName}'", nameof(countryName));
+
+        public static string IOCToISO3(this string IOC) =>
+            IocToIso3.TryGetValue(IOC, out string? value) ? value : IOC;
+
+        private static List<RegionInfo> LoadRegions()
+        {
+            List<RegionInfo> regions = [];
+
+            foreach (CultureInfo culture in CultureInfo.GetCultures(CultureTypes.SpecificCultures))
+            {
+                RegionInfo region = new(culture.Name);
+
+                if (regions.All(x => x.Name != region.Name) && !region.TwoLetterISORegionName.Any(char.IsDigit))
                 {
-                    regionInfoList.Add(regionInfo);
+                    regions.Add(region);
                 }
             }
 
-            return regionInfoList;
+            return regions;
         }
 
-        public static string? GetCountryName(string ISO3)
+        private static FrozenDictionary<string, string> BuildNameIndex()
         {
-            List<RegionInfo> countries = GetCountries();
-            RegionInfo? country = countries.FirstOrDefault(x => x.ThreeLetterISORegionName == ISO3);
-            string? countryName = null;
+            Dictionary<string, string> index = [];
 
-            if (country is not null)
+            foreach (RegionInfo region in Regions.Value)
             {
-                countryName = country.EnglishName;
+                string iso3 = region.ThreeLetterISORegionName;
+
+                foreach (string name in new[] { region.EnglishName, region.NativeName, region.DisplayName, iso3 })
+                {
+                    index.TryAdd(Normalize(name), iso3);
+                }
             }
 
-            return countryName;
+            return index.ToFrozenDictionary();
         }
 
-        public static string GetISO3FromCountry(string countryName)
+        /// <summary>Lower case, diacritics stripped, "&amp;" read as "and", everything but letters and digits removed.</summary>
+        internal static string Normalize(string name)
         {
-            List<RegionInfo> countries = GetCountries();
-            RegionInfo country = countries.FirstOrDefault(x => x.EnglishName.ToLower() == GetRegionMapping(countryName));
+            string decomposed = name.Replace("&", " and ").Normalize(NormalizationForm.FormD);
+            StringBuilder sb = new(decomposed.Length);
 
-            return country.ThreeLetterISORegionName;
-        }
-
-        public static string GetISO3FromCode(string countryCode, string countryName)
-        {
-            List<RegionInfo> countries = GetCountries();
-            RegionInfo? country = countries.FirstOrDefault(x => x.ThreeLetterISORegionName == IOCToISO3(countryCode), null);
-            country ??= countries.FirstOrDefault(x => x.EnglishName.ToLower() == GetRegionMapping(countryName), null);
-
-            return country.ThreeLetterISORegionName;
-        }
-
-        private static string GetRegionMapping(string countryName)
-        {
-            if (CountryMappings.TryGetValue(countryName.ToLower(), out var mappedName))
+            foreach (char c in decomposed)
             {
-                return mappedName;
+                if (char.IsLetterOrDigit(c))
+                {
+                    sb.Append(char.ToLowerInvariant(c));
+                }
             }
 
-            return countryName.ToLower();
+            return sb.ToString();
         }
 
-        private static readonly Dictionary<string, string> CountryMappings = new(StringComparer.OrdinalIgnoreCase)
+        /// <summary>
+        /// Spellings used by federations that the runtime's region names do not cover, keyed by
+        /// <see cref="Normalize"/>d form. Sub-national teams map to their sovereign state (England -> GBR).
+        /// Kosovo has no ISO3 code; XKX is the widely used user-assigned code.
+        /// </summary>
+        private static readonly FrozenDictionary<string, string> Aliases = new Dictionary<string, string>
         {
-            { "england", "united kingdom" },
-            { "wales", "united kingdom" },
-            { "northern ireland", "united kingdom" },
-            { "scotland", "united kingdom" },
-            { "chinese taipei", "taiwan" },
-            { "czech republic", "czechia" },
-            { "trinidad & tobago", "trinidad & tobago" },
-            { "hong kong", "hong kong sar" },
-            { "hong kong china", "hong kong sar" },
-            { "macau", "macao sar" },
-            { "people's republic of china", "china" },
-            { "türkiye", "turkey" },
-            { "united states of america", "united states" },
-            { "usa", "united states" },
-            { "uae", "united arab emirates" },
-            { "tahiti", "french polynesia" }
-        };
+            ["england"] = "GBR",
+            ["wales"] = "GBR",
+            ["scotland"] = "GBR",
+            ["northernireland"] = "GBR",
+            ["greatbritain"] = "GBR",
+            ["usa"] = "USA",
+            ["unitedstatesofamerica"] = "USA",
+            ["uae"] = "ARE",
+            ["korea"] = "KOR",
+            ["southkorea"] = "KOR",
+            ["chinesetaipei"] = "TWN",
+            ["taiwan"] = "TWN",
+            ["hongkong"] = "HKG",
+            ["hongkongchina"] = "HKG",
+            ["macau"] = "MAC",
+            ["macao"] = "MAC",
+            ["peoplesrepublicofchina"] = "CHN",
+            ["czechrepublic"] = "CZE",
+            ["czechia"] = "CZE",
+            ["turkey"] = "TUR",
+            ["turkiye"] = "TUR",
+            ["tahiti"] = "PYF",
+            ["trinidadandtobago"] = "TTO",
+            ["cotedivoire"] = "CIV",
+            ["ivorycoast"] = "CIV",
+            ["congodr"] = "COD",
+            ["drcongo"] = "COD",
+            ["democraticrepublicofthecongo"] = "COD",
+            ["congo"] = "COG",
+            ["stvincentandthegrenadines"] = "VCT",
+            ["saintvincentandthegrenadines"] = "VCT",
+            ["antiguabarbuda"] = "ATG",
+            ["antiguaandbarbuda"] = "ATG",
+            ["centralafricanrep"] = "CAF",
+            ["centralafricanrepublic"] = "CAF",
+            ["federatedstatesofmicronesia"] = "FSM",
+            ["micronesia"] = "FSM",
+            ["virginislands"] = "VIR",
+            ["usvirginislands"] = "VIR",
+            ["britishvirginislands"] = "VGB",
+            ["newcaledonia"] = "NCL",
+            ["kosovo"] = "XKX",
+            ["palestine"] = "PSE",
+            ["turksandcaicos"] = "TCA",
+            ["bosniaandherzegovina"] = "BIH",
+            ["northmacedonia"] = "MKD",
+            ["capeverde"] = "CPV",
+            ["caboverde"] = "CPV",
+            ["eswatini"] = "SWZ",
+            ["swaziland"] = "SWZ",
+            ["russia"] = "RUS",
+            ["iran"] = "IRN",
+            ["syria"] = "SYR",
+            ["laos"] = "LAO",
+            ["vietnam"] = "VNM",
+            ["brunei"] = "BRN",
+            ["moldova"] = "MDA",
+            ["bolivia"] = "BOL",
+            ["venezuela"] = "VEN",
+            ["tanzania"] = "TZA",
+            ["myanmar"] = "MMR",
+            ["burma"] = "MMR",
+            ["saotomeandprincipe"] = "STP",
+        }.ToFrozenDictionary();
 
-        public static string IOCToISO3(this string IOC)
+        private static readonly FrozenDictionary<string, string> IocToIso3 = new Dictionary<string, string>
         {
-            Dictionary<string, string> dictionary = new()
-            {
-                { "ALG", "DZA" },
-                { "ASA", "ASM" },
-                { "ANG", "AGO" },
-                { "ANT", "ATG" },
-                { "ARU", "ABW" },
-                { "BAH", "BHS" },
-                { "BRN", "BHR" },
-                { "BAN", "BGD" },
-                { "BAR", "BRB" },
-                { "BIZ", "BLZ" },
-                { "BER", "BMU" },
-                { "BHU", "BTN" },
-                { "BOT", "BWA" },
-                { "IVB", "VGB" },
-                { "BRU", "BRN" },
-                { "BUL", "BGR" },
-                { "BUR", "BFA" },
-                { "CAM", "KHM" },
-                { "CAY", "CYM" },
-                { "CHA", "TCD" },
-                { "CHI", "CHL" },
-                { "CGO", "COG" },
-                { "CRC", "CRI" },
-                { "CRO", "HRV" },
-                { "DEN", "DNK" },
-                { "ESA", "SLV" },
-                { "GEQ", "GNQ" },
-                { "FIJ", "FJI" },
-                { "GAM", "GMB" },
-                { "GER", "DEU" },
-                { "GRE", "GRC" },
-                { "GRN", "GRD" },
-                { "GUA", "GTM" },
-                { "GUI", "GIN" },
-                { "GBS", "GNB" },
-                { "HAI", "HTI" },
-                { "HON", "HND" },
-                { "INA", "IDN" },
-                { "IRE", "IRL" },
-                { "IRI", "IRN" },
-                { "KUW", "KWT" },
-                { "LAT", "LVA" },
-                { "LIB", "LBN" },
-                { "LES", "LSO" },
-                { "LBA", "LBY" },
-                { "MAD", "MDG" },
-                { "MAW", "MWI" },
-                { "MAS", "MYS" },
-                { "MTN", "MRT" },
-                { "MRI", "MUS" },
-                { "MON", "MCO" },
-                { "MGL", "MNG" },
-                { "MYA", "MMR" },
-                { "NEP", "NPL" },
-                { "NED", "NLD" },
-                { "NCA", "NIC" },
-                { "NIG", "NER" },
-                { "NGR", "NGA" },
-                { "OMA", "OMN" },
-                { "PLE", "PSE" },
-                { "PAR", "PRY" },
-                { "PHI", "PHL" },
-                { "POR", "PRT" },
-                { "PUR", "PRI" },
-                { "SKN", "KNA" },
-                { "VIN", "VCT" },
-                { "SAM", "WSM" },
-                { "KSA", "SAU" },
-                { "SEY", "SYC" },
-                { "SIN", "SGP" },
-                { "SLO", "SVN" },
-                { "SOL", "SLB" },
-                { "RSA", "ZAF" },
-                { "SRI", "LKA" },
-                { "SUD", "SDN" },
-                { "SUI", "CHE" },
-                { "TPE", "TWN" },
-                { "TAN", "TZA" },
-                { "TOG", "TGO" },
-                { "TGA", "TON" },
-                { "TRI", "TTO" },
-                { "UAE", "ARE" },
-                { "ISV", "VIR" },
-                { "URU", "URY" },
-                { "VAN", "VUT" },
-                { "VIE", "VNM" },
-                { "ZAM", "ZMB" },
-                { "ZIM", "ZWE" }
-            };
-
-            return dictionary.TryGetValue(IOC, out string? value) ? value : IOC;
-        }
+            { "ALG", "DZA" },
+            { "ASA", "ASM" },
+            { "ANG", "AGO" },
+            { "ANT", "ATG" },
+            { "ARU", "ABW" },
+            { "BAH", "BHS" },
+            { "BRN", "BHR" },
+            { "BAN", "BGD" },
+            { "BAR", "BRB" },
+            { "BIZ", "BLZ" },
+            { "BER", "BMU" },
+            { "BHU", "BTN" },
+            { "BOT", "BWA" },
+            { "IVB", "VGB" },
+            { "BRU", "BRN" },
+            { "BUL", "BGR" },
+            { "BUR", "BFA" },
+            { "CAM", "KHM" },
+            { "CAY", "CYM" },
+            { "CHA", "TCD" },
+            { "CHI", "CHL" },
+            { "CGO", "COG" },
+            { "CRC", "CRI" },
+            { "CRO", "HRV" },
+            { "DEN", "DNK" },
+            { "ESA", "SLV" },
+            { "GEQ", "GNQ" },
+            { "FIJ", "FJI" },
+            { "GAM", "GMB" },
+            { "GER", "DEU" },
+            { "GRE", "GRC" },
+            { "GRN", "GRD" },
+            { "GUA", "GTM" },
+            { "GUI", "GIN" },
+            { "GBS", "GNB" },
+            { "HAI", "HTI" },
+            { "HON", "HND" },
+            { "INA", "IDN" },
+            { "IRE", "IRL" },
+            { "IRI", "IRN" },
+            { "KUW", "KWT" },
+            { "LAT", "LVA" },
+            { "LIB", "LBN" },
+            { "LES", "LSO" },
+            { "LBA", "LBY" },
+            { "MAD", "MDG" },
+            { "MAW", "MWI" },
+            { "MAS", "MYS" },
+            { "MTN", "MRT" },
+            { "MRI", "MUS" },
+            { "MON", "MCO" },
+            { "MGL", "MNG" },
+            { "MYA", "MMR" },
+            { "NEP", "NPL" },
+            { "NED", "NLD" },
+            { "NCA", "NIC" },
+            { "NIG", "NER" },
+            { "NGR", "NGA" },
+            { "OMA", "OMN" },
+            { "PLE", "PSE" },
+            { "PAR", "PRY" },
+            { "PHI", "PHL" },
+            { "POR", "PRT" },
+            { "PUR", "PRI" },
+            { "SKN", "KNA" },
+            { "VIN", "VCT" },
+            { "SAM", "WSM" },
+            { "KSA", "SAU" },
+            { "SEY", "SYC" },
+            { "SIN", "SGP" },
+            { "SLO", "SVN" },
+            { "SOL", "SLB" },
+            { "RSA", "ZAF" },
+            { "SRI", "LKA" },
+            { "SUD", "SDN" },
+            { "SUI", "CHE" },
+            { "TPE", "TWN" },
+            { "TAN", "TZA" },
+            { "TOG", "TGO" },
+            { "TGA", "TON" },
+            { "TRI", "TTO" },
+            { "UAE", "ARE" },
+            { "ISV", "VIR" },
+            { "URU", "URY" },
+            { "VAN", "VUT" },
+            { "VIE", "VNM" },
+            { "ZAM", "ZMB" },
+            { "ZIM", "ZWE" }
+        }.ToFrozenDictionary();
     }
 }

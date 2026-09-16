@@ -1,79 +1,64 @@
-﻿using HtmlAgilityPack;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
-using SportsRankingService.Enums;
-using SportsRankingService.Factories;
+using Microsoft.Extensions.Options;
+using SportsRankingService.Configuration;
 using SportsRankingService.Models;
-using SportsRankingService.Parsers;
 using SportsRankingService.RankingsDb;
-using SportsRankingService.Repository;
-using SportsRankingService.Utilities;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SportsRankingService.Services
 {
-    public class RankingUpdater(ILogger<RankingUpdater> logger, IScrapeServiceFactory scrapeServiceFactory, IServiceScopeFactory serviceScopeFactory) : IRankingUpdater
+    public sealed class RankingUpdater(
+        RankingSourceRunner runner,
+        IOptionsMonitor<RankingSourcesOptions> sources,
+        IServiceScopeFactory scopeFactory,
+        ILogger<RankingUpdater> logger) : IRankingUpdater
     {
-        private readonly ILogger<RankingUpdater> _logger = logger;
-        private readonly IScrapeServiceFactory _scrapeServiceFactory = scrapeServiceFactory;
-        private readonly IServiceScopeFactory _serviceScopeFactory = serviceScopeFactory;
-        private int count = 0;
-
-        public async Task UpdateRankingsAsync(RankingType rankingType, CancellationToken stoppingToken)
+        public async Task UpdateAllAsync(CancellationToken cancellationToken)
         {
-            switch (rankingType)
+            List<RankingItem> items = sources.CurrentValue.Rankings.Where(i => i.Enabled).ToList();
+
+            if (items.Count == 0)
             {
-                case RankingType.World:
-                    await UpdateAllWorldRanks(stoppingToken);
-                    break;
+                logger.LogWarning("No enabled ranking items configured; check serviceconfig.json");
+                return;
             }
-            _logger.LogInformation("{Count} rows inserted to {Table} since startup", count, nameof(SportsRanking));
+
+            int[] inserted = await Task.WhenAll(items.Select(item => UpdateItemAsync(item, cancellationToken)));
+
+            logger.LogInformation("{Rows} rows inserted across {Feeds} feeds ({Failed} yielded nothing)",
+                inserted.Sum(), items.Count, inserted.Count(n => n == 0));
         }
 
-        public async Task UpdateWorldRankAsync(WorldSports sport, CancellationToken stoppingToken)
+        private async Task<int> UpdateItemAsync(RankingItem item, CancellationToken cancellationToken)
         {
+            string name = RankingSourceRunner.Describe(item);
+
             try
             {
-                IScrapeService service = _scrapeServiceFactory.Create(RankingType.World);
-                List<IRanking> rankings = (await service.GetSportRanksAsync(sport)).ToList();
+                IReadOnlyList<SportsRanking> rows = await runner.RunAsync(item, cancellationToken);
 
-                if (rankings.Count == 0)
+                if (rows.Count == 0)
                 {
-                    _logger.LogWarning("No rankings parsed for {Sport}; nothing inserted", sport);
-                    return;
+                    logger.LogWarning("No rows for {Item}; nothing inserted", name);
+                    return 0;
                 }
 
-                using var scope = _serviceScopeFactory.CreateScope();
-                var dbContext = scope.ServiceProvider.GetRequiredService<WorldRankGuesserContext>();
-                await dbContext.AddRangeAsync(rankings, stoppingToken);
-                await dbContext.SaveChangesAsync(stoppingToken);
-                _logger.LogInformation("{Count} {Sport} rows inserted to {Table}", rankings.Count, sport, nameof(SportsRanking));
-                Interlocked.Add(ref count, rankings.Count);
+                // The updater is transient but the DbContext is scoped, so each feed gets its own scope.
+                using IServiceScope scope = scopeFactory.CreateScope();
+                WorldRankGuesserContext db = scope.ServiceProvider.GetRequiredService<WorldRankGuesserContext>();
+                await db.SportsRankings.AddRangeAsync(rows, cancellationToken);
+                await db.SaveChangesAsync(cancellationToken);
+
+                logger.LogInformation("{Count} rows inserted for {Item}", rows.Count, name);
+                return rows.Count;
             }
-            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
             {
                 throw;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Updating {Sport} failed; other sports are unaffected", sport);
+                logger.LogError(ex, "Feed {Item} failed; other feeds are unaffected", name);
+                return 0;
             }
-        }
-
-        private async Task UpdateAllWorldRanks(CancellationToken stoppingToken)
-        {
-            List<Task> tasks = [];
-            foreach (WorldSports sport in Enum.GetValues<WorldSports>())
-            {
-                tasks.Add(UpdateWorldRankAsync(sport, stoppingToken));
-            }
-
-            await Task.WhenAll(tasks);
         }
     }
 }
