@@ -11,9 +11,9 @@ public class VolleyballWorldParserTests
     {
         var rows = _parser.Parse(Fixture.Read("VolleyballWorld_Men.json")).Entries;
 
-        Assert.Equal(100, rows.Count);
+        Assert.Equal(148, rows.Count);
         Assert.Equal("POL", rows.Single(r => r.Position == 1).ISO3);
-        Assert.Equal("BIH", rows.Single(r => r.Position == 100).ISO3);
+        Assert.Equal("NZL", rows.Single(r => r.Position == 148).ISO3);
         Assert.All(rows, r => Assert.Matches("^[A-Z]{3}$", r.ISO3));
     }
 
@@ -26,7 +26,7 @@ public class VolleyballWorldParserTests
     [Fact]
     public void Carries_the_decimal_points()
     {
-        Assert.Equal(408.9m, _parser.Parse(Fixture.Read("VolleyballWorld_Men.json")).Entries.Single(r => r.Position == 1).Points);
+        Assert.Equal(400.16m, _parser.Parse(Fixture.Read("VolleyballWorld_Men.json")).Entries.Single(r => r.Position == 1).Points);
     }
 
     [Fact]
@@ -35,6 +35,7 @@ public class VolleyballWorldParserTests
         var rows = _parser.Parse(Fixture.Read("VolleyballWorld_Beach_Men.json")).Entries;
         var top = rows.Single(r => r.Position == 1);
 
+        Assert.Equal(500, rows.Count);
         Assert.Equal("SWE", top.ISO3);
         Assert.Equal("Sweden", top.TeamName);
         Assert.Equal("Hölting Nilsson/Andersson, E", top.Competitor);

@@ -1,4 +1,3 @@
-| VolleyballWorld_Beach_Men.json | https://en.volleyballworld.com/api/v1/worldranking/beachvolleyball/0/0/100 | captured 2026-09-16; a pair per row (`player1Name`, `player2Name`, `name`), integer `points` instead of the indoor feed's `decimalPoints` |
 # Fixtures
 
 One real response per feed, captured with a browser User-Agent on 2026-09-15.
@@ -12,7 +11,8 @@ the same commit.
 | WorldRugby_Union_Men.json | https://api.wr-rims-prod.pulselive.com/rugby/v3/rankings/mru?language=en | parses |
 | Espn_Atp_Singles.json | https://site.web.api.espn.com/apis/site/v2/sports/tennis/atp/rankings?region=us&lang=en | parses |
 | Wta_Doubles.json | https://api.wtatennis.com/tennis/players/ranked?page=0&pageSize=100&type=rankDoubles&sort=asc&name=&metric=DOUBLES | parses |
-| VolleyballWorld_Men.json | https://en.volleyballworld.com/api/v1/worldranking/volleyball/1/0/100 | parses |
+| VolleyballWorld_Men.json | https://en.volleyballworld.com/api/v1/worldranking/volleyball/1/0/500 | parses; recaptured 2026-09-17 at the API's 500-row maximum (148 teams, the full list) |
+| VolleyballWorld_Beach_Men.json | https://en.volleyballworld.com/api/v1/worldranking/beachvolleyball/0/0/500 | recaptured 2026-09-17; a pair per row (`player1Name`, `name`), integer `points`; 500 rows is the API's per-request maximum and the beach list is deeper (multi-page spec) |
 | Icc_T20_Women.json | https://assets-icc.sportz.io/cricket/v1/ranking?...&comp_type=t20w&type=team | parses; `shortname` carries a `-W` suffix |
 | Icc_Test_Men.json | https://assets-icc.sportz.io/cricket/v1/ranking?...&comp_type=test&type=team | parses; two-letter codes SA, NZ, SL, WI |
 | Fifa_Overview_Men_id14870.json | https://inside.fifa.com/api/ranking-overview?locale=en&dateId=id14870 | parses; the API returns an empty list for the newer `FRS_*` date ids |
@@ -46,4 +46,4 @@ Gymnastics, captured on 2026-09-16 (the sport was dropped in the 2026-09-15 refa
 
 Still not capturable: IIHF world ranking (403) and the ATP doubles page (Cloudflare challenge, 403 even with `?rankRange=0-5000`).
 
-BWF caveat: the fixtures above were captured with curl. The same URL returns 403 to .NET `HttpClient`, whether through `SocketsHttpHandler` or `WinHttpHandler`, with any header set tried, so the live feed is disabled in serviceconfig.json even though the parser passes its tests.
+BWF caveat: the fixtures above were captured with curl. The same URL returns 403 to .NET `HttpClient`, whether through `SocketsHttpHandler` or `WinHttpHandler`, with any header set tried, so the live feed is disabled in serviceconfig.json even though the parser passes its tests. serviceconfig.json now asks for `pageKey=2000` (honored per the note above); the fixtures remain the `pageKey=100` captures.
