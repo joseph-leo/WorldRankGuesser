@@ -16,4 +16,12 @@ public class WorldRugbyParserTests
         Assert.Equal("ASM", rows.Single(r => r.Position == 114).ISO3);
         Assert.All(rows, r => Assert.Matches("^[A-Z]{3}$", r.ISO3));
     }
+
+    [Fact]
+    public void Carries_the_effective_ranking_date()
+    {
+        var ranking = _parser.Parse(Fixture.Read("WorldRugby_Union_Men.json"));
+
+        Assert.Equal(new DateOnly(2026, 9, 14), ranking.RankingDate);
+    }
 }
