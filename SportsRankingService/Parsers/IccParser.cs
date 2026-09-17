@@ -12,10 +12,10 @@ public sealed class IccParser : JsonRankingParser<IccParser.Root>
     public sealed record Root(Data Data);
     public sealed record Data([property: JsonPropertyName("bat-rank")] BatRank BatRank);
     public sealed record BatRank(List<Entry> Rank, [property: JsonPropertyName("rank_date")] string? RankDate);
-    public sealed record Entry(short No, string Shortname, [property: JsonPropertyName("team_name")] string? TeamName);
+    public sealed record Entry(short No, string Shortname, [property: JsonPropertyName("team_name")] string? TeamName, decimal? Rating);
 
     protected override IEnumerable<RankEntry> Map(Root root) =>
-        root.Data.BatRank.Rank.Select(e => new RankEntry(e.No, ToISO3(e.Shortname), e.TeamName));
+        root.Data.BatRank.Rank.Select(e => new RankEntry(e.No, ToISO3(e.Shortname), e.TeamName, Points: e.Rating));   // the ICC ranks by Rating, not Points
 
     protected override DateOnly? GetRankingDate(Root root) => IsoDate.Parse(SourceName, root.Data.BatRank.RankDate);
 

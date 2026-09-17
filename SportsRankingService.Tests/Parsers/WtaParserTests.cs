@@ -22,4 +22,14 @@ public class WtaParserTests
     {
         Assert.Equal(new DateOnly(2026, 9, 14), _parser.Parse(Fixture.Read("Wta_Doubles.json")).RankingDate);
     }
+
+    [Fact]
+    public void Carries_points_and_the_player_as_competitor_with_no_country_name()
+    {
+        var top = _parser.Parse(Fixture.Read("Wta_Doubles.json")).Entries.Single(r => r.Position == 1);
+
+        Assert.Equal(11460m, top.Points);
+        Assert.Equal("Katerina Siniakova", top.Competitor);
+        Assert.Null(top.TeamName);
+    }
 }

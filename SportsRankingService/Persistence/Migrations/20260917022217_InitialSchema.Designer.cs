@@ -12,7 +12,7 @@ using SportsRankingService.Persistence;
 namespace SportsRankingService.Persistence.Migrations
 {
     [DbContext(typeof(RankingsDbContext))]
-    [Migration("20260916233624_InitialSchema")]
+    [Migration("20260917022217_InitialSchema")]
     partial class InitialSchema
     {
         /// <inheritdoc />
@@ -81,14 +81,25 @@ namespace SportsRankingService.Persistence.Migrations
                     b.Property<int>("Ordinal")
                         .HasColumnType("int");
 
+                    b.Property<string>("Competitor")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
                     b.Property<string>("ISO3")
                         .IsRequired()
                         .HasMaxLength(3)
                         .IsUnicode(false)
                         .HasColumnType("varchar(3)");
 
+                    b.Property<decimal?>("Points")
+                        .HasPrecision(12, 3)
+                        .HasColumnType("decimal(12,3)");
+
                     b.Property<short>("Position")
                         .HasColumnType("smallint");
+
+                    b.Property<int>("RankedEntrants")
+                        .HasColumnType("int");
 
                     b.Property<string>("TeamName")
                         .HasMaxLength(100)

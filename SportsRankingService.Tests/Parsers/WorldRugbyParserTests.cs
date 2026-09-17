@@ -24,4 +24,13 @@ public class WorldRugbyParserTests
 
         Assert.Equal(new DateOnly(2026, 9, 14), ranking.RankingDate);
     }
+
+    [Fact]
+    public void Carries_points_and_the_team_name()
+    {
+        var top = _parser.Parse(Fixture.Read("WorldRugby_Union_Men.json")).Entries.Single(r => r.Position == 1);
+
+        Assert.Equal(95.09175036626566m, top.Points);
+        Assert.Equal("South Africa", top.TeamName);
+    }
 }

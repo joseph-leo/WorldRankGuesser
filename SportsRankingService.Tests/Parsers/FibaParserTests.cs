@@ -39,4 +39,10 @@ public class FibaParserTests
     {
         Assert.Equal(new DateOnly(2026, 9, 1), _parser.Parse(Fixture.Read("Fiba_Ranking_Men.html")).RankingDate);
     }
+
+    [Fact]
+    public void Carries_the_PTS_column()
+    {
+        Assert.Equal(952.3m, _parser.Parse(Fixture.Read("Fiba_Ranking_Men.html")).Entries.First(r => r.Position == 1).Points);
+    }
 }

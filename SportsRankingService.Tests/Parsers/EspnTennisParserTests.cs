@@ -22,4 +22,14 @@ public class EspnTennisParserTests
     {
         Assert.Equal(new DateOnly(2026, 9, 10), _parser.Parse(Fixture.Read("Espn_Atp_Singles.json")).RankingDate);
     }
+
+    [Fact]
+    public void Carries_points_and_the_player_as_competitor_with_no_country_name()
+    {
+        var top = _parser.Parse(Fixture.Read("Espn_Atp_Singles.json")).Entries.Single(r => r.Position == 1);
+
+        Assert.Equal(11500m, top.Points);
+        Assert.Equal("Jannik Sinner", top.Competitor);
+        Assert.Null(top.TeamName);
+    }
 }

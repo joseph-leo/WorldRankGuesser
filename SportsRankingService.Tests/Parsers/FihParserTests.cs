@@ -30,4 +30,14 @@ public class FihParserTests
     {
         Assert.Null(_parser.Parse(Fixture.Read("Fih_Outdoor_Men.json")).RankingDate);
     }
+
+    [Fact]
+    public void Carries_points_and_the_team_name()
+    {
+        var top = _parser.Parse(Fixture.Read("Fih_Outdoor_Men.json")).Entries.Single(r => r.Position == 1);
+
+        Assert.Equal(3720.4115420015878m, top.Points);
+        Assert.Equal("GERMANY", top.TeamName);
+        Assert.Null(top.Competitor);
+    }
 }

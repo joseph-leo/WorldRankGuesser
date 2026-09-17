@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Net;
 using System.Text.RegularExpressions;
 using HtmlAgilityPack;
@@ -12,7 +13,8 @@ namespace SportsRankingService.Parsers;
 /// "World Challenge Cup Ranking List 2026"), followed by a tab strip with one tab per apparatus whose
 /// pane holds that ranking's table. The selector "&lt;series&gt; / &lt;apparatus&gt;" names one table.
 /// Rows are athletes, or national groups for the rhythmic group events, with the IOC code in the
-/// flag image's alt attribute. FIG publishes no ranking date on the page.
+/// flag image's alt attribute and the series total in the Total column. FIG publishes no ranking
+/// date on the page.
 /// </summary>
 public sealed partial class FigParser : IRankingParser
 {
@@ -68,12 +70,26 @@ public sealed partial class FigParser : IRankingParser
             throw new ParseException(SourceName, $"row at rank {position} has no country code");
         }
 
-        // Athletes carry a Name cell; rhythmic groups carry the country name in a second NF cell instead.
-        HtmlNode? nameCell = row.SelectSingleNode("td[@data-label='Name']")
-            ?? row.SelectNodes("td[@data-label='NF']")?.Skip(1).FirstOrDefault();
-        string? name = nameCell is null ? null : Clean(nameCell.InnerText);
+        // Athletes carry a Name cell, and the feed gives no country name for them. Rhythmic groups are
+        // national teams: no Name cell, and the country name sits in a second NF cell.
+        string? athlete = Text(row.SelectSingleNode("td[@data-label='Name']"));
+        string? countryName = athlete is null ? Text(row.SelectNodes("td[@data-label='NF']")?.Skip(1).FirstOrDefault()) : null;
 
-        return new RankEntry(position, ioc.IOCToISO3(), string.IsNullOrEmpty(name) ? null : name);
+        string? totalText = Text(row.SelectSingleNode("td[@data-label='Total']"));
+        decimal? points = totalText is not null && decimal.TryParse(totalText, NumberStyles.Number, CultureInfo.InvariantCulture, out decimal total) ? total : null;
+
+        return new RankEntry(position, ioc.IOCToISO3(), countryName, athlete, points);
+    }
+
+    private static string? Text(HtmlNode? cell)
+    {
+        if (cell is null)
+        {
+            return null;
+        }
+
+        string text = Clean(cell.InnerText);
+        return text.Length == 0 ? null : text;
     }
 
     /// <summary>Decodes entities (the names use &amp;nbsp;) and collapses runs of whitespace to one space.</summary>

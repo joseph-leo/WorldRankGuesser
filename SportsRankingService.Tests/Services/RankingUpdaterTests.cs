@@ -92,7 +92,7 @@ public class RankingUpdaterTests
 
     private static RankingSnapshot Snapshot(string sport, int entries = 1) =>
         new(sport, null, "Men", new DateOnly(2026, 9, 15), IsFederationDate: false,
-            Enumerable.Range(1, entries).Select(i => new RankEntry((short)i, "DEU")).ToList());
+            Enumerable.Range(1, entries).Select(i => new RankingSnapshotEntry((short)i, "DEU")).ToList());
 
     [Fact]
     public async Task Disabled_items_are_skipped_and_not_counted()

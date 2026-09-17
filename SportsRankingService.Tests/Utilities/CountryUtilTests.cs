@@ -8,6 +8,9 @@ public class CountryUtilTests
     [InlineData("GER", "DEU")]
     [InlineData("NED", "NLD")]
     [InlineData("RSA", "ZAF")]
+    [InlineData("ROM", "ROU")]   // ICC, ESPN
+    [InlineData("SER", "SRB")]   // ICC, ESPN
+    [InlineData("KOS", "XKX")]   // FIFA, WBSC; Kosovo has no ISO code, XKX is the customary one
     [InlineData("USA", "USA")]   // already ISO3
     [InlineData("ENG", "ENG")]   // not an IOC code; passes through unchanged
     public void IOCToISO3_maps_IOC_codes_and_passes_others_through(string ioc, string expected)

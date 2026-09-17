@@ -26,4 +26,10 @@ public class SvnsParserTests
         Assert.Equal("ZAF", rows.Single(r => r.Position == 12).ISO3);
         Assert.All(rows, r => Assert.Matches("^[A-Z]{3}$", r.ISO3));
     }
+
+    [Fact]
+    public void Carries_total_points()
+    {
+        Assert.Equal(52m, _parser.Parse(Fixture.Read("Svns_Standings_Men.json")).Entries.Single(r => r.Position == 1).Points);
+    }
 }

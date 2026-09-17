@@ -10,7 +10,7 @@ public sealed class EspnTennisParser : JsonRankingParser<EspnTennisParser.Root>
 
     public sealed record Root(List<Ranking> Rankings);
     public sealed record Ranking(List<Rank> Ranks, string? Update);
-    public sealed record Rank(short Current, Athlete Athlete);
+    public sealed record Rank(short Current, Athlete Athlete, decimal? Points);
     public sealed record Athlete(string CitizenshipCountry, string? DisplayName);
 
     protected override IEnumerable<RankEntry> Map(Root root)
@@ -19,7 +19,7 @@ public sealed class EspnTennisParser : JsonRankingParser<EspnTennisParser.Root>
             ?? throw new ParseException(SourceName, "no rankings in response");
 
         return ranking.Ranks.Select(r =>
-            new RankEntry(r.Current, r.Athlete.CitizenshipCountry.Trim().ToUpperInvariant().IOCToISO3(), r.Athlete.DisplayName));
+            new RankEntry(r.Current, r.Athlete.CitizenshipCountry.Trim().ToUpperInvariant().IOCToISO3(), Competitor: r.Athlete.DisplayName, Points: r.Points));
     }
 
     protected override DateOnly? GetRankingDate(Root root) =>

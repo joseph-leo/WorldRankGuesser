@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text.RegularExpressions;
 using HtmlAgilityPack;
 using SportsRankingService.Parsing;
@@ -7,7 +8,8 @@ namespace SportsRankingService.Parsers;
 
 /// <summary>
 /// FIBA ranking page. The table has no country code column and the country name is localized,
-/// so the country is read from the English slug of the team link (/xx/teams/154-usa).
+/// so the country is read from the English slug of the team link (/xx/teams/154-usa). Columns are
+/// "#, country, zone rank, PTS, +/-".
 /// </summary>
 public sealed partial class FibaParser : HtmlRankingParser
 {
@@ -38,7 +40,10 @@ public sealed partial class FibaParser : HtmlRankingParser
         string positionText = row.SelectSingleNode("td")?.InnerText.Trim().TrimEnd('.') ?? "";
         short position = short.Parse(positionText);
 
-        return new RankEntry(position, iso3!, link.InnerText.Trim());
+        HtmlNodeCollection cells = row.SelectNodes("td");
+        decimal? points = cells.Count > 3 && decimal.TryParse(cells[3].InnerText.Trim(), NumberStyles.Number, CultureInfo.InvariantCulture, out decimal pts) ? pts : null;
+
+        return new RankEntry(position, iso3!, link.InnerText.Trim(), Points: points);
     }
 
     /// <summary>The page's ranking-date dropdown lists releases newest first with the current one selected.</summary>
