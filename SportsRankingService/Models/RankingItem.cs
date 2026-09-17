@@ -29,9 +29,6 @@ namespace SportsRankingService.Models
         /// </summary>
         public string? Selector { get; set; }
 
-        /// <summary>Keep every entry whose position is ≤ N (ties at N are all kept, so the row count can exceed N); null keeps everything.</summary>
-        public int? Take { get; set; }
-
         /// <summary>False leaves the item in the file for reference without fetching it.</summary>
         public bool Enabled { get; set; } = true;
 

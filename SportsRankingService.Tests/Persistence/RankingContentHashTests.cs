@@ -60,12 +60,11 @@ public class RankingContentHashTests
     }
 
     [Fact]
-    public void Changes_when_the_competitor_points_or_entrants_change()
+    public void Changes_when_the_competitor_or_points_change()
     {
-        RankingSnapshot baseline = Snapshot(new(2026, 9, 12), true, new RankingSnapshotEntry(1, "DEU", "Germany", "Anna", 100m, 2));
+        RankingSnapshot baseline = Snapshot(new(2026, 9, 12), true, new RankingSnapshotEntry(1, "DEU", "Germany", "Anna", 100m));
 
-        Assert.NotEqual(RankingContentHash.Compute(baseline), RankingContentHash.Compute(Snapshot(new(2026, 9, 12), true, new RankingSnapshotEntry(1, "DEU", "Germany", "Berta", 100m, 2))));
-        Assert.NotEqual(RankingContentHash.Compute(baseline), RankingContentHash.Compute(Snapshot(new(2026, 9, 12), true, new RankingSnapshotEntry(1, "DEU", "Germany", "Anna", 101m, 2))));
-        Assert.NotEqual(RankingContentHash.Compute(baseline), RankingContentHash.Compute(Snapshot(new(2026, 9, 12), true, new RankingSnapshotEntry(1, "DEU", "Germany", "Anna", 100m, 3))));
+        Assert.NotEqual(RankingContentHash.Compute(baseline), RankingContentHash.Compute(Snapshot(new(2026, 9, 12), true, new RankingSnapshotEntry(1, "DEU", "Germany", "Berta", 100m))));
+        Assert.NotEqual(RankingContentHash.Compute(baseline), RankingContentHash.Compute(Snapshot(new(2026, 9, 12), true, new RankingSnapshotEntry(1, "DEU", "Germany", "Anna", 101m))));
     }
 }

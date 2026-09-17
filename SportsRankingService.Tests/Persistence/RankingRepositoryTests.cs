@@ -118,12 +118,13 @@ public sealed class RankingRepositoryTests : IDisposable
     [Fact]
     public async Task Two_entries_at_the_same_position_are_both_stored()
     {
-        RankingSnapshot doubles = new("Badminton", "Doubles", "Men", new(2026, 9, 15), false, [new(1, "KOR", "Kim"), new(1, "KOR", "Seo")]);
+        RankingSnapshot doubles = new("Badminton", "Doubles", "Men", new(2026, 9, 15), false,
+            [new(1, "KOR", "Korea", "KIM Won Ho"), new(1, "KOR", "Korea", "SEO Seung Jae")]);
 
         await SaveAsync(doubles);
 
         RankingRelease release = Assert.Single(Releases());
-        Assert.Equal(["Kim", "Seo"], release.Rows.Select(x => x.TeamName));
+        Assert.Equal(["KIM Won Ho", "SEO Seung Jae"], release.Rows.Select(x => x.Competitor));
         Assert.All(release.Rows, x => Assert.Equal(1, x.Position));
     }
 
@@ -141,15 +142,15 @@ public sealed class RankingRepositoryTests : IDisposable
     }
 
     [Fact]
-    public async Task Stores_the_country_name_competitor_points_and_entrants()
+    public async Task Stores_the_country_name_competitor_and_points()
     {
         await SaveAsync(new RankingSnapshot("Tennis", "Singles", "Men", new(2026, 9, 10), true,
-            [new(1, "ITA", "Italy", "Jannik Sinner", 11500m, 4), new(2, "ESP", "Spain", "Carlos Alcaraz", 9000.5m, 3)]));
+            [new(1, "ITA", "Italy", "Jannik Sinner", 11500m), new(2, "ESP", "Spain", "Carlos Alcaraz", 9000.5m)]));
 
         RankingRelease release = Assert.Single(Releases());
         Assert.Equal(
-            [("ITA", "Italy", "Jannik Sinner", 11500m, 4), ("ESP", "Spain", "Carlos Alcaraz", 9000.5m, 3)],
-            release.Rows.Select(x => (x.ISO3, x.TeamName, x.Competitor, x.Points, x.RankedEntrants)));
+            [("ITA", "Italy", "Jannik Sinner", 11500m), ("ESP", "Spain", "Carlos Alcaraz", 9000.5m)],
+            release.Rows.Select(x => (x.ISO3, x.TeamName, x.Competitor, x.Points)));
     }
 
     [Fact]
