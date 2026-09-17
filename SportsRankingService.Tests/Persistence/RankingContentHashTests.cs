@@ -1,4 +1,3 @@
-using SportsRankingService.Parsing;
 using SportsRankingService.Persistence;
 using SportsRankingService.Services;
 
