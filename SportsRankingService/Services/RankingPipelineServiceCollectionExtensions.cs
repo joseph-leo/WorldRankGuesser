@@ -42,6 +42,7 @@ public static class RankingPipelineServiceCollectionExtensions
 
         services.TryAddSingleton(TimeProvider.System);
         services.AddSingleton<RankingSourceRunner>();
+        services.AddSingleton<IRankingSourceRunner>(sp => sp.GetRequiredService<RankingSourceRunner>());
         services.AddTransient<IRankingUpdater, RankingUpdater>();
 
         return services;

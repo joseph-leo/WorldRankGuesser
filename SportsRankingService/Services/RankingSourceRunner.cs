@@ -10,7 +10,7 @@ namespace SportsRankingService.Services;
 /// <see cref="ParseException"/>; an unknown Source or UrlResolver name throws
 /// <see cref="InvalidOperationException"/> because that is a configuration error.
 /// </summary>
-public sealed class RankingSourceRunner
+public sealed class RankingSourceRunner : IRankingSourceRunner
 {
     private readonly IHttpFetcher _fetcher;
     private readonly IReadOnlyDictionary<string, IRankingParser> _parsers;
