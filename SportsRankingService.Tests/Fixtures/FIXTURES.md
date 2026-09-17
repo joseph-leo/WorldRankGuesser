@@ -12,7 +12,7 @@ the same commit.
 | Espn_Atp_Singles.json | https://site.web.api.espn.com/apis/site/v2/sports/tennis/atp/rankings?region=us&lang=en | parses |
 | Wta_Doubles.json | https://api.wtatennis.com/tennis/players/ranked?page=0&pageSize=100&type=rankDoubles&sort=asc&name=&metric=DOUBLES | parses |
 | VolleyballWorld_Men.json | https://en.volleyballworld.com/api/v1/worldranking/volleyball/1/0/500 | parses; recaptured 2026-09-17 at the API's 500-row maximum (148 teams, the full list) |
-| VolleyballWorld_Beach_Men.json | https://en.volleyballworld.com/api/v1/worldranking/beachvolleyball/0/0/500 | recaptured 2026-09-17; a pair per row (`player1Name`, `name`), integer `points`; 500 rows is the API's per-request maximum and the beach list is deeper (multi-page spec) |
+| VolleyballWorld_Beach_Men.json | https://en.volleyballworld.com/api/v1/worldranking/beachvolleyball/0/0/500 | recaptured 2026-09-17; a pair per row (`player1Name`, `player2Name`, `name`), integer `points`; 500 rows is the API's per-request maximum and the beach list is deeper (multi-page spec) |
 | Icc_T20_Women.json | https://assets-icc.sportz.io/cricket/v1/ranking?...&comp_type=t20w&type=team | parses; `shortname` carries a `-W` suffix |
 | Icc_Test_Men.json | https://assets-icc.sportz.io/cricket/v1/ranking?...&comp_type=test&type=team | parses; two-letter codes SA, NZ, SL, WI |
 | Fifa_Overview_Men_id14870.json | https://inside.fifa.com/api/ranking-overview?locale=en&dateId=id14870 | parses; the API returns an empty list for the newer `FRS_*` date ids |
