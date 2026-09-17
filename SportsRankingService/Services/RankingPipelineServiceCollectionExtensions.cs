@@ -26,6 +26,7 @@ public static class RankingPipelineServiceCollectionExtensions
         services.AddSingleton<IRankingParser, BwfParser>();
         services.AddSingleton<IRankingParser, EspnTennisParser>();
         services.AddSingleton<IRankingParser, FibaParser>();
+        services.AddSingleton<IRankingParser, FigParser>();
         services.AddSingleton<IRankingParser, FifaV3Parser>();
         services.AddSingleton<IRankingParser, FihParser>();
         services.AddSingleton<IRankingParser, IccParser>();

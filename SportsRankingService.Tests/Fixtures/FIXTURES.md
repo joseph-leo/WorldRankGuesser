@@ -35,6 +35,14 @@ Replacement sources found on 2026-09-15 (endpoints located by the project owner 
 | Svns_Series_Men.json / _Women.json | https://api.wr-rims-prod.pulselive.com/rugby/v3/series/{id} | `sport` is `mrs` (men) or `wrs` (women) |
 | Svns_Standings_Men.json / _Women.json | https://api.wr-rims-prod.pulselive.com/rugby/v3/series/{id}/standings | `entries[].{position, team.abbreviation}`; `team.countryCode` is null |
 
+Gymnastics, captured on 2026-09-16 (the sport was dropped in the 2026-09-15 refactor and restored the next day):
+
+| File | Source URL | Notes |
+|---|---|---|
+| Fig_Artistic_Men.html | https://www.gymnastics.sport/site/rankings/ranking_mag_table.php | fragment loaded by ranking_mag.php; two series (Apparatus World Cup, World Challenge Cup) with one tab per apparatus; rows are athletes with the IOC code in the flag `img` alt. No ranking date. The "By Country" all-around section is inside an HTML comment and frozen at 2020 |
+| Fig_Artistic_Women.html | https://www.gymnastics.sport/site/rankings/ranking_wag_table.php | same shape, four apparatus |
+| Fig_Rhythmic_Women.html | https://www.gymnastics.sport/site/rankings/ranking_rg_table.php | same shape; the three Group tabs rank national groups and carry the country name instead of an athlete name |
+
 Still not capturable: IIHF world ranking (403) and the ATP doubles page (Cloudflare challenge, 403 even with `?rankRange=0-5000`).
 
 BWF caveat: the fixtures above were captured with curl. The same URL returns 403 to .NET `HttpClient`, whether through `SocketsHttpHandler` or `WinHttpHandler`, with any header set tried, so the live feed is disabled in serviceconfig.json even though the parser passes its tests.
