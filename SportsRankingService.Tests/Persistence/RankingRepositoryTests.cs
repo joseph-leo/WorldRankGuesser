@@ -1,7 +1,6 @@
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Time.Testing;
-using SportsRankingService.Parsing;
 using SportsRankingService.Persistence;
 using SportsRankingService.Services;
 
