@@ -3,7 +3,7 @@ namespace SportsRankingService.Services;
 /// <summary>
 /// One feed's ranking as fetched on one run, ready to persist: the feed identity, the ranking
 /// date (the federation's when it publishes one, otherwise the scrape date, which
-/// <see cref="IsFederationDate"/> distinguishes) and one entry per country in position order.
+/// <see cref="IsFederationDate"/> distinguishes) and its entries in position order.
 /// This is the pipeline's output type; it knows nothing about the database.
 /// </summary>
 public sealed record RankingSnapshot(

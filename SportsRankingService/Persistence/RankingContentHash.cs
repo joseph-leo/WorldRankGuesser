@@ -7,7 +7,7 @@ namespace SportsRankingService.Persistence;
 
 /// <summary>
 /// Identity of a release's content: SHA-256 over a header line (the ranking date when it is the
-/// federation's, otherwise empty) and one "position, ISO3, team name, competitor, points, entrants"
+/// federation's, otherwise empty) and one "position, ISO3, team name, competitor, points"
 /// tab-separated line per entry in order, so any stored fact changing makes a new release.
 /// The feed identity is not included because the repository compares within one feed only.
 /// </summary>
@@ -25,8 +25,7 @@ public static class RankingContentHash
                 .Append(entry.ISO3).Append('\t')
                 .Append(entry.TeamName).Append('\t')
                 .Append(entry.Competitor).Append('\t')
-                .Append(entry.Points?.ToString(CultureInfo.InvariantCulture)).Append('\t')
-                .Append(entry.RankedEntrants.ToString(CultureInfo.InvariantCulture)).Append('\n');
+                .Append(entry.Points?.ToString(CultureInfo.InvariantCulture)).Append('\n');
         }
 
         return SHA256.HashData(Encoding.UTF8.GetBytes(text.ToString()));

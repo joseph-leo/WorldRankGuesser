@@ -43,7 +43,6 @@ public sealed class RankingRepository(RankingsDbContext db, TimeProvider clock) 
                     TeamName = entry.TeamName,
                     Competitor = entry.Competitor,
                     Points = entry.Points,
-                    RankedEntrants = entry.RankedEntrants,
                 })
                 .ToList(),
         };

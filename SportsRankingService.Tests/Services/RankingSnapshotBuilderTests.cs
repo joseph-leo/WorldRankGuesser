@@ -24,7 +24,7 @@ public class RankingSnapshotBuilderTests
         Assert.Equal("Field Hockey", snapshot.Sport);
         Assert.Equal("Outdoor", snapshot.Event);
         Assert.Equal("Men", snapshot.Gender);
-        Assert.Equal([new RankingSnapshotEntry(3, "DEU", "Germany", null, null, 1)], snapshot.Entries);
+        Assert.Equal([new RankingSnapshotEntry(3, "DEU", "Germany")], snapshot.Entries);
     }
 
     [Fact]
@@ -44,43 +44,36 @@ public class RankingSnapshotBuilderTests
     }
 
     [Fact]
-    public void One_row_per_country_keeps_the_best_placed_entry_and_counts_the_rest()
+    public void Every_entry_is_kept_a_country_may_appear_many_times()
     {
         RankingSnapshot snapshot = Build(
             new(1, "USA", Competitor: "Biles"),
-            new(2, "JPN", Competitor: "Okamura"),
             new(3, "USA", Competitor: "Lee"),
+            new(2, "JPN", Competitor: "Okamura"),
             new(5, "USA", Competitor: "Jones"));
 
-        Assert.Equal(["USA", "JPN"], snapshot.Entries.Select(e => e.ISO3));
-        RankingSnapshotEntry usa = snapshot.Entries[0];
-        Assert.Equal(1, usa.Position);
-        Assert.Equal("Biles", usa.Competitor);
-        Assert.Equal(3, usa.RankedEntrants);
-        Assert.Equal(1, snapshot.Entries[1].RankedEntrants);
+        Assert.Equal(["Biles", "Okamura", "Lee", "Jones"], snapshot.Entries.Select(e => e.Competitor));
+        Assert.Equal(["USA", "JPN", "USA", "USA"], snapshot.Entries.Select(e => e.ISO3));
     }
 
     [Fact]
-    public void A_country_tied_with_itself_keeps_its_first_feed_entry()
+    public void Partners_differing_only_by_competitor_are_both_kept()
     {
-        RankingSnapshot snapshot = Build(new(1, "KOR", "Korea", "Kim"), new(1, "KOR", "Korea", "Seo"));
+        RankingSnapshot snapshot = Build(
+            new(1, "KOR", "Korea", "KIM Won Ho", 114099m),
+            new(1, "KOR", "Korea", "SEO Seung Jae", 114099m));
 
-        RankingSnapshotEntry korea = Assert.Single(snapshot.Entries);
-        Assert.Equal("Kim", korea.Competitor);
-        Assert.Equal(2, korea.RankedEntrants);
+        Assert.Equal(2, snapshot.Entries.Count);
     }
 
     [Fact]
-    public void Take_applies_by_position_after_the_country_collapse()
+    public void Equal_entries_fail_the_build_naming_the_entry()
     {
-        RankingItem item = new() { Sport = "Badminton", Event = "Singles", Gender = "Men", Url = "http://x", Source = "Bwf", Take = 2 };
-        RankEntry[] entries = [new(1, "KOR"), new(2, "KOR"), new(2, "DNK"), new(3, "CHN"), new(4, "DNK")];
+        var ex = Assert.Throws<ParseException>(() => Build(
+            new(1, "KOR", "Korea", "KIM Won Ho", 114099m),
+            new(1, "KOR", "Korea", "KIM Won Ho", 114099m)));
 
-        RankingSnapshot snapshot = RankingSnapshotBuilder.Build(item, new ParsedRanking(entries), null, Today);
-
-        Assert.Equal(["KOR", "DNK"], snapshot.Entries.Select(e => e.ISO3));
-        // Entrants are counted over the whole ranking, not the kept top.
-        Assert.Equal([2, 2], snapshot.Entries.Select(e => e.RankedEntrants));
+        Assert.Contains("KOR", ex.Message);
     }
 
     [Fact]
