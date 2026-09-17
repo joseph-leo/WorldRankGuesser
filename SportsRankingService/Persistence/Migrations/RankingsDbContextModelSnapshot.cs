@@ -95,9 +95,6 @@ namespace SportsRankingService.Persistence.Migrations
                     b.Property<short>("Position")
                         .HasColumnType("smallint");
 
-                    b.Property<int>("RankedEntrants")
-                        .HasColumnType("int");
-
                     b.Property<string>("TeamName")
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
