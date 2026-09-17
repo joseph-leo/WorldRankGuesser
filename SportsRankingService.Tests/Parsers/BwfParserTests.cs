@@ -6,7 +6,7 @@ namespace SportsRankingService.Tests.Parsers;
 /// <summary>
 /// BWF ranking table API. Countries come as names only (p1_country_model.name), so every name in
 /// a fixture must resolve through CountryUtil; an unresolvable name fails the parse loudly.
-/// Doubles pairs yield one entry per partner with the same position.
+/// Doubles pairs yield one entry per partner, each naming its own partner.
 /// </summary>
 public class BwfParserTests
 {
@@ -63,11 +63,12 @@ public class BwfParserTests
     }
 
     [Fact]
-    public void Doubles_partners_share_the_pair_as_competitor()
+    public void Doubles_partners_each_carry_their_own_name()
     {
         var pair = _parser.Parse(Fixture.Read("Bwf_MensDoubles.json")).Entries.Where(r => r.Position == 1).ToList();
 
-        Assert.All(pair, r => Assert.Equal("KIM Won Ho / SEO Seung Jae", r.Competitor));
+        Assert.Equal(["KIM Won Ho", "SEO Seung Jae"], pair.Select(r => r.Competitor));
+        Assert.All(pair, r => Assert.Equal("KOR", r.ISO3));
         Assert.All(pair, r => Assert.Equal(114099m, r.Points));
     }
 }
