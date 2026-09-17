@@ -33,4 +33,10 @@ public class WbscParserTests
     {
         Assert.Equal(new DateOnly(2026, 3, 26), _parser.Parse(Fixture.Read("Wbsc_Baseball_Men.json")).RankingDate);
     }
+
+    [Fact]
+    public void Carries_points()
+    {
+        Assert.Equal(6337m, _parser.Parse(Fixture.Read("Wbsc_Baseball_Men.json")).Entries.Single(r => r.Position == 1).Points);
+    }
 }

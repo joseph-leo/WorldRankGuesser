@@ -1,3 +1,4 @@
+| VolleyballWorld_Beach_Men.json | https://en.volleyballworld.com/api/v1/worldranking/beachvolleyball/0/0/100 | captured 2026-09-16; a pair per row (`player1Name`, `player2Name`, `name`), integer `points` instead of the indoor feed's `decimalPoints` |
 # Fixtures
 
 One real response per feed, captured with a browser User-Agent on 2026-09-15.

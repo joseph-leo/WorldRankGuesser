@@ -53,4 +53,11 @@ public class IccParserTests
     {
         Assert.Equal(new DateOnly(2026, 9, 12), _parser.Parse(Fixture.Read("Icc_Test_Men.json")).RankingDate);
     }
+
+    [Fact]
+    public void Carries_the_rating_as_points()
+    {
+        // The ICC ranks by Rating; its Points field is the raw total the rating is derived from.
+        Assert.Equal(126m, _parser.Parse(Fixture.Read("Icc_Test_Men.json")).Entries.Single(r => r.Position == 1).Points);
+    }
 }

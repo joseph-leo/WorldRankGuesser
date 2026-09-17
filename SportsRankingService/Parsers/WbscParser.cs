@@ -9,10 +9,10 @@ public sealed class WbscParser : JsonRankingParser<WbscParser.Root>
     public override string SourceName => "Wbsc";
 
     public sealed record Root(List<Row> Rankings);
-    public sealed record Row(short Position, string Ioc, string? Date);
+    public sealed record Row(short Position, string Ioc, string? Date, decimal? Points);
 
     protected override IEnumerable<RankEntry> Map(Root root) =>
-        root.Rankings.Select(r => new RankEntry(r.Position, r.Ioc.Trim().IOCToISO3()));
+        root.Rankings.Select(r => new RankEntry(r.Position, r.Ioc.Trim().IOCToISO3(), Points: r.Points));
 
     // The API only answers for an exact release date, so every row carries that same date.
     protected override DateOnly? GetRankingDate(Root root) =>

@@ -37,4 +37,13 @@ public class FifaV3ParserTests
         Assert.DoesNotContain("GER", codes);
         Assert.Contains("ENG", codes);   // FIFA home nations are kept as FIFA emits them
     }
+
+    [Fact]
+    public void Carries_total_points_and_the_team_name()
+    {
+        var top = _parser.Parse(Fixture.Read("Fifa_V3_Men_FRS_20260611.json")).Entries.Single(r => r.Position == 1);
+
+        Assert.Equal(1995.881879m, top.Points);
+        Assert.Equal("Spain", top.TeamName);
+    }
 }

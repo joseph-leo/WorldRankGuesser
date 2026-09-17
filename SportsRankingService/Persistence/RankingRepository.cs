@@ -41,6 +41,9 @@ public sealed class RankingRepository(RankingsDbContext db, TimeProvider clock) 
                     Position = entry.Position,
                     ISO3 = entry.ISO3,
                     TeamName = entry.TeamName,
+                    Competitor = entry.Competitor,
+                    Points = entry.Points,
+                    RankedEntrants = entry.RankedEntrants,
                 })
                 .ToList(),
         };

@@ -51,4 +51,23 @@ public class BwfParserTests
 
         Assert.Contains("Atlantis", ex.Message);
     }
+
+    [Fact]
+    public void Singles_carry_points_the_country_name_and_the_player_as_competitor()
+    {
+        var top = _parser.Parse(Fixture.Read("Bwf_MensSingles.json")).Entries.Single(r => r.Position == 1);
+
+        Assert.Equal(87631m, top.Points);
+        Assert.Equal("Indonesia", top.TeamName);
+        Assert.Equal("Jonatan CHRISTIE", top.Competitor);
+    }
+
+    [Fact]
+    public void Doubles_partners_share_the_pair_as_competitor()
+    {
+        var pair = _parser.Parse(Fixture.Read("Bwf_MensDoubles.json")).Entries.Where(r => r.Position == 1).ToList();
+
+        Assert.All(pair, r => Assert.Equal("KIM Won Ho / SEO Seung Jae", r.Competitor));
+        Assert.All(pair, r => Assert.Equal(114099m, r.Points));
+    }
 }

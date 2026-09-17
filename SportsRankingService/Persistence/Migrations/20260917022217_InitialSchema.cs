@@ -39,7 +39,10 @@ namespace SportsRankingService.Persistence.Migrations
                     Ordinal = table.Column<int>(type: "int", nullable: false),
                     Position = table.Column<short>(type: "smallint", nullable: false),
                     ISO3 = table.Column<string>(type: "varchar(3)", unicode: false, maxLength: 3, nullable: false),
-                    TeamName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true)
+                    TeamName = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    Competitor = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
+                    Points = table.Column<decimal>(type: "decimal(12,3)", precision: 12, scale: 3, nullable: true),
+                    RankedEntrants = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -57,10 +60,12 @@ namespace SportsRankingService.Persistence.Migrations
                 table: "RankingReleases",
                 columns: new[] { "Sport", "Event", "Gender" });
 
-            // Read model for consumers: the newest release per feed, one row per entry.
+            // Read model for consumers: the newest release per feed, one row per country.
+            // Raw SQL outside the EF model; a later migration that changes a projected column must re-create it.
             migrationBuilder.Sql("""
                 CREATE VIEW dbo.CurrentRankings AS
-                SELECT r.Sport, r.Event, r.Gender, r.RankingDate, r.IsFederationDate, x.Position, x.ISO3, x.TeamName
+                SELECT r.Sport, r.Event, r.Gender, r.RankingDate, r.IsFederationDate,
+                       x.Position, x.ISO3, x.TeamName, x.Competitor, x.Points, x.RankedEntrants
                 FROM dbo.RankingReleases r
                 JOIN dbo.RankingRows x ON x.ReleaseId = r.Id
                 WHERE r.Id = (

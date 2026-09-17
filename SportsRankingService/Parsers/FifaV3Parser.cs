@@ -13,11 +13,11 @@ public sealed class FifaV3Parser : JsonRankingParser<FifaV3Parser.Root>
 
     public sealed record Root(List<Result> Results);
     /// <param name="Rank">Null for teams that are listed but currently unranked (too few rated matches).</param>
-    public sealed record Result(short? Rank, string IdCountry, List<LocalizedText>? TeamName);
+    public sealed record Result(short? Rank, string IdCountry, List<LocalizedText>? TeamName, decimal? TotalPoints);
     public sealed record LocalizedText(string? Locale, string? Description);
 
     protected override IEnumerable<RankEntry> Map(Root root) =>
         root.Results
             .Where(r => r.Rank is not null)
-            .Select(r => new RankEntry(r.Rank!.Value, r.IdCountry.Trim().IOCToISO3(), r.TeamName?.FirstOrDefault()?.Description));
+            .Select(r => new RankEntry(r.Rank!.Value, r.IdCountry.Trim().IOCToISO3(), r.TeamName?.FirstOrDefault()?.Description, Points: r.TotalPoints));
 }

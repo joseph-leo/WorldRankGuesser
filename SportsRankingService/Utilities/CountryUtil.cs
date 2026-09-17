@@ -169,6 +169,9 @@ namespace SportsRankingService.Utilities
         private static readonly FrozenDictionary<string, string> IocToIso3 = new Dictionary<string, string>
         {
             { "ALG", "DZA" },
+            { "ROM", "ROU" },
+            { "SER", "SRB" },
+            { "KOS", "XKX" },
             { "ASA", "ASM" },
             { "ANG", "AGO" },
             { "ANT", "ATG" },

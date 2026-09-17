@@ -42,7 +42,7 @@ public sealed class RankingRepositoryTests : IDisposable
         return db.Releases.Include(r => r.Rows.OrderBy(x => x.Ordinal)).OrderBy(r => r.Id).ToList();
     }
 
-    private static RankingSnapshot Hockey(DateOnly date, bool federation, params RankEntry[] entries) =>
+    private static RankingSnapshot Hockey(DateOnly date, bool federation, params RankingSnapshotEntry[] entries) =>
         new("Field Hockey", "Outdoor", "Men", date, federation, entries);
 
     [Fact]
@@ -95,9 +95,9 @@ public sealed class RankingRepositoryTests : IDisposable
     [Fact]
     public async Task Same_rows_under_a_new_federation_date_insert_a_release()
     {
-        await SaveAsync(Hockey(new(2026, 9, 12), true, new RankEntry(1, "DEU")));
+        await SaveAsync(Hockey(new(2026, 9, 12), true, new RankingSnapshotEntry(1, "DEU")));
 
-        SaveOutcome outcome = await SaveAsync(Hockey(new(2026, 9, 19), true, new RankEntry(1, "DEU")));
+        SaveOutcome outcome = await SaveAsync(Hockey(new(2026, 9, 19), true, new RankingSnapshotEntry(1, "DEU")));
 
         Assert.Equal(SaveOutcome.Inserted, outcome);
         Assert.Equal([new DateOnly(2026, 9, 12), new DateOnly(2026, 9, 19)], Releases().Select(r => r.RankingDate));
@@ -106,10 +106,10 @@ public sealed class RankingRepositoryTests : IDisposable
     [Fact]
     public async Task Reverting_to_older_content_is_still_a_new_release()
     {
-        await SaveAsync(Hockey(new(2026, 9, 15), false, new RankEntry(1, "DEU")));
-        await SaveAsync(Hockey(new(2026, 9, 15), false, new RankEntry(1, "NLD")));
+        await SaveAsync(Hockey(new(2026, 9, 15), false, new RankingSnapshotEntry(1, "DEU")));
+        await SaveAsync(Hockey(new(2026, 9, 15), false, new RankingSnapshotEntry(1, "NLD")));
 
-        SaveOutcome outcome = await SaveAsync(Hockey(new(2026, 9, 15), false, new RankEntry(1, "DEU")));
+        SaveOutcome outcome = await SaveAsync(Hockey(new(2026, 9, 15), false, new RankingSnapshotEntry(1, "DEU")));
 
         Assert.Equal(SaveOutcome.Inserted, outcome);
         Assert.Equal(3, Releases().Count);
@@ -137,6 +137,29 @@ public sealed class RankingRepositoryTests : IDisposable
         Assert.Equal(SaveOutcome.Inserted, await SaveAsync(basketballWomen));
         Assert.Equal(SaveOutcome.Unchanged, await SaveAsync(basketballMen));
         Assert.Equal(SaveOutcome.Unchanged, await SaveAsync(basketballWomen));
+        Assert.Equal(2, Releases().Count);
+    }
+
+    [Fact]
+    public async Task Stores_the_country_name_competitor_points_and_entrants()
+    {
+        await SaveAsync(new RankingSnapshot("Tennis", "Singles", "Men", new(2026, 9, 10), true,
+            [new(1, "ITA", "Italy", "Jannik Sinner", 11500m, 4), new(2, "ESP", "Spain", "Carlos Alcaraz", 9000.5m, 3)]));
+
+        RankingRelease release = Assert.Single(Releases());
+        Assert.Equal(
+            [("ITA", "Italy", "Jannik Sinner", 11500m, 4), ("ESP", "Spain", "Carlos Alcaraz", 9000.5m, 3)],
+            release.Rows.Select(x => (x.ISO3, x.TeamName, x.Competitor, x.Points, x.RankedEntrants)));
+    }
+
+    [Fact]
+    public async Task A_new_best_athlete_at_the_same_position_is_a_new_release()
+    {
+        await SaveAsync(Hockey(new(2026, 9, 15), false, new RankingSnapshotEntry(1, "DEU", "Germany", "Anna")));
+
+        SaveOutcome outcome = await SaveAsync(Hockey(new(2026, 9, 15), false, new RankingSnapshotEntry(1, "DEU", "Germany", "Berta")));
+
+        Assert.Equal(SaveOutcome.Inserted, outcome);
         Assert.Equal(2, Releases().Count);
     }
 }
