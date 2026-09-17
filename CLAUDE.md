@@ -11,7 +11,7 @@ A .NET 8 run-once console app that scrapes world sports rankings (FIFA, ICC, Wor
 All commands run from the repo root unless noted.
 
 ```powershell
-docker compose up -d --wait                              # local SQL Server 2022 (sa / Rankings_Dev1!, port 1433)
+docker compose up -d --wait                              # local SQL Server 2022 (sa / Rankings_Dev1!, port 1433, loopback-only)
 dotnet tool restore                                      # repo-local dotnet-ef 8.0.31
 dotnet ef database update --project SportsRankingService --startup-project SportsRankingService # apply migrations (the app never migrates itself)
 dotnet build SportsRankingService.sln                    # build all projects (warnings are expected; 0 errors)

@@ -11,7 +11,7 @@ services:
       MSSQL_SA_PASSWORD: "Rankings_Dev1!"
       MSSQL_PID: Developer
     ports:
-      - "1433:1433"
+      - "127.0.0.1:1433:1433"
     volumes:
       - sqldata:/var/opt/mssql
     healthcheck:
