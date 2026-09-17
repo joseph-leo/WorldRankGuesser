@@ -34,8 +34,8 @@ cron:
 
 ## Reading the data
 
-`CurrentRankings` is a view with one row per entry of each feed's newest release; `CurrentCountryRankings` collapses it to one row per country (the best-placed entry plus its entrant count)
-(`Sport, Event, Gender, RankingDate, IsFederationDate, Position, ISO3, TeamName`).
+`CurrentRankings` is a view with one row per entry of each feed's newest release; `CurrentCountryRankings` collapses it to one row per country (the best-placed entry plus its entrant count).
+`CurrentRankings` columns: Sport, Event, Gender, RankingDate, IsFederationDate, Ordinal, Position, ISO3, TeamName, Competitor, Points; `CurrentCountryRankings` columns: Sport, Event, Gender, RankingDate, IsFederationDate, Position, ISO3, TeamName, Competitor, Points, RankedEntrants.
 `RankingReleases` and `RankingRows` hold every release ever seen; `IsFederationDate` says whether
 `RankingDate` came from the federation or is the scrape date of a feed that publishes none. For a
 dateless feed, `RankingDate` is the day its content was first seen and does not move while that
