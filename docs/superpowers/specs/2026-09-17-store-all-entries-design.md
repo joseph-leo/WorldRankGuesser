@@ -75,16 +75,21 @@ must drop and re-create them itself.
 
 ## Page sizes (URL-only raises)
 
-- WTA: `pageSize=100` raised to fetch the full doubles list; exact value verified
-  against the live API during implementation (the API may cap silently — verify the
-  returned count).
-- Volleyball World: the trailing `/100` path segment raised the same way for all four
-  feeds.
-- BWF: `pageKey=150` raised too, although the feeds stay disabled (Cloudflare 403).
+Live probes on 2026-09-17, while planning:
+
+- WTA silently caps `pageSize` at 100 (2000 and 200 both return 100 rows; `page=1`
+  returns positions 101 on), so the raise this spec assumed does not exist. The feed
+  stays at `pageSize=100` with a config note; its full depth joins the multi-page spec.
+- Volleyball World serves at most 500 rows in one request (600 and above return an
+  error page). All four feeds move from 100 to 500. The indoor lists are complete at
+  that size (148 men, 133 women on probe day); the beach lists fill all 500 rows, so
+  their full depth also joins the multi-page spec.
+- BWF: `pageKey=150` raised to 2000, which `FIXTURES.md` records as honored, although
+  the feeds stay disabled (Cloudflare 403).
 - ESPN tennis has no size parameter; deeper tennis lists wait for the multi-page spec.
 
-The WTA and Volleyball World fixtures are recaptured at the new URLs — the configured
-URL is part of what `FIXTURES.md` records — and their test counts updated.
+The two Volleyball World fixtures are recaptured at the new URLs — the configured URL
+is part of what `FIXTURES.md` records — and their test counts updated.
 
 ## Testing
 
