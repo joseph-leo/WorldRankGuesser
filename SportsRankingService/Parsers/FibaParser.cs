@@ -9,13 +9,14 @@ namespace SportsRankingService.Parsers;
 /// <summary>
 /// FIBA ranking page. The table has no country code column and the country name is localized,
 /// so the country is read from the English slug of the team link (/xx/teams/154-usa). Columns are
-/// "#, country, zone rank, PTS, +/-".
+/// "#, country, zone rank, PTS, +/-". The page also holds "biggest movers" and "biggest drops" widget
+/// tables after the ranking, so only the first table is read.
 /// </summary>
 public sealed partial class FibaParser : HtmlRankingParser
 {
     public override string SourceName => "Fiba";
 
-    protected override string RowXPath => "//table//tbody/tr";
+    protected override string RowXPath => "(//table)[1]//tbody/tr";
 
     protected override RankEntry? MapRow(HtmlNode row)
     {

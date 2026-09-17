@@ -45,4 +45,14 @@ public class FibaParserTests
     {
         Assert.Equal(952.3m, _parser.Parse(Fixture.Read("Fiba_Ranking_Men.html")).Entries.First(r => r.Position == 1).Points);
     }
+
+    [Fact]
+    public void Ignores_the_movers_and_drops_widget_tables()
+    {
+        // The page also carries "Meilleures Progressions" and "Pires Chutes" tables whose rows repeat ranked countries.
+        var rows = _parser.Parse(Fixture.Read("Fiba_Ranking_Men.html")).Entries;
+
+        Assert.Equal(159, rows.Count);
+        Assert.Equal(159, rows.Select(r => r.ISO3).Distinct().Count());
+    }
 }
