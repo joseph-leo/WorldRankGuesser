@@ -2,19 +2,19 @@
   "Rankings": [
     { "Sport": "Badminton", "Event": "Singles", "Gender": "Men", "Source": "Bwf", "Enabled": false,
       "Note": "Cloudflare returns 403 to .NET HttpClient (SslStream and WinHTTP) while curl with the same User-Agent passes (2026-09-15). Parser and fixtures are ready.",
-      "Url": "https://extranet-lv.bwfbadminton.com/api/vue-rankingtable?rankId=2&catId=6&publicationId=0&doubles=false&searchKey=&pageKey=150&page=1" },
+      "Url": "https://extranet-lv.bwfbadminton.com/api/vue-rankingtable?rankId=2&catId=6&publicationId=0&doubles=false&searchKey=&pageKey=2000&page=1" },
     { "Sport": "Badminton", "Event": "Singles", "Gender": "Women", "Source": "Bwf", "Enabled": false,
       "Note": "Cloudflare returns 403 to .NET HttpClient (SslStream and WinHTTP) while curl with the same User-Agent passes (2026-09-15). Parser and fixtures are ready.",
-      "Url": "https://extranet-lv.bwfbadminton.com/api/vue-rankingtable?rankId=2&catId=7&publicationId=0&doubles=false&searchKey=&pageKey=150&page=1" },
+      "Url": "https://extranet-lv.bwfbadminton.com/api/vue-rankingtable?rankId=2&catId=7&publicationId=0&doubles=false&searchKey=&pageKey=2000&page=1" },
     { "Sport": "Badminton", "Event": "Doubles", "Gender": "Men", "Source": "Bwf", "Enabled": false,
       "Note": "Cloudflare returns 403 to .NET HttpClient (SslStream and WinHTTP) while curl with the same User-Agent passes (2026-09-15). Parser and fixtures are ready.",
-      "Url": "https://extranet-lv.bwfbadminton.com/api/vue-rankingtable?rankId=2&catId=8&publicationId=0&doubles=true&searchKey=&pageKey=150&page=1" },
+      "Url": "https://extranet-lv.bwfbadminton.com/api/vue-rankingtable?rankId=2&catId=8&publicationId=0&doubles=true&searchKey=&pageKey=2000&page=1" },
     { "Sport": "Badminton", "Event": "Doubles", "Gender": "Women", "Source": "Bwf", "Enabled": false,
       "Note": "Cloudflare returns 403 to .NET HttpClient (SslStream and WinHTTP) while curl with the same User-Agent passes (2026-09-15). Parser and fixtures are ready.",
-      "Url": "https://extranet-lv.bwfbadminton.com/api/vue-rankingtable?rankId=2&catId=9&publicationId=0&doubles=true&searchKey=&pageKey=150&page=1" },
+      "Url": "https://extranet-lv.bwfbadminton.com/api/vue-rankingtable?rankId=2&catId=9&publicationId=0&doubles=true&searchKey=&pageKey=2000&page=1" },
     { "Sport": "Badminton", "Event": "Doubles", "Gender": "Mixed", "Source": "Bwf", "Enabled": false,
       "Note": "Cloudflare returns 403 to .NET HttpClient (SslStream and WinHTTP) while curl with the same User-Agent passes (2026-09-15). Parser and fixtures are ready.",
-      "Url": "https://extranet-lv.bwfbadminton.com/api/vue-rankingtable?rankId=2&catId=10&publicationId=0&doubles=true&searchKey=&pageKey=150&page=1" },
+      "Url": "https://extranet-lv.bwfbadminton.com/api/vue-rankingtable?rankId=2&catId=10&publicationId=0&doubles=true&searchKey=&pageKey=2000&page=1" },
 
     { "Sport": "Baseball", "Gender": "Men", "Source": "Wbsc", "UrlResolver": "WbscReleaseDate",
       "Url": "https://www.wbsc.org/api/v1/rankings/sport/show?sportId=baseball-m&date={0}&fullView=1&preview=&lang=en" },
@@ -113,15 +113,16 @@
       "Note": "https://www.atptour.com/en/rankings/doubles sits behind a Cloudflare challenge (2026-09-15). No parser yet; needs a new source.",
       "Url": "https://www.atptour.com/en/rankings/doubles?rankRange=0-5000" },
     { "Sport": "Tennis", "Event": "Doubles", "Gender": "Women", "Source": "Wta",
+      "Note": "The API caps pageSize at 100 whatever is asked (checked 2026-09-17); positions past 100 need page=1 and up, which waits for the multi-page fetch spec.",
       "Url": "https://api.wtatennis.com/tennis/players/ranked?page=0&pageSize=100&type=rankDoubles&sort=asc&name=&metric=DOUBLES" },
 
     { "Sport": "Volleyball", "Gender": "Men", "Source": "VolleyballWorld",
-      "Url": "https://en.volleyballworld.com/api/v1/worldranking/volleyball/1/0/100" },
+      "Url": "https://en.volleyballworld.com/api/v1/worldranking/volleyball/1/0/500" },
     { "Sport": "Volleyball", "Gender": "Women", "Source": "VolleyballWorld",
-      "Url": "https://en.volleyballworld.com/api/v1/worldranking/volleyball/0/0/100" },
+      "Url": "https://en.volleyballworld.com/api/v1/worldranking/volleyball/0/0/500" },
     { "Sport": "Volleyball", "Event": "Beach", "Gender": "Men", "Source": "VolleyballWorld",
-      "Url": "https://en.volleyballworld.com/api/v1/worldranking/beachvolleyball/0/0/100" },
+      "Url": "https://en.volleyballworld.com/api/v1/worldranking/beachvolleyball/0/0/500" },
     { "Sport": "Volleyball", "Event": "Beach", "Gender": "Women", "Source": "VolleyballWorld",
-      "Url": "https://en.volleyballworld.com/api/v1/worldranking/beachvolleyball/1/0/100" }
+      "Url": "https://en.volleyballworld.com/api/v1/worldranking/beachvolleyball/1/0/500" }
   ]
 }
