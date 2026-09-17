@@ -23,7 +23,7 @@ namespace SportsRankingService.Models
         /// <summary><see cref="IUrlResolver.Name"/> of the strategy that turns <see cref="Url"/> into the request URL.</summary>
         public string UrlResolver { get; set; } = IdentityUrlResolver.ResolverName;
 
-        /// <summary>Keep only the first N entries by position; null keeps everything.</summary>
+        /// <summary>Keep every entry whose position is ≤ N (ties at N are all kept, so the row count can exceed N); null keeps everything.</summary>
         public int? Take { get; set; }
 
         /// <summary>False leaves the item in the file for reference without fetching it.</summary>
