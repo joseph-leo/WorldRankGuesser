@@ -19,7 +19,7 @@ public abstract class JsonRankingParser<TRoot> : IRankingParser
     /// <summary>The federation's ranking date, or null when the feed has none. Throw <see cref="ParseException"/> for an unreadable value.</summary>
     protected virtual DateOnly? GetRankingDate(TRoot root) => null;
 
-    public ParsedRanking Parse(string response)
+    public ParsedRanking Parse(string response, string? selector = null)
     {
         TRoot root;
         try

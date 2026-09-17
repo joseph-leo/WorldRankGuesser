@@ -23,6 +23,12 @@ namespace SportsRankingService.Models
         /// <summary><see cref="IUrlResolver.Name"/> of the strategy that turns <see cref="Url"/> into the request URL.</summary>
         public string UrlResolver { get; set; } = IdentityUrlResolver.ResolverName;
 
+        /// <summary>
+        /// Names one ranking inside a response that holds several, for parsers that need it (FIG: "&lt;series&gt; / &lt;apparatus&gt;",
+        /// e.g. "World Cup / Vault"). Null for every other feed.
+        /// </summary>
+        public string? Selector { get; set; }
+
         /// <summary>Keep every entry whose position is ≤ N (ties at N are all kept, so the row count can exceed N); null keeps everything.</summary>
         public int? Take { get; set; }
 

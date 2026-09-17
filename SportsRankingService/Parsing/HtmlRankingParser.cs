@@ -18,7 +18,7 @@ public abstract class HtmlRankingParser : IRankingParser
     /// <summary>The federation's ranking date, or null when the page has none. Throw <see cref="ParseException"/> for an unreadable value.</summary>
     protected virtual DateOnly? GetRankingDate(HtmlDocument document) => null;
 
-    public ParsedRanking Parse(string response)
+    public ParsedRanking Parse(string response, string? selector = null)
     {
         HtmlDocument document = new();
         document.LoadHtml(response);

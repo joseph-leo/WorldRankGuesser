@@ -52,7 +52,7 @@ public sealed class RankingSourceRunner : IRankingSourceRunner
             return null;
         }
 
-        ParsedRanking parsed = parser.Parse(response);
+        ParsedRanking parsed = parser.Parse(response, item.Selector);
         DateOnly today = DateOnly.FromDateTime(_clock.GetLocalNow().Date);
         RankingSnapshot snapshot = RankingSnapshotBuilder.Build(item, parsed, resolved.RankingDate, today);
 

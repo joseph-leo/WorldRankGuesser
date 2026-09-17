@@ -28,7 +28,7 @@ public class RankingSourceRunnerTests
 
     private static RankingSourceRunner Runner(FakeFetcher fetcher) =>
         new(fetcher,
-            [new FihParser(), new FifaV3Parser()],
+            [new FihParser(), new FifaV3Parser(), new FigParser()],
             [new IdentityUrlResolver(), new FifaDateIdResolver(fetcher)],
             new FakeTimeProvider(Now),
             NullLogger<RankingSourceRunner>.Instance);
@@ -79,6 +79,20 @@ public class RankingSourceRunnerTests
         Assert.Equal(new DateOnly(2026, 7, 20), snapshot.RankingDate);
         Assert.True(snapshot.IsFederationDate);
         Assert.Equal(["https://inside.fifa.com/fifa-rankings/world-ranking/men", "http://fifa/api?id=FRS_Male_Football_20260611"], fetcher.Requested);
+    }
+
+    [Fact]
+    public async Task Selector_reaches_the_parser_for_a_page_holding_several_tables()
+    {
+        var fetcher = new FakeFetcher(new() { ["http://fig/rg"] = Fixture.Read("Fig_Rhythmic_Women.html") });
+        var item = new RankingItem { Sport = "Rhythmic Gymnastics", Event = "World Cup Group 5x", Gender = "Women", Url = "http://fig/rg", Source = "Fig", Selector = "World Cup / Group 5x" };
+
+        RankingSnapshot? snapshot = await Runner(fetcher).RunAsync(item, CancellationToken.None);
+
+        Assert.NotNull(snapshot);
+        Assert.Equal("World Cup Group 5x", snapshot.Event);
+        Assert.Equal(21, snapshot.Entries.Count);
+        Assert.Equal("CHN", snapshot.Entries.Single(e => e.Position == 1).ISO3);
     }
 
     [Fact]
