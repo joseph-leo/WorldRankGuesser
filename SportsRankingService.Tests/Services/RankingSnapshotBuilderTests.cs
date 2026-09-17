@@ -35,6 +35,16 @@ public class RankingSnapshotBuilderTests
     }
 
     [Fact]
+    public void Entries_tied_on_position_keep_their_feed_order()
+    {
+        RankEntry[] entries = [new(1, "KOR"), new(1, "DNK"), new(1, "CHN")];
+
+        RankingSnapshot snapshot = RankingSnapshotBuilder.Build(Item, new ParsedRanking(entries), null, Today);
+
+        Assert.Equal(["KOR", "DNK", "CHN"], snapshot.Entries.Select(e => e.ISO3));
+    }
+
+    [Fact]
     public void Take_keeps_every_entry_up_to_that_position_including_ties()
     {
         RankingItem item = new() { Sport = "Badminton", Event = "Doubles", Gender = "Men", Url = "http://x", Source = "Bwf", Take = 2 };
