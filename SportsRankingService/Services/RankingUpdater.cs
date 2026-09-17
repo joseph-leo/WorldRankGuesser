@@ -6,7 +6,7 @@ using SportsRankingService.Persistence;
 namespace SportsRankingService.Services;
 
 public sealed class RankingUpdater(
-    RankingSourceRunner runner,
+    IRankingSourceRunner runner,
     IOptionsMonitor<RankingSourcesOptions> sources,
     IServiceScopeFactory scopeFactory,
     ILogger<RankingUpdater> logger) : IRankingUpdater
