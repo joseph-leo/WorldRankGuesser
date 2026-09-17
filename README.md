@@ -8,7 +8,7 @@ the current table per feed and its history.
 ## Setup
 
 ```powershell
-docker compose up -d --wait                              # SQL Server 2022 on localhost,1433 (sa / Rankings_Dev1!)
+docker compose up -d --wait                              # SQL Server 2022 on localhost,1433, loopback-only (sa / Rankings_Dev1!)
 dotnet tool restore                                      # dotnet-ef
 dotnet ef database update --project SportsRankingService --startup-project SportsRankingService # create the database and schema
 dotnet run --project SportsRankingService                # fetch every enabled feed once and exit
