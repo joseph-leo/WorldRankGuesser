@@ -37,7 +37,9 @@ cron:
 `CurrentRankings` is a view with one row per entry of each feed's newest release
 (`Sport, Event, Gender, RankingDate, IsFederationDate, Position, ISO3, TeamName`).
 `RankingReleases` and `RankingRows` hold every release ever seen; `IsFederationDate` says whether
-`RankingDate` came from the federation or is the scrape date of a feed that publishes none.
+`RankingDate` came from the federation or is the scrape date of a feed that publishes none. For a
+dateless feed, `RankingDate` is the day its content was first seen and does not move while that
+content stays the same; use `LastSeenAt` on `RankingReleases` for "as of".
 
 ## Configuration
 
