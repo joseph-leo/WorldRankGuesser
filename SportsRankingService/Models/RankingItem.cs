@@ -34,5 +34,9 @@ namespace SportsRankingService.Models
 
         /// <summary>Free text for humans, e.g. why an item is disabled.</summary>
         public string? Note { get; set; }
+
+        /// <summary>The feed's name in logs and on the command line: "Sport Event Gender", e.g. "Cricket ODI Women" or "Basketball Men".</summary>
+        public string Describe() =>
+            string.Join(" ", new[] { Sport, Event, Gender }.Where(s => !string.IsNullOrEmpty(s)));
     }
 }

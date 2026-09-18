@@ -1,4 +1,4 @@
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
@@ -100,7 +100,7 @@ public class RankingUpdaterTests
         var (updater, runner, _) = CreateUpdater(Item("Enabled Sport"), Item("Disabled Sport", enabled: false));
         runner.Returns("Enabled Sport", Snapshot("Enabled Sport"));
 
-        UpdateSummary summary = await updater.UpdateAllAsync(CancellationToken.None);
+        UpdateSummary summary = await updater.UpdateAllAsync(FeedFilter.All, CancellationToken.None);
 
         Assert.Equal(1, summary.Feeds);
         Assert.DoesNotContain("Disabled Sport", runner.Called);
@@ -112,7 +112,7 @@ public class RankingUpdaterTests
         var (updater, runner, recorder) = CreateUpdater(Item("Empty Sport"));
         runner.Returns("Empty Sport", Snapshot("Empty Sport", entries: 0));
 
-        UpdateSummary summary = await updater.UpdateAllAsync(CancellationToken.None);
+        UpdateSummary summary = await updater.UpdateAllAsync(FeedFilter.All, CancellationToken.None);
 
         Assert.Equal(new UpdateSummary(Feeds: 1, Inserted: 0, Unchanged: 0, Failed: 1), summary);
         Assert.Empty(recorder.Saved);
@@ -127,7 +127,7 @@ public class RankingUpdaterTests
         runner.Returns("Unchanged Sport", Snapshot("Unchanged Sport"));
         recorder.Outcomes["Unchanged Sport"] = SaveOutcome.Unchanged;
 
-        UpdateSummary summary = await updater.UpdateAllAsync(CancellationToken.None);
+        UpdateSummary summary = await updater.UpdateAllAsync(FeedFilter.All, CancellationToken.None);
 
         Assert.Equal(3, summary.Feeds);
         Assert.Equal(1, summary.Inserted);
@@ -146,7 +146,7 @@ public class RankingUpdaterTests
         runner.Returns("Empty Sport", Snapshot("Empty Sport", entries: 0));
         recorder.Outcomes["Unchanged Sport"] = SaveOutcome.Unchanged;
 
-        UpdateSummary summary = await updater.UpdateAllAsync(CancellationToken.None);
+        UpdateSummary summary = await updater.UpdateAllAsync(FeedFilter.All, CancellationToken.None);
 
         Assert.Equal(summary.Feeds, summary.Inserted + summary.Unchanged + summary.Failed);
     }
@@ -159,7 +159,34 @@ public class RankingUpdaterTests
         using CancellationTokenSource cts = new();
         cts.Cancel();
 
-        await Assert.ThrowsAsync<OperationCanceledException>(() => updater.UpdateAllAsync(cts.Token));
+        await Assert.ThrowsAsync<OperationCanceledException>(() => updater.UpdateAllAsync(FeedFilter.All, cts.Token));
+    }
+
+    [Fact]
+    public async Task A_filter_runs_only_the_matching_enabled_feeds()
+    {
+        var (updater, runner, _) = CreateUpdater(Item("Cricket"), Item("Soccer"), Item("Volleyball"));
+        runner.Returns("Cricket", Snapshot("Cricket"));
+        runner.Returns("Soccer", Snapshot("Soccer"));
+        runner.Returns("Volleyball", Snapshot("Volleyball"));
+
+        UpdateSummary summary = await updater.UpdateAllAsync(new FeedFilter(["Cricket", "Volleyball Men"]), CancellationToken.None);
+
+        Assert.Equal(2, summary.Feeds);
+        Assert.Equal(["Cricket", "Volleyball"], runner.Called.Order());
+    }
+
+    [Fact]
+    public async Task A_pattern_that_matches_no_enabled_feed_is_a_configuration_error_and_nothing_runs()
+    {
+        var (updater, runner, _) = CreateUpdater(Item("Cricket"), Item("Badminton", enabled: false));
+        runner.Returns("Cricket", Snapshot("Cricket"));
+
+        InvalidOperationException ex = await Assert.ThrowsAsync<InvalidOperationException>(
+            () => updater.UpdateAllAsync(new FeedFilter(["Cricket", "Badminton"]), CancellationToken.None));
+
+        Assert.Contains("Badminton", ex.Message);
+        Assert.Empty(runner.Called);
     }
 
     [Fact]
@@ -170,7 +197,7 @@ public class RankingUpdaterTests
         runner.Returns("Sport B", Snapshot("Sport B"));
         runner.Returns("Sport C", Snapshot("Sport C"));
 
-        await updater.UpdateAllAsync(CancellationToken.None);
+        await updater.UpdateAllAsync(FeedFilter.All, CancellationToken.None);
 
         Assert.Equal(3, recorder.Saved.Select(c => c.Instance).Distinct().Count());
     }

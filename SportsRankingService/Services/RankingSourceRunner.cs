@@ -1,4 +1,4 @@
-using SportsRankingService.Models;
+﻿using SportsRankingService.Models;
 using SportsRankingService.Parsing;
 using SportsRankingService.Services.UrlResolvers;
 
@@ -36,12 +36,12 @@ public sealed class RankingSourceRunner : IRankingSourceRunner
     {
         if (!_parsers.TryGetValue(item.Source, out IRankingParser? parser))
         {
-            throw new InvalidOperationException($"No parser registered for Source '{item.Source}' ({Describe(item)}). Known: {string.Join(", ", _parsers.Keys)}");
+            throw new InvalidOperationException($"No parser registered for Source '{item.Source}' ({item.Describe()}). Known: {string.Join(", ", _parsers.Keys)}");
         }
 
         if (!_resolvers.TryGetValue(item.UrlResolver, out IUrlResolver? resolver))
         {
-            throw new InvalidOperationException($"No URL resolver registered for '{item.UrlResolver}' ({Describe(item)}). Known: {string.Join(", ", _resolvers.Keys)}");
+            throw new InvalidOperationException($"No URL resolver registered for '{item.UrlResolver}' ({item.Describe()}). Known: {string.Join(", ", _resolvers.Keys)}");
         }
 
         ResolvedUrl resolved = await resolver.ResolveAsync(item, cancellationToken);
@@ -61,7 +61,4 @@ public sealed class RankingSourceRunner : IRankingSourceRunner
 
         return snapshot;
     }
-
-    internal static string Describe(RankingItem item) =>
-        string.Join(" ", new[] { item.Sport, item.Event, item.Gender }.Where(s => !string.IsNullOrEmpty(s)));
 }

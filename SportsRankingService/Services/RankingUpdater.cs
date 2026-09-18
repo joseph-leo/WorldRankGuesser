@@ -11,14 +11,30 @@ public sealed class RankingUpdater(
     IServiceScopeFactory scopeFactory,
     ILogger<RankingUpdater> logger) : IRankingUpdater
 {
-    public async Task<UpdateSummary> UpdateAllAsync(CancellationToken cancellationToken)
+    public async Task<UpdateSummary> UpdateAllAsync(FeedFilter filter, CancellationToken cancellationToken)
     {
-        List<RankingItem> items = sources.CurrentValue.Rankings.Where(i => i.Enabled).ToList();
+        List<RankingItem> enabled = sources.CurrentValue.Rankings.Where(i => i.Enabled).ToList();
 
-        if (items.Count == 0)
+        if (enabled.Count == 0)
         {
             logger.LogWarning("No enabled ranking items configured; check serviceconfig.json");
             return new UpdateSummary(0, 0, 0, 0);
+        }
+
+        // A typo in --only must not quietly run zero feeds, so an unmatched pattern is an error like an unknown Source.
+        List<string> unmatched = filter.Patterns.Where(pattern => !enabled.Any(item => FeedFilter.Matches(pattern, item))).ToList();
+
+        if (unmatched.Count > 0)
+        {
+            throw new InvalidOperationException(
+                $"--only '{string.Join("', '", unmatched)}' matches no enabled feed. Enabled: {string.Join(", ", enabled.Select(i => i.Describe()))}");
+        }
+
+        List<RankingItem> items = enabled.Where(filter.Matches).ToList();
+
+        if (filter.Patterns.Count > 0)
+        {
+            logger.LogInformation("--only selected {Selected} of {Enabled} enabled feeds", items.Count, enabled.Count);
         }
 
         SaveOutcome?[] outcomes = await Task.WhenAll(items.Select(item => UpdateItemAsync(item, cancellationToken)));
@@ -38,7 +54,7 @@ public sealed class RankingUpdater(
     /// <returns>The save outcome, or null when the feed produced nothing or threw.</returns>
     private async Task<SaveOutcome?> UpdateItemAsync(RankingItem item, CancellationToken cancellationToken)
     {
-        string name = RankingSourceRunner.Describe(item);
+        string name = item.Describe();
 
         try
         {
