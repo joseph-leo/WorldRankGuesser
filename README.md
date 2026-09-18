@@ -12,11 +12,19 @@ docker compose up -d --wait                              # SQL Server 2022 on lo
 dotnet tool restore                                      # dotnet-ef
 dotnet ef database update --project SportsRankingService --startup-project SportsRankingService # create the database and schema
 dotnet run --project SportsRankingService                # fetch every enabled feed once and exit
+dotnet run --project SportsRankingService -- --only "Cricket ODI Women" --only Soccer   # rerun a subset
 dotnet test SportsRankingService.Tests                   # fixture-based tests, no network or database
 ```
 
 The process exits 0 when every enabled feed was saved and 1 when any feed failed, so a scheduler's
 "last run result" is meaningful.
+
+`--only` (repeatable) selects feeds by the name the log prints, "Sport Event Gender": every word of the
+pattern must appear in the name, in order, as a whole word. `Cricket` runs every cricket feed,
+`Cricket ODI` both ODI feeds, `Cricket Women` every women's cricket feed, `Gymnastics` all eighteen
+gymnastics feeds and `Cricket ODI Women` one. A pattern that matches no enabled feed is an error and
+nothing is fetched; disabled feeds stay disabled. Copy the name from a "Feed ... failed" line to rerun
+just that feed.
 
 ## Scheduling a weekly run
 

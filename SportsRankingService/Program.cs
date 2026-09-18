@@ -4,10 +4,24 @@ using SportsRankingService.Persistence;
 using SportsRankingService.Services;
 
 // A run-once console app: an external scheduler (Task Scheduler, cron) runs it weekly.
+// `--only <feed>` (repeatable) reruns a subset, e.g. the feeds a previous run reported as failed.
+FeedFilter filter;
+
+try
+{
+    filter = FeedFilter.Parse(args);
+}
+catch (ArgumentException ex)
+{
+    Console.Error.WriteLine(ex.Message);
+    return 1;
+}
+
 // The generic host is kept only as the configuration / logging / DI container.
 HostApplicationBuilder builder = Host.CreateApplicationBuilder(new HostApplicationBuilderSettings
 {
-    Args = args,
+    // The command line holds only --only, which the host's own command-line provider would otherwise read as a config key.
+    Args = [],
     // appsettings.json and serviceconfig.json sit next to the binaries, so the working directory does not matter.
     ContentRootPath = AppContext.BaseDirectory,
 });
@@ -39,7 +53,7 @@ try
     using IServiceScope scope = host.Services.CreateScope();
     IRankingUpdater updater = scope.ServiceProvider.GetRequiredService<IRankingUpdater>();
 
-    UpdateSummary summary = await updater.UpdateAllAsync(shutdown.Token);
+    UpdateSummary summary = await updater.UpdateAllAsync(filter, shutdown.Token);
 
     return summary.Failed > 0 ? 1 : 0;
 }
