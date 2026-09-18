@@ -44,7 +44,7 @@ public sealed partial class BwfParser : JsonRankingParser<BwfParser.Root>
                     throw new ParseException(SourceName, $"no ISO3 mapping for country name '{country.Name}'");
                 }
 
-                yield return new RankEntry(row.Rank, iso3!, country.Name, CleanName(player?.NameHtml), row.Points);
+                yield return new RankEntry(row.Rank, iso3!, CleanName(player?.NameHtml), row.Points);
             }
         }
     }

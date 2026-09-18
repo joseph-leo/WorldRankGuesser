@@ -2,7 +2,7 @@ namespace SportsRankingService.Services;
 
 /// <summary>
 /// One entry's row in a <see cref="RankingSnapshot"/>: a ranked athlete, doubles partner, group
-/// or team. <paramref name="TeamName"/> is always the country name when one is known. Value
+/// or team. <paramref name="TeamName"/> is the country name the code table gives for <paramref name="ISO3"/>. Value
 /// equality doubles as the builder's duplicate guard, so every stored fact is a positional
 /// parameter of this record.
 /// </summary>

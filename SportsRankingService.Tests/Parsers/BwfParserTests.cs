@@ -58,7 +58,7 @@ public class BwfParserTests
         var top = _parser.Parse(Fixture.Read("Bwf_MensSingles.json")).Entries.Single(r => r.Position == 1);
 
         Assert.Equal(87631m, top.Points);
-        Assert.Equal("Indonesia", top.TeamName);
+        Assert.Equal("IDN", top.ISO3);
         Assert.Equal("Jonatan CHRISTIE", top.Competitor);
     }
 

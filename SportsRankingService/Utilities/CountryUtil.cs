@@ -9,6 +9,7 @@ namespace SportsRankingService.Utilities
     /// (<see cref="IOCToISO3"/>), or names in various spellings (<see cref="TryGetISO3FromCountry"/>).
     /// Name lookup is by a normalized key (lower case, diacritics and punctuation removed, "&amp;" as "and")
     /// against every region the runtime knows plus an alias table for spellings federations use.
+    /// The name stored for a code is the reverse direction and comes only from <see cref="CountryNames"/>.
     /// </summary>
     internal static class CountryUtil
     {
@@ -17,8 +18,14 @@ namespace SportsRankingService.Utilities
 
         public static List<RegionInfo> GetCountries() => Regions.Value;
 
-        public static string? GetCountryName(string iso3) =>
-            Regions.Value.FirstOrDefault(x => x.ThreeLetterISORegionName == iso3)?.EnglishName;
+        /// <summary>The display name every stored row carries for <paramref name="code"/>; see <see cref="CountryNames"/>.</summary>
+        public static bool TryGetCountryName(string code, out string? name) =>
+            CountryNames.ByCode.TryGetValue(code, out name);
+
+        public static string GetCountryName(string code) =>
+            TryGetCountryName(code, out string? name)
+                ? name!
+                : throw new ArgumentException($"No country name for code '{code}'", nameof(code));
 
         /// <summary>Resolves a country name, slug ("cote-divoire") or alias ("usa", "England") to ISO3.</summary>
         public static bool TryGetISO3FromCountry(string? countryName, out string? iso3)
@@ -166,8 +173,30 @@ namespace SportsRankingService.Utilities
             ["saotomeandprincipe"] = "STP",
         }.ToFrozenDictionary();
 
+        /// <summary>
+        /// IOC codes plus the federation-specific codes that differ from both IOC and ISO3
+        /// (Volleyball World, FIFA, ICC, FIH), all resolved to ISO3.
+        /// </summary>
         private static readonly FrozenDictionary<string, string> IocToIso3 = new Dictionary<string, string>
         {
+            { "AGU", "AIA" },   // Volleyball World
+            { "CUR", "CUW" },   // Volleyball World
+            { "FAR", "FRO" },   // Volleyball World
+            { "MSH", "MHL" },   // Volleyball World
+            { "MLD", "MDA" },   // Volleyball World
+            { "PAU", "PLW" },   // Volleyball World
+            { "GDP", "GLP" },   // Volleyball World
+            { "MQE", "MTQ" },   // Volleyball World
+            { "NMI", "MNP" },   // Volleyball World
+            { "JSY", "JEY" },   // ICC
+            { "GSY", "GGY" },   // ICC
+            { "IOM", "IMN" },   // ICC
+            { "STH", "SHN" },   // ICC (St. Helena)
+            { "CTA", "CAF" },   // FIFA
+            { "EQG", "GNQ" },   // FIFA
+            { "TAH", "PYF" },   // FIFA (Tahiti)
+            { "ESW", "SWZ" },   // ICC, FIH
+            { "SDA", "SAU" },   // ICC
             { "ALG", "DZA" },
             { "ROM", "ROU" },
             { "SER", "SRB" },

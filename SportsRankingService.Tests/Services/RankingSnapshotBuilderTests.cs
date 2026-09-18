@@ -19,7 +19,7 @@ public class RankingSnapshotBuilderTests
     [Fact]
     public void Stamps_sport_event_and_gender_from_the_item()
     {
-        RankingSnapshot snapshot = Build(new RankEntry(3, "DEU", "Germany"));
+        RankingSnapshot snapshot = Build(new RankEntry(3, "DEU"));
 
         Assert.Equal("Field Hockey", snapshot.Sport);
         Assert.Equal("Outdoor", snapshot.Event);
@@ -60,8 +60,8 @@ public class RankingSnapshotBuilderTests
     public void Partners_differing_only_by_competitor_are_both_kept()
     {
         RankingSnapshot snapshot = Build(
-            new(1, "KOR", "Korea", "KIM Won Ho", 114099m),
-            new(1, "KOR", "Korea", "SEO Seung Jae", 114099m));
+            new(1, "KOR", "KIM Won Ho", 114099m),
+            new(1, "KOR", "SEO Seung Jae", 114099m));
 
         Assert.Equal(2, snapshot.Entries.Count);
     }
@@ -70,24 +70,32 @@ public class RankingSnapshotBuilderTests
     public void Equal_entries_fail_the_build_naming_the_entry()
     {
         var ex = Assert.Throws<ParseException>(() => Build(
-            new(1, "KOR", "Korea", "KIM Won Ho", 114099m),
-            new(1, "KOR", "Korea", "KIM Won Ho", 114099m)));
+            new(1, "KOR", "KIM Won Ho", 114099m),
+            new(1, "KOR", "KIM Won Ho", 114099m)));
 
         Assert.Contains("KOR", ex.Message);
     }
 
     [Fact]
-    public void The_country_name_is_filled_from_the_code_when_the_feed_gives_none()
+    public void The_country_name_always_comes_from_the_code_table()
     {
-        RankingSnapshot snapshot = Build(new(1, "DEU"), new(2, "NLD", "Nederland"), new(3, "WI"));
+        RankingSnapshot snapshot = Build(new(1, "DEU"), new(2, "NLD"), new(3, "WI"), new(4, "USA"));
 
-        Assert.Equal(["Germany", "Nederland", null], snapshot.Entries.Select(e => e.TeamName));
+        Assert.Equal(["Germany", "Netherlands", "West Indies", "United States of America"], snapshot.Entries.Select(e => e.TeamName));
+    }
+
+    [Fact]
+    public void An_unknown_code_fails_the_build_naming_the_code()
+    {
+        var ex = Assert.Throws<ParseException>(() => Build(new(1, "DEU"), new(2, "ZZZ")));
+
+        Assert.Contains("ZZZ", ex.Message);
     }
 
     [Fact]
     public void Competitor_and_points_are_carried_through()
     {
-        RankingSnapshot snapshot = Build(new RankEntry(1, "ESP", "Spain", "Alcaraz", 11500m));
+        RankingSnapshot snapshot = Build(new RankEntry(1, "ESP", "Alcaraz", 11500m));
 
         RankingSnapshotEntry spain = Assert.Single(snapshot.Entries);
         Assert.Equal("Alcaraz", spain.Competitor);

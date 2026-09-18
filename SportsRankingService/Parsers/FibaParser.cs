@@ -44,7 +44,7 @@ public sealed partial class FibaParser : HtmlRankingParser
         HtmlNodeCollection cells = row.SelectNodes("td");
         decimal? points = cells.Count > 3 && decimal.TryParse(cells[3].InnerText.Trim(), NumberStyles.Number, CultureInfo.InvariantCulture, out decimal pts) ? pts : null;
 
-        return new RankEntry(position, iso3!, link.InnerText.Trim(), Points: points);
+        return new RankEntry(position, iso3!, Points: points);
     }
 
     /// <summary>The page's ranking-date dropdown lists releases newest first with the current one selected.</summary>

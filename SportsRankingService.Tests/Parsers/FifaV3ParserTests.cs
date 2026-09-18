@@ -44,6 +44,6 @@ public class FifaV3ParserTests
         var top = _parser.Parse(Fixture.Read("Fifa_V3_Men_FRS_20260611.json")).Entries.Single(r => r.Position == 1);
 
         Assert.Equal(1995.881879m, top.Points);
-        Assert.Equal("Spain", top.TeamName);
+        Assert.Equal("ESP", top.ISO3);
     }
 }

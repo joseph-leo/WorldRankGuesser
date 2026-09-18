@@ -31,6 +31,6 @@ public class WorldRugbyParserTests
         var top = _parser.Parse(Fixture.Read("WorldRugby_Union_Men.json")).Entries.Single(r => r.Position == 1);
 
         Assert.Equal(95.09175036626566m, top.Points);
-        Assert.Equal("South Africa", top.TeamName);
+        Assert.Equal("ZAF", top.ISO3);
     }
 }

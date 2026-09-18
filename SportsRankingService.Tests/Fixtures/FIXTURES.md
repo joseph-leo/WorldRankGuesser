@@ -15,6 +15,7 @@ the same commit.
 | VolleyballWorld_Beach_Men.json | https://en.volleyballworld.com/api/v1/worldranking/beachvolleyball/0/0/500 | recaptured 2026-09-17; a pair per row (`player1Name`, `player2Name`, `name`), integer `points`; 500 rows is the API's per-request maximum and the beach list is deeper (multi-page spec) |
 | Icc_T20_Women.json | https://assets-icc.sportz.io/cricket/v1/ranking?...&comp_type=t20w&type=team | parses; `shortname` carries a `-W` suffix |
 | Icc_Test_Men.json | https://assets-icc.sportz.io/cricket/v1/ranking?...&comp_type=test&type=team | parses; two-letter codes SA, NZ, SL, WI |
+| Icc_T20_Men.json | https://assets-icc.sportz.io/cricket/v1/ranking?...&comp_type=t20&type=team | captured 2026-09-17; the deepest ICC list (102 teams) and the source of the ICC-only codes STH, GSY, IOM, JSY, SRL, ESW, SDA |
 | Fifa_Overview_Men_id14870.json | https://inside.fifa.com/api/ranking-overview?locale=en&dateId=id14870 | parses; the API returns an empty list for the newer `FRS_*` date ids |
 | Fifa_WorldRanking_Men.html | https://inside.fifa.com/fifa-rankings/world-ranking/men | page data still embeds the ranking dates |
 | Fiba_Ranking_Men.html | https://www.fiba.basketball/rankingmen (redirects to /fr/ranking/men) | markup changed: no IOC column, country only in the team link slug |

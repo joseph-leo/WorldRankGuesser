@@ -13,6 +13,24 @@ public class CountryUtilTests
     [InlineData("KOS", "XKX")]   // FIFA, WBSC; Kosovo has no ISO code, XKX is the customary one
     [InlineData("USA", "USA")]   // already ISO3
     [InlineData("ENG", "ENG")]   // not an IOC code; passes through unchanged
+    [InlineData("AGU", "AIA")]   // Volleyball World
+    [InlineData("CUR", "CUW")]   // Volleyball World
+    [InlineData("FAR", "FRO")]   // Volleyball World
+    [InlineData("MSH", "MHL")]   // Volleyball World
+    [InlineData("MLD", "MDA")]   // Volleyball World
+    [InlineData("PAU", "PLW")]   // Volleyball World
+    [InlineData("GDP", "GLP")]   // Volleyball World
+    [InlineData("MQE", "MTQ")]   // Volleyball World
+    [InlineData("NMI", "MNP")]   // Volleyball World
+    [InlineData("JSY", "JEY")]   // ICC
+    [InlineData("GSY", "GGY")]   // ICC
+    [InlineData("IOM", "IMN")]   // ICC
+    [InlineData("STH", "SHN")]   // ICC
+    [InlineData("CTA", "CAF")]   // FIFA
+    [InlineData("EQG", "GNQ")]   // FIFA
+    [InlineData("TAH", "PYF")]   // FIFA
+    [InlineData("ESW", "SWZ")]   // ICC, FIH
+    [InlineData("SDA", "SAU")]   // ICC
     public void IOCToISO3_maps_IOC_codes_and_passes_others_through(string ioc, string expected)
     {
         Assert.Equal(expected, ioc.IOCToISO3());

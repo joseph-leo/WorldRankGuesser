@@ -30,6 +30,5 @@ public class WtaParserTests
 
         Assert.Equal(11460m, top.Points);
         Assert.Equal("Katerina Siniakova", top.Competitor);
-        Assert.Null(top.TeamName);
     }
 }

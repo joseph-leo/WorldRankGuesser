@@ -12,16 +12,17 @@ public sealed class IccParser : JsonRankingParser<IccParser.Root>
     public sealed record Root(Data Data);
     public sealed record Data([property: JsonPropertyName("bat-rank")] BatRank BatRank);
     public sealed record BatRank(List<Entry> Rank, [property: JsonPropertyName("rank_date")] string? RankDate);
-    public sealed record Entry(short No, string Shortname, [property: JsonPropertyName("team_name")] string? TeamName, decimal? Rating);
+    public sealed record Entry(short No, string Shortname, decimal? Rating);
 
     protected override IEnumerable<RankEntry> Map(Root root) =>
-        root.Data.BatRank.Rank.Select(e => new RankEntry(e.No, ToISO3(e.Shortname), e.TeamName, Points: e.Rating));   // the ICC ranks by Rating, not Points
+        root.Data.BatRank.Rank.Select(e => new RankEntry(e.No, ToISO3(e.Shortname), Points: e.Rating));   // the ICC ranks by Rating, not Points
 
     protected override DateOnly? GetRankingDate(Root root) => IsoDate.Parse(SourceName, root.Data.BatRank.RankDate);
 
     /// <summary>
     /// ICC "shortname" is a team code, not a country code: women's teams carry a "-W" suffix
     /// and a few teams use two-letter abbreviations. West Indies (WI) has no ISO3 code and is kept as-is.
+    /// Sri Lanka is SL and Sierra Leone is SRL, which the IOC table would otherwise leave alone.
     /// </summary>
     internal static string ToISO3(string iccShortName)
     {
@@ -42,6 +43,6 @@ public sealed class IccParser : JsonRankingParser<IccParser.Root>
         { "NZ", "NZL" },
         { "SL", "LKA" },
         { "HK", "HKG" },
-        { "SRL", "LKA" },
+        { "SRL", "SLE" },
     };
 }

@@ -30,6 +30,5 @@ public class EspnTennisParserTests
 
         Assert.Equal(11500m, top.Points);
         Assert.Equal("Jannik Sinner", top.Competitor);
-        Assert.Null(top.TeamName);
     }
 }
