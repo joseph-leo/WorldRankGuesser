@@ -52,6 +52,48 @@ public class BwfParserTests
         Assert.Contains("Atlantis", ex.Message);
     }
 
+    /// <summary>
+    /// BWF's full lists echo some rows inside a block of tied players: a second row id for the same player ids with the same
+    /// rank and points (172 echoes over the five lists on 2026-09-18). The excerpt is five consecutive real rows at rank 925:
+    /// three players, two of them listed twice.
+    /// </summary>
+    [Fact]
+    public void A_player_the_feed_lists_twice_is_one_entry()
+    {
+        var rows = _parser.Parse(Fixture.Read("Bwf_MensSingles_RepeatedRows.json")).Entries;
+
+        Assert.Equal(["PER", "DOM", "CAN"], rows.Select(r => r.ISO3));
+        Assert.All(rows, r => Assert.Equal((short)925, r.Position));
+    }
+
+    /// <summary>
+    /// A player can be ranked with several partners. When two of his pairs tie on rank and points his two entries are
+    /// identical, because an entry names the player and not the pair; he is then listed once (decided 2026-09-18).
+    /// The excerpt is the two real rows of one player's pairs tied at rank 505.
+    /// </summary>
+    [Fact]
+    public void A_player_in_two_tied_pairs_is_listed_once_at_that_rank()
+    {
+        var rows = _parser.Parse(Fixture.Read("Bwf_MensDoubles_TiedPairs.json")).Entries;
+
+        Assert.Equal(["Enrico Keoni ASUNCION", "Adrian King-Sun MAR", "Jacob ZHANG"], rows.Select(r => r.Competitor));
+        Assert.All(rows, r => Assert.Equal(new RankEntry(505, "USA", r.Competitor, 2200m), r));
+    }
+
+    [Fact]
+    public void A_repeated_player_whose_rows_disagree_fails_the_parse()
+    {
+        const string json = """
+            {"results":{"data":[
+              {"rank":7,"points":"500.0000","player1_id":11,"player2_id":null,"player1_model":{"slug":"x"},"p1_country_model":{"name":"Peru"}},
+              {"rank":9,"points":"500.0000","player1_id":11,"player2_id":null,"player1_model":{"slug":"x"},"p1_country_model":{"name":"Peru"}}]}}
+            """;
+
+        var ex = Assert.Throws<ParseException>(() => _parser.Parse(json));
+
+        Assert.Contains("11", ex.Message);
+    }
+
     [Fact]
     public void Singles_carry_points_the_country_name_and_the_player_as_competitor()
     {

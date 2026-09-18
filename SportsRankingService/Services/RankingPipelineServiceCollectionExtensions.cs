@@ -20,6 +20,9 @@ public static class RankingPipelineServiceCollectionExtensions
             client.DefaultRequestHeaders.UserAgent.ParseAdd(UserAgent);
             client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("*/*"));
         });
+        // The runner indexes the fetchers by Name. HttpFetcher stays last: a single IHttpFetcher dependency
+        // (the URL resolvers) gets the last registration, and their requests must not start needing curl.
+        services.AddSingleton<IHttpFetcher, CurlFetcher>();
         services.AddSingleton<IHttpFetcher, HttpFetcher>();
 
         // Parsers are stateless; the runner indexes them by SourceName.
@@ -33,6 +36,7 @@ public static class RankingPipelineServiceCollectionExtensions
         services.AddSingleton<IRankingParser, SvnsParser>();
         services.AddSingleton<IRankingParser, VolleyballWorldParser>();
         services.AddSingleton<IRankingParser, WbscParser>();
+        services.AddSingleton<IRankingParser, WikipediaIihfParser>();
         services.AddSingleton<IRankingParser, WorldRugbyParser>();
         services.AddSingleton<IRankingParser, WtaParser>();
 

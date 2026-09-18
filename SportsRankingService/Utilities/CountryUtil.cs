@@ -124,6 +124,12 @@ namespace SportsRankingService.Utilities
             ["hongkongchina"] = "HKG",
             ["macau"] = "MAC",
             ["macao"] = "MAC",
+            ["macauchina"] = "MAC",
+            ["bruneidarussalam"] = "BRN",
+            ["frenchpolynesiatahiti"] = "PYF",
+            ["nationalolympiccommiteekenya"] = "KEN",   // BWF's spelling
+            ["northernmarianas"] = "MNP",
+            ["syrianarabrepublic"] = "SYR",
             ["peoplesrepublicofchina"] = "CHN",
             ["czechrepublic"] = "CZE",
             ["czechia"] = "CZE",

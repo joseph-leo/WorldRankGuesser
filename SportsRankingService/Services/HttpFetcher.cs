@@ -3,6 +3,9 @@ namespace SportsRankingService.Services;
 public sealed class HttpFetcher(IHttpClientFactory httpClientFactory, ILogger<HttpFetcher> logger) : IHttpFetcher
 {
     public const string ClientName = "federations";
+    public const string FetcherName = "Http";
+
+    public string Name => FetcherName;
 
     public async Task<string?> GetStringAsync(string url, CancellationToken cancellationToken)
     {
