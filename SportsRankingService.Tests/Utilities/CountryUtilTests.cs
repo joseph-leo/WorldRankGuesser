@@ -50,6 +50,21 @@ public class CountryUtilTests
         Assert.Equal(expected, iso3);
     }
 
+    /// <summary>Spellings from BWF's full ranking lists (2026-09-18) that the 100-row fixtures do not reach.</summary>
+    [Theory]
+    [InlineData("Brunei Darussalam", "BRN")]
+    [InlineData("French Polynesia (Tahiti)", "PYF")]
+    [InlineData("Macau China", "MAC")]
+    [InlineData("National Olympic Commitee KENYA", "KEN")]   // BWF's own spelling, typo included
+    [InlineData("Northern Marianas", "MNP")]
+    [InlineData("Réunion", "REU")]
+    [InlineData("Syrian Arab Republic", "SYR")]
+    public void TryGetISO3FromCountry_resolves_the_names_bwf_uses(string name, string expected)
+    {
+        Assert.True(CountryUtil.TryGetISO3FromCountry(name, out string? iso3), $"'{name}' did not resolve");
+        Assert.Equal(expected, iso3);
+    }
+
     [Theory]
     [InlineData("Athlete Independent Neutral")]
     [InlineData("")]

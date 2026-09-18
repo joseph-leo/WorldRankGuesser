@@ -74,6 +74,8 @@ public class FifaDateIdTests
 
     private sealed class FakeFetcher(Dictionary<string, string> pages) : IHttpFetcher
     {
+        public string Name => HttpFetcher.FetcherName;
+
         public Task<string?> GetStringAsync(string url, CancellationToken cancellationToken) =>
             Task.FromResult(pages.GetValueOrDefault(url));
     }

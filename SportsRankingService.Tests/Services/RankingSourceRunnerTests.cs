@@ -15,8 +15,10 @@ public class RankingSourceRunnerTests
 {
     private static readonly DateTimeOffset Now = new(2026, 9, 15, 12, 0, 0, TimeSpan.Zero);
 
-    private sealed class FakeFetcher(Dictionary<string, string> pages) : IHttpFetcher
+    private sealed class FakeFetcher(Dictionary<string, string> pages, string name = HttpFetcher.FetcherName) : IHttpFetcher
     {
+        public string Name => name;
+
         public List<string> Requested { get; } = [];
 
         public Task<string?> GetStringAsync(string url, CancellationToken cancellationToken)
@@ -26,8 +28,8 @@ public class RankingSourceRunnerTests
         }
     }
 
-    private static RankingSourceRunner Runner(FakeFetcher fetcher) =>
-        new(fetcher,
+    private static RankingSourceRunner Runner(FakeFetcher fetcher, params FakeFetcher[] otherFetchers) =>
+        new([fetcher, .. otherFetchers],
             [new FihParser(), new FifaV3Parser(), new FigParser()],
             [new IdentityUrlResolver(), new FifaDateIdResolver(fetcher)],
             new FakeTimeProvider(Now),
@@ -114,6 +116,30 @@ public class RankingSourceRunnerTests
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => Runner(new FakeFetcher([])).RunAsync(item, CancellationToken.None));
 
         Assert.Contains("Fide", ex.Message);
+    }
+
+    [Fact]
+    public async Task An_item_is_fetched_through_the_fetcher_it_names()
+    {
+        var http = new FakeFetcher([]);
+        var curl = new FakeFetcher(new() { ["http://fih/outdoor_m.json"] = Fixture.Read("Fih_Outdoor_Men.json") }, name: "Curl");
+        var item = new RankingItem { Sport = "Field Hockey", Event = "Outdoor", Gender = "Men", Url = "http://fih/outdoor_m.json", Source = "Fih", Fetcher = "curl" };
+
+        RankingSnapshot? snapshot = await Runner(http, curl).RunAsync(item, CancellationToken.None);
+
+        Assert.NotNull(snapshot);
+        Assert.Equal(["http://fih/outdoor_m.json"], curl.Requested);
+        Assert.Empty(http.Requested);
+    }
+
+    [Fact]
+    public async Task Unknown_fetcher_is_a_configuration_error()
+    {
+        var item = new RankingItem { Sport = "Field Hockey", Gender = "Men", Url = "http://x", Source = "Fih", Fetcher = "Wget" };
+
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => Runner(new FakeFetcher([])).RunAsync(item, CancellationToken.None));
+
+        Assert.Contains("Wget", ex.Message);
     }
 
     [Fact]

@@ -7,25 +7,25 @@ namespace SportsRankingService.Services;
 /// <summary>
 /// Runs one configured feed end to end: resolve the URL, fetch it, parse it, build the snapshot.
 /// A failed fetch yields null (already logged by the fetcher). A malformed response throws
-/// <see cref="ParseException"/>; an unknown Source or UrlResolver name throws
+/// <see cref="ParseException"/>; an unknown Source, UrlResolver or Fetcher name throws
 /// <see cref="InvalidOperationException"/> because that is a configuration error.
 /// </summary>
 public sealed class RankingSourceRunner : IRankingSourceRunner
 {
-    private readonly IHttpFetcher _fetcher;
+    private readonly IReadOnlyDictionary<string, IHttpFetcher> _fetchers;
     private readonly IReadOnlyDictionary<string, IRankingParser> _parsers;
     private readonly IReadOnlyDictionary<string, IUrlResolver> _resolvers;
     private readonly TimeProvider _clock;
     private readonly ILogger<RankingSourceRunner> _logger;
 
     public RankingSourceRunner(
-        IHttpFetcher fetcher,
+        IEnumerable<IHttpFetcher> fetchers,
         IEnumerable<IRankingParser> parsers,
         IEnumerable<IUrlResolver> resolvers,
         TimeProvider clock,
         ILogger<RankingSourceRunner> logger)
     {
-        _fetcher = fetcher;
+        _fetchers = fetchers.ToDictionary(f => f.Name, StringComparer.OrdinalIgnoreCase);
         _parsers = parsers.ToDictionary(p => p.SourceName, StringComparer.OrdinalIgnoreCase);
         _resolvers = resolvers.ToDictionary(r => r.Name, StringComparer.OrdinalIgnoreCase);
         _clock = clock;
@@ -44,8 +44,13 @@ public sealed class RankingSourceRunner : IRankingSourceRunner
             throw new InvalidOperationException($"No URL resolver registered for '{item.UrlResolver}' ({item.Describe()}). Known: {string.Join(", ", _resolvers.Keys)}");
         }
 
+        if (!_fetchers.TryGetValue(item.Fetcher, out IHttpFetcher? fetcher))
+        {
+            throw new InvalidOperationException($"No fetcher registered for '{item.Fetcher}' ({item.Describe()}). Known: {string.Join(", ", _fetchers.Keys)}");
+        }
+
         ResolvedUrl resolved = await resolver.ResolveAsync(item, cancellationToken);
-        string? response = await _fetcher.GetStringAsync(resolved.Url, cancellationToken);
+        string? response = await fetcher.GetStringAsync(resolved.Url, cancellationToken);
 
         if (response is null)
         {

@@ -10,7 +10,11 @@ namespace SportsRankingService.Parsers;
 /// BWF ranking table API (vue-rankingtable). Countries come as names only. Doubles rows carry
 /// two players and yield one entry per partner with the pair's position and points; each entry
 /// names its own partner. Players listed as "Athlete Independent Neutral" have no country and
-/// are dropped. Player names arrive as HTML ("&lt;span class="name-1"&gt;Jonatan&lt;/span&gt; ...").
+/// are dropped. The full lists echo some rows inside a block of tied players (a new row id, the same
+/// player ids, rank and points); a player or pair is one entry however often it is listed, and an echo
+/// that disagrees on rank or points fails the parse. A player ranked with several partners has an entry
+/// per pair, except that two of his pairs tied on rank and points list him once: an entry names the
+/// player, not the pair, so the two would be identical (decided 2026-09-18). Player names arrive as HTML ("&lt;span class="name-1"&gt;Jonatan&lt;/span&gt; ...").
 /// </summary>
 public sealed partial class BwfParser : JsonRankingParser<BwfParser.Root>
 {
@@ -21,6 +25,8 @@ public sealed partial class BwfParser : JsonRankingParser<BwfParser.Root>
     public sealed record Row(
         short Rank,
         decimal? Points,
+        [property: JsonPropertyName("player1_id")] int? Player1Id,
+        [property: JsonPropertyName("player2_id")] int? Player2Id,
         [property: JsonPropertyName("player1_model")] Player? Player1,
         [property: JsonPropertyName("player2_model")] Player? Player2,
         [property: JsonPropertyName("p1_country_model")] Country? Player1Country,
@@ -30,11 +36,32 @@ public sealed partial class BwfParser : JsonRankingParser<BwfParser.Root>
 
     protected override IEnumerable<RankEntry> Map(Root root)
     {
+        Dictionary<(int, int?), Row> listed = [];
+        HashSet<(int PlayerId, short Rank, decimal? Points)> placed = [];
+
         foreach (Row row in root.Results.Data)
         {
-            foreach ((Player? player, Country? country) in new[] { (row.Player1, row.Player1Country), (row.Player2, row.Player2Country) })
+            if (row.Player1Id is int player1Id && !listed.TryAdd((player1Id, row.Player2Id), row))
+            {
+                Row first = listed[(player1Id, row.Player2Id)];
+                if (first.Rank != row.Rank || first.Points != row.Points)
+                {
+                    throw new ParseException(SourceName,
+                        $"player ids {player1Id}/{row.Player2Id} are listed at rank {first.Rank} with {first.Points} points and again at rank {row.Rank} with {row.Points}");
+                }
+
+                continue;
+            }
+
+            foreach ((int? playerId, Player? player, Country? country) in new[] { (row.Player1Id, row.Player1, row.Player1Country), (row.Player2Id, row.Player2, row.Player2Country) })
             {
                 if (country?.Name is null || IsNeutral(country.Name))
+                {
+                    continue;
+                }
+
+                // Two of a player's pairs tied on rank and points would give him two identical entries.
+                if (playerId is int id && !placed.Add((id, row.Rank, row.Points)))
                 {
                     continue;
                 }
