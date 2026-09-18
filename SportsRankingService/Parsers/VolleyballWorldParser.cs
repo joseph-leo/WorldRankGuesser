@@ -7,7 +7,8 @@ namespace SportsRankingService.Parsers;
 /// Volleyball World ranking API, indoor and beach. Indoor rows are national teams with a decimal
 /// score (<c>decimalPoints</c>; <c>points</c> is the rounded value). Beach rows are player pairs:
 /// <c>name</c> is the pair ("Hölting Nilsson/Andersson, E"), <c>player1Name</c> is present, and only
-/// the integer <c>points</c> exists.
+/// the integer <c>points</c> exists. <c>federationCode</c> is mostly IOC with a few FIVB-only codes
+/// (AGU, CUR, FAR, MSH, MLD, PAU), all in the IOC table.
 /// </summary>
 public sealed class VolleyballWorldParser : JsonRankingParser<VolleyballWorldParser.Root>
 {
@@ -17,7 +18,6 @@ public sealed class VolleyballWorldParser : JsonRankingParser<VolleyballWorldPar
     public sealed record Team(
         short RankToDisplay,
         string FederationCode,
-        string? FederationName,
         string? Name,
         string? Player1Name,
         decimal? DecimalPoints,
@@ -27,7 +27,6 @@ public sealed class VolleyballWorldParser : JsonRankingParser<VolleyballWorldPar
         root.Teams.Select(t => new RankEntry(
             t.RankToDisplay,
             t.FederationCode.Trim().IOCToISO3(),
-            t.FederationName,
             Competitor: t.Player1Name is null ? null : t.Name,
             Points: t.DecimalPoints ?? t.Points));
 }

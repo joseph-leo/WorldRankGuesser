@@ -6,7 +6,7 @@ namespace SportsRankingService.Services;
 
 /// <summary>
 /// Turns parser output into a <see cref="RankingSnapshot"/>: orders the entries by position,
-/// fills a missing country name, rejects equal duplicates, stamps the item and decides the date.
+/// names the country from its code, rejects equal duplicates, stamps the item and decides the date.
 /// </summary>
 public static class RankingSnapshotBuilder
 {
@@ -18,7 +18,7 @@ public static class RankingSnapshotBuilder
         // A stable sort, so entries tied on position keep feed order.
         List<RankingSnapshotEntry> entries = parsed.Entries
             .OrderBy(e => e.Position)
-            .Select(e => new RankingSnapshotEntry(e.Position, e.ISO3, e.TeamName ?? CountryUtil.GetCountryName(e.ISO3), e.Competitor, e.Points))
+            .Select(e => new RankingSnapshotEntry(e.Position, e.ISO3, CountryName(item, e.ISO3), e.Competitor, e.Points))
             .ToList();
 
         // Equal rows carry no distinguishing fact, so they are always a feed or parser bug:
@@ -40,4 +40,11 @@ public static class RankingSnapshotBuilder
             IsFederationDate: federationDate is not null,
             entries);
     }
+
+    // The name is the table's, never the feed's, so every feed spells a country the same way. A code
+    // the table lacks is a new country or an unmapped federation code: fail loudly rather than store it nameless.
+    private static string CountryName(RankingItem item, string iso3) =>
+        CountryUtil.TryGetCountryName(iso3, out string? name)
+            ? name!
+            : throw new ParseException(item.Source, $"no country name for code '{iso3}'");
 }

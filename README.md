@@ -36,6 +36,7 @@ cron:
 
 `CurrentRankings` is a view with one row per entry of each feed's newest release; `CurrentCountryRankings` collapses it to one row per country (the best-placed entry plus its entrant count).
 `CurrentRankings` columns: Sport, Event, Gender, RankingDate, IsFederationDate, Ordinal, Position, ISO3, TeamName, Competitor, Points; `CurrentCountryRankings` columns: Sport, Event, Gender, RankingDate, IsFederationDate, Position, ISO3, TeamName, Competitor, Points, RankedEntrants.
+`ISO3` identifies the country and `TeamName` is one fixed display name per code (`SportsRankingService/Utilities/CountryNames.cs`), the same in every sport, never the federation's own spelling.
 `RankingReleases` and `RankingRows` hold every release ever seen; `IsFederationDate` says whether
 `RankingDate` came from the federation or is the scrape date of a feed that publishes none. For a
 dateless feed, `RankingDate` is the day its content was first seen and does not move while that

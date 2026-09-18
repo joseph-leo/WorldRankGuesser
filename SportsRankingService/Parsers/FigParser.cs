@@ -70,15 +70,14 @@ public sealed partial class FigParser : IRankingParser
             throw new ParseException(SourceName, $"row at rank {position} has no country code");
         }
 
-        // Athletes carry a Name cell, and the feed gives no country name for them. Rhythmic groups are
-        // national teams: no Name cell, and the country name sits in a second NF cell.
+        // Athletes carry a Name cell. Rhythmic groups are national teams: no Name cell (the second NF
+        // cell holds the country name, which the pipeline derives from the code instead).
         string? athlete = Text(row.SelectSingleNode("td[@data-label='Name']"));
-        string? countryName = athlete is null ? Text(row.SelectNodes("td[@data-label='NF']")?.Skip(1).FirstOrDefault()) : null;
 
         string? totalText = Text(row.SelectSingleNode("td[@data-label='Total']"));
         decimal? points = totalText is not null && decimal.TryParse(totalText, NumberStyles.Number, CultureInfo.InvariantCulture, out decimal total) ? total : null;
 
-        return new RankEntry(position, ioc.IOCToISO3(), countryName, athlete, points);
+        return new RankEntry(position, ioc.IOCToISO3(), athlete, points);
     }
 
     private static string? Text(HtmlNode? cell)

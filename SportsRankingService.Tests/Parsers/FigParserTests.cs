@@ -40,7 +40,6 @@ public class FigParserTests
         var top = _parser.Parse(Men, "World Cup / Floor Exercise").Entries.First(r => r.Position == 1);
 
         Assert.Equal("SHARAMKOU Yahor", top.Competitor);
-        Assert.Null(top.TeamName);
     }
 
     [Fact]
@@ -64,13 +63,12 @@ public class FigParserTests
     }
 
     [Fact]
-    public void Rhythmic_group_events_are_national_teams_named_by_country()
+    public void Rhythmic_group_events_are_national_teams_without_a_competitor()
     {
         var rows = _parser.Parse(Rhythmic, "World Cup / Group 5x").Entries;
 
         Assert.Equal(21, rows.Count);
         Assert.Equal("CHN", rows.First(r => r.Position == 1).ISO3);
-        Assert.Equal("People's Republic of China", rows.First(r => r.Position == 1).TeamName);
         Assert.Null(rows.First(r => r.Position == 1).Competitor);
         Assert.Equal("RUS", rows.First(r => r.Position == 2).ISO3);
     }
@@ -92,7 +90,6 @@ public class FigParserTests
         {
             Assert.Matches("^[A-Z]{3}$", r.ISO3);
             Assert.True(r.Position > 0);
-            Assert.False(string.IsNullOrWhiteSpace(r.Competitor ?? r.TeamName), "every row names an athlete or a national group");
         });
     }
 

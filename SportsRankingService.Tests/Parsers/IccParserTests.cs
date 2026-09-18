@@ -49,6 +49,20 @@ public class IccParserTests
     }
 
     [Fact]
+    public void ICC_country_codes_that_are_not_ISO3_are_mapped()
+    {
+        var codes = _parser.Parse(Fixture.Read("Icc_T20_Women.json")).Entries.Select(r => r.ISO3).ToList();
+
+        Assert.Contains("SLE", codes);   // SRL-W: Sierra Leone, not Sri Lanka
+        Assert.Contains("LKA", codes);   // SL-W
+        Assert.Contains("SWZ", codes);   // ESW-W
+        Assert.Contains("SAU", codes);   // SDA
+        Assert.DoesNotContain("ESW", codes);
+        Assert.DoesNotContain("SDA", codes);
+        Assert.Equal(1, codes.Count(c => c == "LKA"));
+    }
+
+    [Fact]
     public void Carries_the_ICC_rank_date()
     {
         Assert.Equal(new DateOnly(2026, 9, 12), _parser.Parse(Fixture.Read("Icc_Test_Men.json")).RankingDate);

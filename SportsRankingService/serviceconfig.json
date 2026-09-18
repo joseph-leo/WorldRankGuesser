@@ -100,9 +100,9 @@
     { "Sport": "Rugby", "Event": "Sevens", "Gender": "Women", "Source": "Svns", "UrlResolver": "SvnsSeries",
       "Url": "https://api.wr-rims-prod.pulselive.com/rugby/v3/series/{0}/standings" },
 
-    { "Sport": "Soccer/Football", "Gender": "Men", "Source": "FifaV3", "UrlResolver": "FifaDateId",
+    { "Sport": "Soccer", "Gender": "Men", "Source": "FifaV3", "UrlResolver": "FifaDateId",
       "Url": "https://api.fifa.com/api/v3/fifarankings/rankings/rankingsbyschedule?rankingScheduleId={0}&language=en" },
-    { "Sport": "Soccer/Football", "Gender": "Women", "Source": "FifaV3", "UrlResolver": "FifaDateId",
+    { "Sport": "Soccer", "Gender": "Women", "Source": "FifaV3", "UrlResolver": "FifaDateId",
       "Url": "https://api.fifa.com/api/v3/fifarankings/rankings/rankingsbyschedule?rankingScheduleId={0}&language=en" },
 
     { "Sport": "Tennis", "Event": "Singles", "Gender": "Men", "Source": "EspnTennis",

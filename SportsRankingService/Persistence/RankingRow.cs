@@ -16,7 +16,7 @@ public class RankingRow
     /// <summary>ISO 3166-1 alpha-3, except FIFA's home nations (ENG, SCO, WAL, NIR) and West Indies (WI).</summary>
     public required string ISO3 { get; set; }
 
-    /// <summary>The country name: the federation's spelling, or the English region name when the feed gives only a code.</summary>
+    /// <summary>The country name from <see cref="Utilities.CountryNames"/> for the code; never the federation's spelling.</summary>
     public string? TeamName { get; set; }
 
     /// <summary>The athlete, pair or group this row stands on when the federation ranks people; null for team sports.</summary>
