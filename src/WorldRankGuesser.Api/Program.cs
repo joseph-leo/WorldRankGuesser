@@ -70,9 +70,11 @@ builder.Services.AddScoped<GameService>();
 
 // ---- Identity: an anonymous player in an HttpOnly cookie -----------------------------------------------------------
 // Keys live in the database so cookies survive restarts and scale-to-zero.
-builder.Services.AddDataProtection()
-    .SetApplicationName("WorldRankGuesser")
-    .PersistKeysToDbContext<GameDbContext>();
+var dataProtection = builder.Services.AddDataProtection().SetApplicationName("WorldRankGuesser");
+if (!isOpenApiBuild)
+{
+    dataProtection.PersistKeysToDbContext<GameDbContext>();
+}
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie(options =>
@@ -97,8 +99,12 @@ builder.Services.AddRateLimiter(limiter =>
 {
     limiter.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
 
+    // Matching on the endpoint (not the path string) means a trailing slash or different casing can't bypass the limit:
+    // routing has already run by the time UseRateLimiter executes, because minimal hosting inserts UseRouting at the
+    // head of the pipeline whenever it isn't called explicitly.
     static bool IsGameStart(HttpContext http) =>
-        HttpMethods.IsPost(http.Request.Method) && http.Request.Path.Equals(GameEndpoints.StartGameRoute, StringComparison.OrdinalIgnoreCase);
+        HttpMethods.IsPost(http.Request.Method)
+        && http.GetEndpoint()?.Metadata.GetMetadata<IEndpointNameMetadata>()?.EndpointName == "StartGame";
 
     static string Ip(HttpContext http) => http.Connection.RemoteIpAddress?.ToString() ?? "unknown";
 

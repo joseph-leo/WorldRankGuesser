@@ -134,6 +134,23 @@ public class GameApiTests(SqlServerFixture sql) : IAsyncLifetime
     }
 
     [Fact]
+    public async Task A_trailing_slash_does_not_bypass_the_game_start_rate_limit()
+    {
+        await using var limited = new ApiFactory(sql.ConnectionString, new Dictionary<string, string?>
+        {
+            ["RateLimits:GameStartsPerPlayerPerHour"] = "2",
+        });
+        var client = limited.CreateClient();
+
+        await Start(client);      // creates the player; counted against the anonymous partition
+        await Start(client);
+        await Start(client);      // exhausts the per-player limit, as in the sibling test above
+        var blocked = await client.PostAsJsonAsync("/api/games/", new StartGameRequest("practice"));
+
+        Assert.Equal(HttpStatusCode.TooManyRequests, blocked.StatusCode);
+    }
+
+    [Fact]
     public async Task Starting_a_game_before_the_rankings_load_returns_503_and_creates_no_player()
     {
         await using var notReady = new ApiFactory(sql.EmptyConnectionString);
