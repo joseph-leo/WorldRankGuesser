@@ -1,5 +1,8 @@
 using WorldRankGuesser.Api.Configuration;
+using WorldRankGuesser.Api.Countries;
+using WorldRankGuesser.Api.Endpoints;
 using WorldRankGuesser.Api.Persistence;
+using WorldRankGuesser.Api.Rankings;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,9 +25,20 @@ builder.Services.AddDbContext<GameDbContext>((services, options) =>
     GameDbContext.Configure(options, connectionString);
 });
 
+builder.Services.AddOptions<RankingsOptions>()
+    .Bind(builder.Configuration.GetSection(RankingsOptions.Section))
+    .Validate(o => o.RefreshMinutes >= 1, "Rankings:RefreshMinutes must be at least 1.")
+    .ValidateOnStart();
+
+builder.Services.AddSingleton(TimeProvider.System);
+builder.Services.AddSingleton(CountryCatalog.LoadEmbedded());
+builder.Services.AddSingleton<IRankingsStore, RankingsStore>();
+builder.Services.AddScoped<IRankingsReader, RankingsReader>();
+builder.Services.AddHostedService<RankingsRefreshService>();
+
 var app = builder.Build();
 
-app.MapGet("/healthz", () => Results.Ok(new { status = "ok" }));
+app.MapHealthEndpoints();
 
 app.Run();
 
