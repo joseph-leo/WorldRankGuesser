@@ -4,57 +4,51 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-A Blazor Server game. The player is shown a random country and assigns it to one of 10 sport categories; the app then looks up that country's best world ranking in that sport by scraping live ranking sources. After all 10 categories are filled, the positions are summed — lower total is better.
+A server-authoritative guessing game. The player is dealt ten countries one at a time and assigns each to a different sport category; each pick scores the country's world rank in that category (lower total wins; unranked or below 150th scores 150). `src/WorldRankGuesser.Api` (ASP.NET Core minimal API, .NET 11, EF Core, SQL Server) owns every rule and all state. `src/WorldRankGuesser.Web` (SvelteKit, Svelte 5, TypeScript, static single-page app) only renders what the API returns. Rankings come from the `dbo.CurrentCountryRankings` view that the separate **SportsRankingService** repo fills weekly; that view is the only link between the repos.
+
+Design: `docs/superpowers/specs/2026-09-19-server-authoritative-rebuild-design.md`. Built so far: phases 0–1 (practice mode). Not built yet: deployment, the daily challenge, the timer, streaks, leaderboards, sign-in.
 
 ## Commands
 
 ```powershell
-dotnet build WorldRankGuesser.sln
-dotnet run --project WorldRankGuesser                        # http://localhost:5170
-dotnet run --project WorldRankGuesser --launch-profile https # https://localhost:7296
-dotnet watch --project WorldRankGuesser                      # hot reload
+# Database: the SQL Server container lives in the SportsRankingService repo (docker compose up -d --wait there).
+dotnet tool restore                                                      # installs dotnet-ef from .config/dotnet-tools.json
+dotnet ef database update --project src/WorldRankGuesser.Api            # apply the game schema; the API never migrates itself
+dotnet ef migrations add <Name> --project src/WorldRankGuesser.Api --output-dir Persistence/Migrations
+
+dotnet build WorldRankGuesser.slnx                                      # also regenerates src/WorldRankGuesser.Web/openapi/*.json
+dotnet test WorldRankGuesser.slnx                                       # needs Docker (Testcontainers SQL Server)
+dotnet test WorldRankGuesser.slnx --filter "FullyQualifiedName~ScoringEngineTests"   # one class; add .Method_name for one test
+dotnet run --project src/WorldRankGuesser.Api                           # http://localhost:5170, /readyz says whether rankings loaded
+
+cd src/WorldRankGuesser.Web
+npm run dev                # http://localhost:5173, proxies /api to the API
+npm run check              # svelte-check
+npm test                   # Vitest; one file: npm test -- src/lib/game/spin.test.ts
+npm run test:e2e           # Playwright; starts the API and Vite itself; writes real games into the local database's game schema
+npm run gen:api            # after any API contract change: rebuild the API first, then regenerate src/lib/api/schema.d.ts
 ```
 
-There is no test project and no lint configuration. The build emits ~60 nullable/BL0016 warnings; these are pre-existing.
-
-Single project (`WorldRankGuesser/WorldRankGuesser.csproj`), classic Blazor Server hosting model (`AddServerSideBlazor` / `MapBlazorHub` / `_Host.cshtml`), not the .NET 8+ Blazor Web App model. Dependencies: HtmlAgilityPack (HTML scraping) and Newtonsoft.Json (JSON sources; `System.Text.Json` is used for config and session storage).
+CI fails if the committed OpenAPI document or `schema.d.ts` is out of date. `dotnet build` boots the app without a database to generate the OpenAPI document, so it logs a non-fatal DataProtection key-ring error — expected, not a build failure. Front-end TypeScript is pinned to `^5.9.3` because `openapi-typescript` 7.13 rejects TypeScript 6; `npm ci`/`npm install` need no extra flags.
 
 ## Architecture
 
-### Ranking pipeline: `urls.json` → `ScrapeService<TRank, TRankModel>` → `Rank`
+**The board.** Starting a game draws one country per category and computes the whole country × category grid once (`BoardGenerator`), storing it as immutable JSON on `game.Boards`. Every pick is a lookup on that stored grid, so a rankings refresh never changes a game in progress. A practice game has its own board; a daily challenge (later phase) is one dated board shared by all players.
 
-`Services/ScrapeService.cs` is the abstract base for every sport. The pieces are wired together by naming convention rather than DI:
+**Anti-cheat invariants — do not weaken these.** A pick request names only a category; the server applies it to the country at its own `TurnIndex`. `GameStateMapper` is the only code that decides what a response reveals: past picks and the current country, and the grid/optimal score only once the game is complete. A game that is not the caller's is a `404`. `AntiCheatTests` pins all of this. There is deliberately no endpoint that returns rankings.
 
-- `wwwroot/urls.json` is a three-level map: **Rank class name** (`"HockeyRank"`) → **sport variant** (`"Field Hockey"`, `"Ice Hockey"`) → **gender** (`"Men"`, `"Women"`, or `"Both"`) → URL. The base class looks up its section with `typeof(TRank).Name`, so the top-level key must exactly match the `Data/*Rank.cs` class name.
-- A URL value starting with `wwwroot` is read from disk instead of fetched. Several sources (gymnastics, women's field hockey) are saved browser snapshots under `wwwroot/remotehtml/`; they only update when someone re-saves the page. These paths, and `GeneralUtil.ReadConfig`, are relative to the process working directory, which must be the project directory (`dotnet run` sets this; running the DLL from `bin/` does not).
-- The base class iterates variant × gender, sets the mutable `Sport` and `Gender` properties, then calls the subclass's `ParseRanks(response)`. Subclasses read `Sport`/`Gender` to tag results and — when one service covers structurally different sources — to `switch` between parsers (see `HockeyService`, `RugbyService`). When the gender key is `"Both"`, the parser derives gender from the response itself.
-- `GetLowestRankAsync(iso3)` returns the numerically lowest `Position` across all variants and genders for a country. A country missing from a source gets a placeholder rank with `Position = 200`; `Rank.Unranked` is defined as `Position == 200`, so 200 is a sentinel — don't change one without the other.
-- Override points beyond `ParseRanks`: `GetCountryRank` (`CricketService` maps the 15 West Indies member countries onto the single `"WI"` entry) and `CallUrlAsync` (`TennisService` delays each call to stay under the Sportradar trial rate limit).
-- `TRankModel` is currently unused; every service passes the same type twice.
+**Rankings pipeline.** `RankingsReader` (the only code that knows about the view) → `RankingsSnapshotBuilder` → `RankingsStore`, refreshed at startup and hourly by `RankingsRefreshService`; a failed refresh keeps the previous snapshot. The builder computes, per feed, each country's *entry rank* (the published position of its best entry) and *country rank* (competition ranking among countries: 1, 2, 2, 4), keeps the best feed per category separately for each mode, then applies aliases.
 
-### Country identity
+**Scoring** lives only in `ScoringEngine`: `min(rank in Scoring:RankMode, Scoring:Cap)`, unranked = cap. Both ranks are stored in every cell, and the mode and cap are stamped on every board, so the two modes can be compared and are never mixed.
 
-Everything is keyed on ISO 3166 alpha-3 codes from .NET `RegionInfo` (`CountryUtil.GetCountries()` enumerates all specific cultures). Sources disagree on how they name countries, so `Helpers/CountryUtil.cs` normalizes:
+**Configuration over code** (`appsettings.json`): the ten categories and the scraper `Sport` values each covers; alias rules (`GBR` inherits the best of `ENG`/`SCO`/`WAL`/`NIR`; the 15 West Indies members inherit `WI` in cricket only); `NotDrawable`; `MinCategoriesRanked`. The category count is never hardcoded: a game has as many turns as its board has categories.
 
-- `IOCToISO3` — IOC/FIFA-style codes (`GER`, `NED`, `RSA`) → ISO3; unknown codes pass through unchanged.
-- `GetISO3FromCountry` / `GetRegionMapping` — display names → `RegionInfo.EnglishName` (England/Scotland/Wales/NI → United Kingdom, Chinese Taipei → Taiwan, etc.). This throws a `NullReferenceException` on an unmapped name, which is the usual failure when a source adds or renames a team; the fix is a new `case` in `GetRegionMapping`.
-- Flags are emoji computed from the ISO2 code, not image assets.
+**Countries.** ISO3 identifies a country; display names are the scraper's `TeamName`. Flags need ISO2, which the view lacks, so `Countries/countries.json` is a committed ISO3→ISO2 table generated by `tools/GenerateCountryCatalog/generate.cs`, a file-based `dotnet run <file>.cs` app — this SDK disables reflection-based `JsonSerializer` by default for those, so the script sets `#:property JsonSerializerIsReflectionEnabledByDefault=true`. A drawable code missing from the table fails the rankings load with a message naming the code: add it to the table or to `NotDrawable`.
 
-### Game flow (`Pages/Game.razor` + `.razor.cs`)
+**Persistence.** The API owns SQL schema `game` (history table `game.__EFMigrationsHistory`) and never touches `dbo`. The view is mapped keyless with `ToView`, so it never appears in migrations. Filtered unique indexes enforce one board per daily date, one daily game per player per date, and one pick per category per game; `Games.RowVersion` plus those indexes make a pick atomic — a losing simultaneous pick becomes a `409` carrying the current state. Some columns (streaks, deadlines, external login) exist for later phases and are unused today.
 
-- The country list is shuffled and "spun" through 50 entries (50 ms each) before landing on one; `loading` disables the cards during the spin. The chosen country is removed from the pool.
-- Each `CategoryCard` invokes `GetRankAsync<TService, TRank, TModel>`, which instantiates the service with `Activator.CreateInstance` — services are not registered in DI. The `CardFlags` dictionary key is the rank type name minus `"Rank"`, and must equal the card's `Sport` parameter string for the card to flip to a flag.
-- The category count is hardcoded (`CardFlags.Count < 10`, `Rankings.Count == 10`).
-- On the 10th pick, results are serialized as `List<Rank>` into `sessionStorage` and the app navigates to `/rankings` with `forceLoad: true`; `RankingsPage` reads and clears the key in `OnAfterRenderAsync` (JS interop is unavailable earlier). Because the list is typed as the base class, subclass-only properties such as `GymnasticsRank.Event` do not survive the round trip.
+**Identity.** An anonymous player is created on the first `POST /api/games` (not on page load) and carried in the HttpOnly `wrg_player` cookie via ASP.NET Core cookie authentication; data-protection keys are stored in the database so cookies survive restarts. Same-origin hosting is a design requirement: in development Vite proxies `/api`; in production the API serves the built front end.
 
-### Adding a sport
+**Front end.** `GameStore` (`src/lib/game/gameStore.svelte.ts`) holds the last server state and has no game rules; a `409` or a failed pick means "adopt or reload the server state". The spinner cycles decoy flags from `src/lib/countries/iso2.json` (no rank data) while a pick is in flight and lands when the next country arrives. Types in `src/lib/api/schema.d.ts` are generated — never edit them by hand. `svelte.config.js` is hand-maintained: the current `sv` CLI scaffold no longer emits one, so don't expect it to reappear from a `sv` regeneration.
 
-1. `Data/FooRank.cs` deriving from `Rank`.
-2. `Services/FooService.cs` deriving from `ScrapeService<FooRank, FooRank>` with a `ParseRanks` implementation.
-3. A `"FooRank"` section in `wwwroot/urls.json`.
-4. A `<CategoryCard Sport="Foo" …>` in `Game.razor`, and bump the two hardcoded `10`s in `Game.razor.cs`.
-
-## Notes
-
-- `Pages/Counter.razor`, `Shared/SurveyPrompt.razor`, and `NavMenu` are leftovers from the Blazor template.
-- The `<None Include="wwwroot\remotehtml\…">` list in the csproj is IDE-generated noise; snapshot files do not need to be listed there.
+**Tests.** Pure logic (scoring, snapshot builder, board generator, optimal assignment) is unit-tested without a database. Everything touching SQL runs against a real SQL Server in Testcontainers (xUnit collection `"sql"`), because the model depends on filtered indexes, row versions and a view; `RankingsSeed` stands in for the scraper's view with 12 countries ranked 1–12 in one feed per category. Tests share one database, so never assert on global row counts.
