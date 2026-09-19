@@ -1,7 +1,9 @@
 using WorldRankGuesser.Api.Configuration;
 using WorldRankGuesser.Api.Countries;
 using WorldRankGuesser.Api.Endpoints;
+using WorldRankGuesser.Api.Games;
 using WorldRankGuesser.Api.Persistence;
+using WorldRankGuesser.Api.Players;
 using WorldRankGuesser.Api.Rankings;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -35,6 +37,10 @@ builder.Services.AddSingleton(CountryCatalog.LoadEmbedded());
 builder.Services.AddSingleton<IRankingsStore, RankingsStore>();
 builder.Services.AddScoped<IRankingsReader, RankingsReader>();
 builder.Services.AddHostedService<RankingsRefreshService>();
+
+builder.Services.AddSingleton(Random.Shared);
+builder.Services.AddScoped<PlayerService>();
+builder.Services.AddScoped<GameService>();
 
 var app = builder.Build();
 
