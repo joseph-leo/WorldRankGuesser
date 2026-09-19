@@ -29,7 +29,8 @@ public sealed class GameService(
     IRankingsStore rankings,
     IOptions<ScoringOptions> scoring,
     Random random,
-    TimeProvider time)
+    TimeProvider time,
+    ILogger<GameService> logger)
 {
     public async Task<GameStateDto> StartPracticeAsync(Guid playerId, CancellationToken ct)
     {
@@ -106,9 +107,11 @@ public sealed class GameService(
             // One SaveChanges is one transaction: the pick insert and the row-versioned game update succeed or fail together.
             await db.SaveChangesAsync(ct);
         }
-        catch (DbUpdateException)
+        catch (DbUpdateException ex)
         {
             // A simultaneous pick won: the row version moved, or a unique index (turn, category) fired.
+            // Also the only place a deadlock or command timeout under load would otherwise vanish silently.
+            logger.LogWarning(ex, "Pick on game {GameId} could not be saved; resyncing.", gameId);
             db.ChangeTracker.Clear();
             var current = await LoadAsync(playerId, gameId, tracking: false, ct);
 
