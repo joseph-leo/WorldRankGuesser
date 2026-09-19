@@ -4,4 +4,9 @@
     <InternalsVisibleTo Include="WorldRankGuesser.Api.Tests" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Remove="Countries\countries.json" />
+    <EmbeddedResource Include="Countries\countries.json" LogicalName="countries.json" />
+  </ItemGroup>
+
 </Project>
