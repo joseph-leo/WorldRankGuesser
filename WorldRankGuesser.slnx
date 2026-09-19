@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/WorldRankGuesser.Api/WorldRankGuesser.Api.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/WorldRankGuesser.Api.Tests/WorldRankGuesser.Api.Tests.csproj" />
+  </Folder>
+</Solution>
