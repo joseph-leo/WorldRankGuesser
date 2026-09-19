@@ -24,6 +24,19 @@ public class RankingPipelineRegistrationTests
     {
         using ServiceProvider provider = Provider();
 
-        Assert.IsType<HttpFetcher>(provider.GetRequiredService<IHttpFetcher>());
+        Assert.Equal(HttpFetcher.FetcherName, provider.GetRequiredService<IHttpFetcher>().Name);
+    }
+
+    /// <summary>
+    /// Feeds sharing a page (FIG, Wikipedia IIHF) and resolvers sharing a preliminary page (WBSC, SVNS)
+    /// request it once per run, and only because every fetcher they can be handed is the caching one.
+    /// </summary>
+    [Fact]
+    public void Every_fetcher_is_handed_out_behind_the_cache()
+    {
+        using ServiceProvider provider = Provider();
+
+        Assert.All(provider.GetServices<IHttpFetcher>(), fetcher => Assert.IsType<CachingFetcher>(fetcher));
+        Assert.Same(provider.GetRequiredService<IHttpFetcher>(), provider.GetServices<IHttpFetcher>().Single(f => f.Name == HttpFetcher.FetcherName));
     }
 }

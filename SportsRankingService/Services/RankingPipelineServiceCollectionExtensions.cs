@@ -22,8 +22,11 @@ public static class RankingPipelineServiceCollectionExtensions
         });
         // The runner indexes the fetchers by Name. HttpFetcher stays last: a single IHttpFetcher dependency
         // (the URL resolvers) gets the last registration, and their requests must not start needing curl.
-        services.AddSingleton<IHttpFetcher, CurlFetcher>();
-        services.AddSingleton<IHttpFetcher, HttpFetcher>();
+        // Both are only handed out behind CachingFetcher, so feeds and resolvers sharing a page request it once per run.
+        services.AddSingleton<CurlFetcher>();
+        services.AddSingleton<HttpFetcher>();
+        services.AddSingleton<IHttpFetcher>(sp => new CachingFetcher(sp.GetRequiredService<CurlFetcher>()));
+        services.AddSingleton<IHttpFetcher>(sp => new CachingFetcher(sp.GetRequiredService<HttpFetcher>()));
 
         // Parsers are stateless; the runner indexes them by SourceName.
         services.AddSingleton<IRankingParser, BwfParser>();
