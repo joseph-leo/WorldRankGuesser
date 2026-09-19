@@ -1,6 +1,19 @@
 import { defineConfig } from '@playwright/test';
 
 export default defineConfig({
-	webServer: { command: 'npm run build && npm run preview', port: 4173 },
-	testMatch: '**/*.e2e.{ts,js}'
+	testDir: 'e2e',
+	use: { baseURL: 'http://localhost:5173' },
+	webServer: [
+		{
+			command: 'dotnet run --project ../WorldRankGuesser.Api',
+			url: 'http://localhost:5170/readyz',
+			reuseExistingServer: true,
+			timeout: 120_000
+		},
+		{
+			command: 'npm run dev -- --port 5173 --strictPort',
+			url: 'http://localhost:5173',
+			reuseExistingServer: true
+		}
+	]
 });
