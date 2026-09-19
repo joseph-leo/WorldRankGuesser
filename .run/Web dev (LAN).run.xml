@@ -1,0 +1,12 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="Web: dev (LAN)" type="js.build_tools.npm">
+    <package-json value="$PROJECT_DIR$/src/WorldRankGuesser.Web/package.json" />
+    <command value="run" />
+    <scripts>
+      <script value="dev:lan" />
+    </scripts>
+    <node-interpreter value="project" />
+    <envs />
+    <method v="2" />
+  </configuration>
+</component>

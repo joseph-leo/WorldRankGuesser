@@ -1,0 +1,7 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="API + Web (LAN)" type="CompoundRunConfigurationType">
+    <toRun name="WorldRankGuesser.Api: http" type="LaunchSettings" />
+    <toRun name="Web: dev (LAN)" type="js.build_tools.npm" />
+    <method v="2" />
+  </configuration>
+</component>
