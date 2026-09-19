@@ -1,0 +1,31 @@
+{
+	"name": "worldrankguesser.web",
+	"private": true,
+	"version": "0.0.1",
+	"type": "module",
+	"scripts": {
+		"dev": "vite dev",
+		"build": "vite build",
+		"preview": "vite preview",
+		"prepare": "svelte-kit sync || echo ''",
+		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+		"test": "vitest run",
+		"test:e2e": "playwright test",
+		"gen:api": "openapi-typescript openapi/WorldRankGuesser.Api.json -o src/lib/api/schema.d.ts"
+	},
+	"devDependencies": {
+		"@playwright/test": "^1.60.0",
+		"@sveltejs/adapter-static": "^3.0.10",
+		"@sveltejs/kit": "^2.63.0",
+		"@sveltejs/vite-plugin-svelte": "^7.1.2",
+		"openapi-typescript": "^7.13.0",
+		"svelte": "^5.56.1",
+		"svelte-check": "^4.6.0",
+		"typescript": "^5.9.3",
+		"vite": "^8.0.16",
+		"vitest": "^5.0.1"
+	},
+	"dependencies": {
+		"flag-icons": "^7.5.0"
+	}
+}

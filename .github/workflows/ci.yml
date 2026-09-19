@@ -15,3 +15,24 @@ jobs:
           global-json-file: global.json
       - run: dotnet build WorldRankGuesser.slnx
       - run: dotnet test WorldRankGuesser.slnx --no-build
+      - name: The committed OpenAPI document matches the API
+        run: git diff --exit-code -- src/WorldRankGuesser.Web/openapi
+
+  web:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/WorldRankGuesser.Web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: src/WorldRankGuesser.Web/package-lock.json
+      - run: npm ci
+      - name: The committed API types match the OpenAPI document
+        run: npm run gen:api && git diff --exit-code -- src/lib/api/schema.d.ts
+      - run: npm run check
+      - run: npm test -- --passWithNoTests
+      - run: npm run build

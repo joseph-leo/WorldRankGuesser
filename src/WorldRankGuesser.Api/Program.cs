@@ -1,3 +1,5 @@
+using System.Reflection;
+using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.DataProtection;
@@ -11,6 +13,14 @@ using WorldRankGuesser.Api.Players;
 using WorldRankGuesser.Api.Rankings;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// The build-time OpenAPI generator runs this entry point; it must not try to reach a database.
+var isOpenApiBuild = Assembly.GetEntryAssembly()?.GetName().Name == "GetDocument.Insider";
+
+builder.Services.AddOpenApi();
+
+// Strict numbers: the web default also accepts "12" for 12, which makes every integer `number | string` in the generated types.
+builder.Services.ConfigureHttpJsonOptions(json => json.SerializerOptions.NumberHandling = JsonNumberHandling.Strict);
 
 // ---- Options -------------------------------------------------------------------------------------------------------
 builder.Services.AddOptions<ScoringOptions>()
@@ -49,7 +59,12 @@ builder.Services.AddSingleton(Random.Shared);
 builder.Services.AddSingleton(CountryCatalog.LoadEmbedded());
 builder.Services.AddSingleton<IRankingsStore, RankingsStore>();
 builder.Services.AddScoped<IRankingsReader, RankingsReader>();
-builder.Services.AddHostedService<RankingsRefreshService>();
+
+if (!isOpenApiBuild)
+{
+    builder.Services.AddHostedService<RankingsRefreshService>();
+}
+
 builder.Services.AddScoped<PlayerService>();
 builder.Services.AddScoped<GameService>();
 
@@ -113,11 +128,22 @@ var app = builder.Build();
 app.UseExceptionHandler();
 app.UseStatusCodePages();
 
+app.UseDefaultFiles();
+app.UseStaticFiles();
+
 app.UseAuthentication();      // before the limiter, so the player partition can see the cookie
 app.UseRateLimiter();
 
+if (app.Environment.IsDevelopment())
+{
+    app.MapOpenApi();
+}
+
 app.MapHealthEndpoints();
 app.MapGameEndpoints();
+
+// The single-page app's client-side routes (/play/..., /results/...) all load index.html.
+app.MapFallbackToFile("index.html");
 
 app.Run();
 
