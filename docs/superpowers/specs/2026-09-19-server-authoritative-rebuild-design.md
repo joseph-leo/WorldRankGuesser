@@ -232,7 +232,7 @@ Schema `game`, EF Core migrations with the history table in the same schema. The
 - **Types** are generated from the API's OpenAPI document with `openapi-typescript`; CI fails if the generated file is out of date.
 - **Spin and timer:** a click starts the flag spin and sends the pick together. When the response arrives the card reveals the result and the spin lands on the next country. The countdown uses `deadline` and `serverNow` from the server. The spin is skipped under `prefers-reduced-motion`. The decoy countries in the spin come from a static list shipped with the front end that contains no ranks.
 - **Flags** are SVGs from `flag-icons`, keyed by ISO2, because Windows browsers do not render flag emoji.
-- **Share:** a spoiler-free emoji grid (one square per pick in turn order, coloured by score: 🟩 1–10, 🟨 11–50, 🟧 51 to one below the cap, 🟥 the cap; plus the total, the date and the streak) through the Web Share API with a clipboard fallback.
+- **Share:** a spoiler-free emoji grid (one square per pick in turn order, coloured by score: ⭐ 1, 🟩 2–10, 🟨 11–50, 🟧 51 to one below the cap, 🟥 the cap; plus the total, the date and the streak) through the Web Share API with a clipboard fallback.
 - **Styling:** scoped Svelte CSS and CSS custom properties, mobile first, no UI framework.
 
 ## 10. Error handling
