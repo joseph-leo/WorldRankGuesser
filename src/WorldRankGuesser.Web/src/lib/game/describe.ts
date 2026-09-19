@@ -1,17 +1,19 @@
-import type { Pick } from '$lib/api/client';
+import type { Cell } from '$lib/api/client';
 
-/** One line under a filled category card, for example "#2 — Viktor Axelsen, world #3 · Badminton Singles Men". */
-export function describePick(pick: Pick, rankMode: string): string {
-	const result = pick.result;
-	if (result.unranked) return 'Unranked';
+/**
+ * One line about a country in a category, for example "Viktor Axelsen, world #3 · Badminton Singles Men".
+ * It is always shown beside the score, so a rank that equals the score is left out.
+ */
+export function describeCell(cell: Cell, rankMode: string): string {
+	if (cell.unranked) return 'Unranked';
 
 	const entryMode = rankMode === 'Entry';
-	const lead = entryMode ? result.entryRank : result.countryRank;
-	const other = entryMode ? `nation #${result.countryRank}` : `world #${result.entryRank}`;
+	const scored = entryMode ? cell.entryRank : cell.countryRank;
+	const capped = scored != null && scored !== cell.score ? `#${scored}` : null;
 
-	const who = result.competitor ? ` — ${result.competitor}, ${other}` : '';
-	const capped = lead != null && lead > pick.score ? ` (scores ${pick.score})` : '';
-	const feed = [result.sport, result.event, result.gender].filter(Boolean).join(' ');
+	const world = !entryMode && cell.entryRank !== cell.score ? `, world #${cell.entryRank}` : '';
+	const who = cell.competitor ? `${cell.competitor}${world}` : null;
+	const feed = [cell.sport, cell.event, cell.gender].filter(Boolean).join(' ');
 
-	return `#${lead}${who}${capped} · ${feed}`;
+	return [capped, who, feed].filter(Boolean).join(' · ');
 }

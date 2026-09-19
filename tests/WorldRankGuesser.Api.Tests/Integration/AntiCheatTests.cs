@@ -54,6 +54,41 @@ public class AntiCheatTests(SqlServerFixture sql) : IAsyncLifetime
     }
 
     [Fact]
+    public async Task No_response_reveals_what_a_pick_scored_before_the_game_is_complete()
+    {
+        var client = _factory.CreateClient();
+        var state = (await (await client.PostAsJsonAsync("/api/games", new StartGameRequest("practice")))
+            .Content.ReadFromJsonAsync<GameStateDto>())!;
+
+        foreach (var category in state.Categories.SkipLast(1))
+        {
+            var pick = await client.PostAsJsonAsync($"/api/games/{state.Id}/picks", new PickRequest(category.Id));
+            var reload = await client.GetAsync($"/api/games/{state.Id}");
+            var conflict = await client.PostAsJsonAsync($"/api/games/{state.Id}/picks", new PickRequest(category.Id));
+            Assert.Equal(HttpStatusCode.Conflict, conflict.StatusCode);
+
+            foreach (var response in new[] { pick, reload, conflict })
+            {
+                var body = await response.Content.ReadAsStringAsync();
+                Assert.DoesNotMatch("\"score\":\\s*\\d", body);
+                Assert.DoesNotContain("\"countryRank\"", body);      // no board cell under any name
+                Assert.DoesNotContain("\"entryRank\"", body);
+                Assert.Contains("\"totalScore\":null", body);
+            }
+        }
+
+        var last = await client.PostAsJsonAsync($"/api/games/{state.Id}/picks", new PickRequest(state.Categories[^1].Id));
+        var final = (await last.Content.ReadFromJsonAsync<GameStateDto>())!;
+
+        Assert.True(final.IsComplete);
+        Assert.All(final.Picks, p =>
+        {
+            Assert.NotNull(p.Score);
+            Assert.NotNull(p.Result);
+        });
+    }
+
+    [Fact]
     public async Task Another_players_game_is_404_for_reads_and_picks()
     {
         var owner = _factory.CreateClient();
@@ -94,6 +129,18 @@ public class AntiCheatTests(SqlServerFixture sql) : IAsyncLifetime
         var pick = Assert.Single(state.Picks);
         Assert.Equal(0, pick.TurnIndex);
         Assert.Equal(game.CurrentCountry!.Iso3, pick.Country.Iso3);
-        Assert.Equal(pick.Result.Score, pick.Score);
+
+        // The score stays hidden until the game is complete, so finish it and compare with the stored board.
+        foreach (var category in game.Categories.Where(c => c.Id != "soccer"))
+        {
+            response = await client.PostAsJsonAsync($"/api/games/{game.Id}/picks", new PickRequest(category.Id));
+        }
+
+        state = (await response.Content.ReadFromJsonAsync<GameStateDto>())!;
+        await using var db = sql.CreateContext();
+        var board = (await db.Games.Include(g => g.Board).SingleAsync(g => g.Id == game.Id)).Board.Content;
+        var soccer = board.Categories.ToList().FindIndex(c => c.Id == "soccer");
+
+        Assert.Equal(board.Cells[0][soccer].Score, state.Picks[0].Score);
     }
 }

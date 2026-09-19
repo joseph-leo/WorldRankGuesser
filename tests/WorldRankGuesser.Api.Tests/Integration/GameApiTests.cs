@@ -81,6 +81,32 @@ public class GameApiTests(SqlServerFixture sql) : IAsyncLifetime
     }
 
     [Fact]
+    public async Task A_complete_game_names_each_countrys_best_category_and_the_optimal_assignment()
+    {
+        var client = _factory.CreateClient();
+        var state = await Start(client);
+        foreach (var category in state.Categories)
+        {
+            var response = await client.PostAsJsonAsync($"/api/games/{state.Id}/picks", new PickRequest(category.Id));
+            state = (await response.Content.ReadFromJsonAsync<GameStateDto>())!;
+        }
+
+        var grid = state.Grid!;
+        var categoryIds = state.Categories.Select(c => c.Id).ToList();
+        int ScoreOf(int country, string categoryId) => grid.Cells[country][categoryIds.IndexOf(categoryId)].Score;
+
+        Assert.Equal(grid.Countries.Count, grid.BestCategoryIds.Count);
+        for (var country = 0; country < grid.Countries.Count; country++)
+        {
+            Assert.Equal(grid.Cells[country].Min(cell => cell.Score), ScoreOf(country, grid.BestCategoryIds[country]));
+        }
+
+        // Every category is used once, and the chart adds up to the optimal score shown beside it.
+        Assert.Equal(categoryIds.Order(), grid.OptimalCategoryIds.Order());
+        Assert.Equal(state.OptimalScore, grid.OptimalCategoryIds.Select((categoryId, country) => ScoreOf(country, categoryId)).Sum());
+    }
+
+    [Fact]
     public async Task A_used_category_returns_409_with_the_current_state()
     {
         var client = _factory.CreateClient();

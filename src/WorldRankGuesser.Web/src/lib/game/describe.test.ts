@@ -1,41 +1,45 @@
 import { describe, expect, it } from 'vitest';
-import { describePick } from './describe';
-import { pickOf } from './testState';
+import { describeCell } from './describe';
+import { cellOf } from './testState';
 
-describe('describePick', () => {
-	it('describes a team ranking', () => {
-		expect(describePick(pickOf('soccer'), 'Country')).toBe('#3 · Soccer Men');
+const axelsen = { countryRank: 2, entryRank: 3, sport: 'Badminton', event: 'Singles', competitor: 'Viktor Axelsen' };
+
+describe('describeCell', () => {
+	it('leaves out a team rank, which is the score', () => {
+		expect(describeCell(cellOf(), 'Country')).toBe('Soccer Men');
+		expect(describeCell(cellOf(), 'Entry')).toBe('Soccer Men');
 	});
 
 	it('names the athlete and their world rank in country mode', () => {
-		const pick = pickOf(
-			'badminton',
-			{ countryRank: 2, entryRank: 3, sport: 'Badminton', event: 'Singles', competitor: 'Viktor Axelsen' },
-			2
-		);
-
-		expect(describePick(pick, 'Country')).toBe('#2 — Viktor Axelsen, world #3 · Badminton Singles Men');
+		expect(describeCell(cellOf(axelsen, 2), 'Country')).toBe('Viktor Axelsen, world #3 · Badminton Singles Men');
 	});
 
-	it('leads with the world rank in entry mode', () => {
-		const pick = pickOf(
-			'badminton',
-			{ countryRank: 2, entryRank: 3, sport: 'Badminton', event: 'Singles', competitor: 'Viktor Axelsen' },
-			3
-		);
+	it('leaves out a world rank that is the score', () => {
+		const cell = cellOf({ ...axelsen, countryRank: 3 }, 3);
 
-		expect(describePick(pick, 'Entry')).toBe('#3 — Viktor Axelsen, nation #2 · Badminton Singles Men');
+		expect(describeCell(cell, 'Country')).toBe('Viktor Axelsen · Badminton Singles Men');
 	});
 
-	it('says when the score was capped', () => {
-		const pick = pickOf('soccer', { countryRank: 180, entryRank: 180 }, 150);
+	it('names only the athlete in entry mode', () => {
+		expect(describeCell(cellOf(axelsen, 3), 'Entry')).toBe('Viktor Axelsen · Badminton Singles Men');
+	});
 
-		expect(describePick(pick, 'Country')).toBe('#180 (scores 150) · Soccer Men');
+	it('shows a rank the cap replaced', () => {
+		const cell = cellOf({ countryRank: 180, entryRank: 180 }, 150);
+
+		expect(describeCell(cell, 'Country')).toBe('#180 · Soccer Men');
+		expect(describeCell(cell, 'Entry')).toBe('#180 · Soccer Men');
+	});
+
+	it('shows both ranks of a capped athlete in country mode', () => {
+		const cell = cellOf({ ...axelsen, countryRank: 160, entryRank: 400 }, 150);
+
+		expect(describeCell(cell, 'Country')).toBe('#160 · Viktor Axelsen, world #400 · Badminton Singles Men');
 	});
 
 	it('says unranked', () => {
-		const pick = pickOf('cricket', { unranked: true, countryRank: null, entryRank: null, sport: null, gender: null }, 150);
+		const cell = cellOf({ unranked: true, countryRank: null, entryRank: null, sport: null, gender: null }, 150);
 
-		expect(describePick(pick, 'Country')).toBe('Unranked');
+		expect(describeCell(cell, 'Country')).toBe('Unranked');
 	});
 });

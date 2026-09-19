@@ -4,8 +4,8 @@ using WorldRankGuesser.Api.Persistence;
 namespace WorldRankGuesser.Api.Games;
 
 /// <summary>
-/// The only code that decides what a response reveals: past picks, the current country, and nothing else
-/// until the game is complete.
+/// The only code that decides what a response reveals: which category each past country went to, the current
+/// country, and nothing else until the game is complete. What a pick scored stays hidden until then too.
 /// </summary>
 public static class GameStateMapper
 {
@@ -23,9 +23,9 @@ public static class GameStateMapper
                     p.TurnIndex,
                     p.CategoryId,
                     ToDto(content.Countries[p.TurnIndex]),
-                    p.Score,
+                    complete ? p.Score : null,
                     p.WasLate,
-                    ToDto(content.Cells[p.TurnIndex][categoryIndex]));
+                    complete ? ToDto(content.Cells[p.TurnIndex][categoryIndex]) : null);
             })
             .ToList();
 
@@ -43,11 +43,7 @@ public static class GameStateMapper
             complete,
             game.TotalScore,
             complete ? game.Board.OptimalScore : null,
-            complete
-                ? new GridDto(
-                    content.Countries.Select(ToDto).ToList(),
-                    content.Cells.Select(row => (IReadOnlyList<CellDto>)row.Select(ToDto).ToList()).ToList())
-                : null);
+            complete ? ToGrid(content) : null);
     }
 
     public static int IndexOfCategory(BoardContent content, string categoryId)
@@ -58,6 +54,32 @@ public static class GameStateMapper
         }
 
         return -1;
+    }
+
+    private static GridDto ToGrid(BoardContent content)
+    {
+        var scores = content.Cells.Select(row => (IReadOnlyList<int>)row.Select(cell => cell.Score).ToList()).ToList();
+
+        // The board is immutable, so solving it again on read gives the assignment behind the stored OptimalScore.
+        var optimal = OptimalAssignment.Solve(scores).CategoryOfCountry;
+
+        return new GridDto(
+            content.Countries.Select(ToDto).ToList(),
+            content.Cells.Select(row => (IReadOnlyList<CellDto>)row.Select(ToDto).ToList()).ToList(),
+            scores.Select(row => content.Categories[IndexOfLowest(row)].Id).ToList(),
+            optimal.Select(category => content.Categories[category].Id).ToList());
+    }
+
+    /// <summary>The first of equals, so a tie goes to the earlier category.</summary>
+    private static int IndexOfLowest(IReadOnlyList<int> scores)
+    {
+        var lowest = 0;
+        for (var i = 1; i < scores.Count; i++)
+        {
+            if (scores[i] < scores[lowest]) lowest = i;
+        }
+
+        return lowest;
     }
 
     private static CountryDto ToDto(BoardCountry c) => new(c.Iso3, c.Iso2, c.Name);

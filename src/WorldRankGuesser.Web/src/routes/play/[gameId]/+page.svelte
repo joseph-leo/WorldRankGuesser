@@ -61,16 +61,4 @@
 		text-align: center;
 		margin: 0 0 1rem;
 	}
-
-	.cards {
-		display: grid;
-		grid-template-columns: 1fr 1fr;
-		gap: 0.5rem;
-	}
-
-	@media (max-width: 30rem) {
-		.cards {
-			grid-template-columns: 1fr;
-		}
-	}
 </style>

@@ -52,6 +52,30 @@ button.primary {
 	color: #ffffff;
 }
 
+/* The category cards, on the game and on its results. */
+.cards {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+	gap: 0.5rem;
+}
+
+@media (max-width: 30rem) {
+	.cards {
+		grid-template-columns: 1fr;
+	}
+}
+
+/* A small label beside a title, such as "your pick" on the results. */
+.badge {
+	margin-left: 0.4rem;
+	padding: 0 0.4rem;
+	border: 1px solid var(--accent);
+	border-radius: 1rem;
+	color: var(--accent);
+	font-size: 0.75rem;
+	white-space: nowrap;
+}
+
 .error {
 	color: var(--error);
 }
