@@ -1,4 +1,5 @@
 using WorldRankGuesser.Api.Configuration;
+using WorldRankGuesser.Api.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,6 +12,15 @@ builder.Services.AddOptions<GameOptions>()
     .Bind(builder.Configuration.GetSection(GameOptions.Section))
     .Validate(GameOptions.IsValid, "Game: needs at least one category, unique category IDs, and at least one sport per category.")
     .ValidateOnStart();
+
+// The connection string is read when the context is first resolved, so test hosts can override it.
+builder.Services.AddDbContext<GameDbContext>((services, options) =>
+{
+    var connectionString = services.GetRequiredService<IConfiguration>().GetConnectionString(GameDbContext.ConnectionStringName)
+        ?? throw new InvalidOperationException($"Connection string '{GameDbContext.ConnectionStringName}' is not configured.");
+
+    GameDbContext.Configure(options, connectionString);
+});
 
 var app = builder.Build();
 
