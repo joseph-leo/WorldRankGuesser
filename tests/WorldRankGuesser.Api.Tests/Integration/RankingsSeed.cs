@@ -50,7 +50,7 @@ internal static class RankingsSeed
             var iso3 = Countries[country];
             var name = Names[country];
 
-            await db.Database.ExecuteSqlInterpolatedAsync($"""
+            await db.Database.ExecuteSqlAsync($"""
                 INSERT INTO dbo.CurrentCountryRankings
                     (Sport, Event, Gender, RankingDate, IsFederationDate, Position, ISO3, TeamName, Competitor, Points, RankedEntrants)
                 VALUES ({sport}, {ev}, {gender}, '2026-09-14', 1, {position}, {iso3}, {name}, NULL, NULL, 1)
