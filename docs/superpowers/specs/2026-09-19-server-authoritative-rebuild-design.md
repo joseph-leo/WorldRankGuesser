@@ -269,9 +269,9 @@ Each phase gets its own implementation plan.
 
 | Phase | Delivers |
 |---|---|
-| 0. Reset | Blazor project removed; solution layout in section 4.1; `net11.0`; CI that builds and tests; `docker-compose.yml`; CLAUDE.md rewritten. |
+| 0. Reset | Blazor project removed; solution layout in section 4.1; `net11.0`; CI that builds and tests; CLAUDE.md rewritten. Local development uses the SportsRankingService SQL Server container, so no compose file is needed yet. |
 | 1. Practice game | Rankings snapshot, aliases, both scoring modes, boards, games and picks, anonymous player cookie, Svelte game and results screens, tests in section 11 for what exists. |
-| 2. Go live | Dockerfile, Bicep, deploy pipeline, Azure SQL, custom domain. The scraper Job runs weekly. |
+| 2. Go live | Dockerfile, `docker-compose.yml` (the image plus SQL Server: the VPS fallback), Bicep, deploy pipeline, Azure SQL, custom domain. The scraper Job runs weekly. |
 | 3. Daily challenge | Daily boards, timer, one attempt per day, streaks, history, nickname, both leaderboards (the verified one is empty until phase 4), share grid, optimal score on results. |
 | 4. Sign-in | OAuth providers, claim and merge, verified flag. |
 | 5. Visual polish | Design pass; may overlap phases 3 and 4. |
