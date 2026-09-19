@@ -74,10 +74,14 @@ public class GameServiceTests(SqlServerFixture sql) : IAsyncLifetime
         Assert.Equal(0, pick.TurnIndex);
         Assert.Equal("cricket", pick.CategoryId);
         Assert.Equal(board.Content.Countries[0].Iso3, pick.Country.Iso3);
-        Assert.Equal(board.Content.Cells[0][cricket].Score, pick.Score);
-        Assert.Equal("Cricket", pick.Result.Sport);
+        Assert.Null(pick.Score);        // scored and stored now, shown only once the game is complete
+        Assert.Null(pick.Result);
         Assert.False(pick.WasLate);
         Assert.Equal(board.Content.Countries[1].Iso3, result.State.CurrentCountry!.Iso3);
+
+        await using var db = sql.CreateContext();
+        var stored = await db.Picks.SingleAsync(p => p.GameId == start.Id);
+        Assert.Equal(board.Content.Cells[0][cricket].Score, stored.Score);
     }
 
     [Fact]
@@ -101,6 +105,8 @@ public class GameServiceTests(SqlServerFixture sql) : IAsyncLifetime
         Assert.True(state.OptimalScore <= state.TotalScore);
         Assert.Equal(10, state.Grid!.Countries.Count);
         Assert.Equal(board.Content.Cells[3][7].Score, state.Grid.Cells[3][7].Score);
+        Assert.Equal(board.Content.Cells[2][2].Score, state.Picks[2].Score);
+        Assert.Equal("Cricket", state.Picks[2].Result!.Sport);     // the third category in appsettings
 
         var reloaded = await InScope(s => s.GetRequiredService<GameService>().GetAsync(player, start.Id, default));
         Assert.Equal(state.TotalScore, reloaded!.TotalScore);

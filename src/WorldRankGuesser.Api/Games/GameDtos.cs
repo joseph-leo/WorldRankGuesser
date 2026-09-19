@@ -18,14 +18,25 @@ public sealed record CellDto(
     string? Gender,
     string? Competitor);
 
-/// <summary>Score is what the pick cost (the cap when late); Result is what the board says for that country and category.</summary>
-public sealed record PickDto(int TurnIndex, string CategoryId, CountryDto Country, int Score, bool WasLate, CellDto Result);
+/// <summary>
+/// Score is what the pick cost (the cap when late); Result is what the board says for that country and category.
+/// Both are null until the game is complete, so a bad pick is not known while the game can still be abandoned.
+/// </summary>
+public sealed record PickDto(int TurnIndex, string CategoryId, CountryDto Country, int? Score, bool WasLate, CellDto? Result);
 
-public sealed record GridDto(IReadOnlyList<CountryDto> Countries, IReadOnlyList<IReadOnlyList<CellDto>> Cells);
+/// <summary>
+/// Countries are in turn order and Cells is [country][category]. BestCategoryIds and OptimalCategoryIds have one
+/// entry per country: its lowest-scoring category, and the category it takes in the assignment behind OptimalScore.
+/// </summary>
+public sealed record GridDto(
+    IReadOnlyList<CountryDto> Countries,
+    IReadOnlyList<IReadOnlyList<CellDto>> Cells,
+    IReadOnlyList<string> BestCategoryIds,
+    IReadOnlyList<string> OptimalCategoryIds);
 
 /// <summary>
 /// CurrentCountry is the only country not yet picked that a response ever contains.
-/// TotalScore, OptimalScore and Grid are null until IsComplete.
+/// Pick scores and results, TotalScore, OptimalScore and Grid are null until IsComplete.
 /// </summary>
 public sealed record GameStateDto(
     Guid Id,

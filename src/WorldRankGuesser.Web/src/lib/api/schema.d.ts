@@ -104,6 +104,8 @@ export interface components {
         GridDto: {
             countries: components["schemas"]["CountryDto"][];
             cells: components["schemas"]["CellDto"][][];
+            bestCategoryIds: string[];
+            optimalCategoryIds: string[];
         };
         HttpValidationProblemDetails: {
             type?: null | string;
@@ -122,9 +124,9 @@ export interface components {
             categoryId: string;
             country: components["schemas"]["CountryDto"];
             /** Format: int32 */
-            score: number;
+            score: null | number;
             wasLate: boolean;
-            result: components["schemas"]["CellDto"];
+            result: null | components["schemas"]["CellDto"];
         };
         PickRequest: {
             categoryId: null | string;

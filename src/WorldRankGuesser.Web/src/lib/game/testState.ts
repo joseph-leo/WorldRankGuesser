@@ -1,4 +1,4 @@
-import type { GameState, Pick } from '$lib/api/client';
+import type { Cell, GameState, Pick } from '$lib/api/client';
 
 export function gameState(overrides: Partial<GameState> = {}): GameState {
 	return {
@@ -23,23 +23,28 @@ export function gameState(overrides: Partial<GameState> = {}): GameState {
 	};
 }
 
-export function pickOf(categoryId: string, overrides: Partial<Pick['result']> = {}, score = 3): Pick {
+export function cellOf(overrides: Partial<Cell> = {}, score = 3): Cell {
+	return {
+		score,
+		countryRank: 3,
+		entryRank: 3,
+		unranked: false,
+		sport: 'Soccer',
+		event: null,
+		gender: 'Men',
+		competitor: null,
+		...overrides
+	};
+}
+
+/** A pick as the server sends it during a game: what it scored is hidden until the game is complete. */
+export function pickOf(categoryId: string): Pick {
 	return {
 		turnIndex: 0,
 		categoryId,
 		country: { iso3: 'JPN', iso2: 'JP', name: 'Japan' },
-		score,
+		score: null,
 		wasLate: false,
-		result: {
-			score,
-			countryRank: 3,
-			entryRank: 3,
-			unranked: false,
-			sport: 'Soccer',
-			event: null,
-			gender: 'Men',
-			competitor: null,
-			...overrides
-		}
+		result: null
 	};
 }

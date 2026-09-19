@@ -8,11 +8,13 @@ export type GameClient = {
 };
 
 /**
- * Holds the latest state the server sent, and nothing else. There are no game rules here:
- * every change is a server response replacing `state`.
+ * Holds the latest state the server sent, plus the one pick that is in flight so its card fills without
+ * waiting for the round trip. There are no game rules here: every change to `state` is a server response
+ * replacing it.
  */
 export class GameStore {
 	state = $state<GameState | null>(null);
+	pendingPick = $state<Pick | null>(null);
 	busy = $state(false);
 	error = $state<string | null>(null);
 
@@ -23,11 +25,17 @@ export class GameStore {
 	}
 
 	get usedCategoryIds(): Set<string> {
-		return new Set(this.state?.picks.map((p) => p.categoryId) ?? []);
+		return new Set(this.#picks.map((p) => p.categoryId));
 	}
 
 	pickFor(categoryId: string): Pick | undefined {
-		return this.state?.picks.find((p) => p.categoryId === categoryId);
+		return this.#picks.find((p) => p.categoryId === categoryId);
+	}
+
+	/** The server's picks, then the one still in flight. */
+	get #picks(): Pick[] {
+		const picks = this.state?.picks ?? [];
+		return this.pendingPick ? [...picks, this.pendingPick] : picks;
 	}
 
 	/** The new game's id, or null (with `error` set) when it could not be started. */
@@ -63,8 +71,17 @@ export class GameStore {
 
 	async pick(categoryId: string): Promise<void> {
 		const current = this.state;
-		if (!current || this.busy || current.isComplete || this.usedCategoryIds.has(categoryId)) return;
+		if (!current?.currentCountry || this.busy || this.usedCategoryIds.has(categoryId)) return;
 
+		// Shown at once; the server's answer below replaces it, or takes it back if the pick did not apply.
+		this.pendingPick = {
+			turnIndex: current.picks.length,
+			categoryId,
+			country: current.currentCountry,
+			score: null,
+			wasLate: false,
+			result: null
+		};
 		this.busy = true;
 		this.error = null;
 		try {
@@ -78,6 +95,7 @@ export class GameStore {
 				// Still offline: keep what we have; the next action retries.
 			}
 		} finally {
+			this.pendingPick = null;
 			this.busy = false;
 		}
 	}

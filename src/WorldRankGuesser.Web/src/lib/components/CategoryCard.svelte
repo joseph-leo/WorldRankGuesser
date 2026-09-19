@@ -1,24 +1,43 @@
 <script lang="ts">
 	import type { Category, Pick } from '$lib/api/client';
-	import { describePick } from '$lib/game/describe';
+	import { describeCell } from '$lib/game/describe';
 	import Flag from './Flag.svelte';
 
 	let {
 		category,
 		pick,
 		rankMode,
-		disabled,
-		onpick
-	}: { category: Category; pick: Pick | undefined; rankMode: string; disabled: boolean; onpick: () => void } = $props();
+		disabled = true,
+		onpick,
+		badge,
+		testid
+	}: {
+		category: Category;
+		pick: Pick | undefined;
+		rankMode: string;
+		disabled?: boolean;
+		onpick?: () => void;
+		badge?: string;
+		testid?: string;
+	} = $props();
 </script>
 
-<div class="category-card" class:filled={pick !== undefined}>
+<div class="category-card" class:filled={pick !== undefined} data-testid={testid}>
 	{#if pick}
 		<div class="result">
 			<Flag iso2={pick.country.iso2} size="2rem" label={pick.country.name} />
 			<div>
-				<div class="title">{category.name}: <strong>{pick.score}</strong></div>
-				<div class="muted detail">{pick.country.name} · {describePick(pick, rankMode)}</div>
+				<!-- The server sends what a pick scored only once the game is complete. -->
+				{#if pick.result}
+					<div class="title">
+						{category.name}: <strong data-testid={testid && `${testid}-score`}>{pick.score}</strong>
+						{#if badge}<span class="badge">{badge}</span>{/if}
+					</div>
+					<div class="muted detail">{pick.country.name} · {describeCell(pick.result, rankMode)}</div>
+				{:else}
+					<div class="title">{category.name}</div>
+					<div class="muted detail">{pick.country.name}</div>
+				{/if}
 			</div>
 		</div>
 	{:else}

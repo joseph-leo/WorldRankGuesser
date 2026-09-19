@@ -345,7 +345,9 @@
       "GridDto": {
         "required": [
           "countries",
-          "cells"
+          "cells",
+          "bestCategoryIds",
+          "optimalCategoryIds"
         ],
         "type": "object",
         "properties": {
@@ -362,6 +364,18 @@
               "items": {
                 "$ref": "#/components/schemas/CellDto"
               }
+            }
+          },
+          "bestCategoryIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "optimalCategoryIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
             }
           }
         }
@@ -433,14 +447,24 @@
             "$ref": "#/components/schemas/CountryDto"
           },
           "score": {
-            "type": "integer",
+            "type": [
+              "null",
+              "integer"
+            ],
             "format": "int32"
           },
           "wasLate": {
             "type": "boolean"
           },
           "result": {
-            "$ref": "#/components/schemas/CellDto"
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/CellDto"
+              }
+            ]
           }
         }
       },

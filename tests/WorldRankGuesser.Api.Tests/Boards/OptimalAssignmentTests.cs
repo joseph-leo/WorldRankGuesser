@@ -55,6 +55,47 @@ public class OptimalAssignmentTests
         Assert.Throws<ArgumentException>(() => OptimalAssignment.MinTotal(cost));
     }
 
+    [Fact]
+    public void A_country_beaten_in_its_best_category_takes_its_next_best()
+    {
+        // Denmark's best is badminton (3), but Korea is 1 there and poor at soccer, so Denmark takes soccer.
+        int[][] cost =
+        [
+            [3, 20],    // Denmark: badminton, soccer
+            [1, 90],    // Korea
+        ];
+
+        var solution = OptimalAssignment.Solve(cost);
+
+        Assert.Equal([1, 0], solution.CategoryOfCountry);
+        Assert.Equal(21, solution.Total);
+    }
+
+    [Fact]
+    public void Ties_go_to_the_earliest_category_for_the_earliest_country()
+    {
+        int[][] cost = [[1, 1, 9], [1, 1, 9], [9, 9, 1]];
+
+        Assert.Equal([0, 1, 2], OptimalAssignment.Solve(cost).CategoryOfCountry);
+    }
+
+    [Theory]
+    [InlineData(1)]
+    [InlineData(2)]
+    [InlineData(3)]
+    public void The_assignment_uses_every_category_once_and_adds_up_to_the_brute_force_total(int seed)
+    {
+        var random = new Random(seed);
+        var cost = Enumerable.Range(0, 5)
+            .Select(_ => Enumerable.Range(0, 5).Select(_ => random.Next(1, 151)).ToArray())
+            .ToArray();
+
+        var solution = OptimalAssignment.Solve(cost);
+
+        Assert.Equal([0, 1, 2, 3, 4], solution.CategoryOfCountry.Order());
+        Assert.Equal(BruteForce(cost, 0, new bool[5]), solution.CategoryOfCountry.Select((category, country) => cost[country][category]).Sum());
+    }
+
     private static int BruteForce(int[][] cost, int country, bool[] used)
     {
         if (country == cost.Length) return 0;
