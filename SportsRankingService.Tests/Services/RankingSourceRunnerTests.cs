@@ -97,6 +97,31 @@ public class RankingSourceRunnerTests
         Assert.Equal("CHN", snapshot.Entries.Single(e => e.Position == 1).ISO3);
     }
 
+    /// <summary>The updater runs the feeds in parallel; behind the caching fetcher two tables of one page cost one request.</summary>
+    [Fact]
+    public async Task Feeds_sharing_a_page_fetch_it_once_and_each_parse_their_own_table()
+    {
+        var pages = new FakeFetcher(new() { ["http://fig/rg"] = Fixture.Read("Fig_Rhythmic_Women.html") });
+        var runner = new RankingSourceRunner(
+            [new CachingFetcher(pages)],
+            [new FigParser()],
+            [new IdentityUrlResolver()],
+            new FakeTimeProvider(Now),
+            NullLogger<RankingSourceRunner>.Instance);
+        var group = new RankingItem { Sport = "Rhythmic Gymnastics", Event = "World Cup Group 5x", Gender = "Women", Url = "http://fig/rg", Source = "Fig", Selector = "World Cup / Group 5x" };
+        var hoop = new RankingItem { Sport = "Rhythmic Gymnastics", Event = "World Cup Hoop", Gender = "Women", Url = "http://fig/rg", Source = "Fig", Selector = "World Cup / Hoop" };
+
+        RankingSnapshot?[] snapshots = await Task.WhenAll(
+            runner.RunAsync(group, CancellationToken.None),
+            runner.RunAsync(hoop, CancellationToken.None));
+
+        Assert.Equal(["http://fig/rg"], pages.Requested);
+        Assert.Equal(21, snapshots[0]!.Entries.Count);
+        Assert.Equal("World Cup Hoop", snapshots[1]!.Event);
+        Assert.NotEmpty(snapshots[1]!.Entries);
+        Assert.NotEqual(snapshots[0]!.Entries, snapshots[1]!.Entries);
+    }
+
     [Fact]
     public async Task Failed_fetch_yields_null_and_does_not_throw()
     {
