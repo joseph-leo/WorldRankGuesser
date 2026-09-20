@@ -35,6 +35,34 @@ test('a full practice game ends on the results page', async ({ page }) => {
 	const optimal = Number(await page.getByTestId('optimal').textContent());
 	expect(scores.reduce((sum, score) => sum + Number(score), 0)).toBe(optimal);});
 
+test('on a phone the cards stay in two columns and the game fits the screen', async ({ page }) => {
+	await page.setViewportSize({ width: 375, height: 667 });
+	await page.emulateMedia({ reducedMotion: 'reduce' });
+	await page.goto('/');
+	await page.getByRole('button', { name: 'Practice game' }).click();
+
+	const cards = page.locator('.category-card');
+	await expect(cards).toHaveCount(10);
+
+	// Fill two cards, so both kinds of card are measured.
+	for (let turn = 0; turn < 2; turn++) {
+		await page.locator('button.category:enabled').first().click();
+		await expect(page.locator('button.category:enabled')).toHaveCount(9 - turn);
+	}
+
+	const first = (await cards.nth(0).boundingBox())!;
+	const second = (await cards.nth(1).boundingBox())!;
+	expect(second.y).toBe(first.y);
+	expect(second.x).toBeGreaterThan(first.x);
+
+	const overflow = await page.evaluate(() => ({
+		down: document.documentElement.scrollHeight - window.innerHeight,
+		across: document.documentElement.scrollWidth - window.innerWidth
+	}));
+	expect(overflow.down).toBeLessThanOrEqual(0);
+	expect(overflow.across).toBeLessThanOrEqual(0);
+});
+
 test('a refresh in the middle of a game resumes it', async ({ page }) => {
 	await page.emulateMedia({ reducedMotion: 'reduce' });
 	await page.goto('/');
