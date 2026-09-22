@@ -1,7 +1,7 @@
 # Phase 2, go live: one repo, two images, two Azure environments
 
 Date: 2026-09-19, completed 2026-09-21
-Status: **approved design.** Every section was approved in discussion and the owner's decisions are made (section 2). No implementation plan exists yet.
+Status: **approved design.** Every section was approved in discussion and the owner's decisions are made (section 2). Plans: 2a `docs/superpowers/plans/2026-09-21-phase-2a-scraper-import.md` (merged 2026-09-21), 2b `docs/superpowers/plans/2026-09-21-phase-2b-images-compose-app-changes.md` (sections 6 and 9; the Compose project was renamed `worldrankguesser`), 2c not yet written (sections 7 and 8, and the promotion-guard action of section 9).
 
 Parent design: `2026-09-19-server-authoritative-rebuild-design.md`, section 12 (deployment) and the phase table in section 13. This document replaces that section's "Required outside this repo" paragraph: the scraper moves into this repo.
 

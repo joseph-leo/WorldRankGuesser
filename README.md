@@ -14,4 +14,6 @@ country's world rank in that sport, and the lowest total wins.
 3. `dotnet run --project src/WorldRankGuesser.Api`
 4. In `src/WorldRankGuesser.Web`: `npm install`, then `npm run dev`, and open http://localhost:5173.
 
+Or everything in containers, the way it is deployed: `docker compose --profile stack up --build -d` (SQL Server, both migration sets, then the game on http://localhost:8080) and `docker compose run --rm scraper` once, so it has rankings.
+
 Design and plans are in `docs/superpowers/`.

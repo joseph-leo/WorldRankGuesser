@@ -8,12 +8,12 @@ the current table per feed and its history.
 ## Setup
 
 ```powershell
-docker compose up -d --wait                              # SQL Server 2022 on localhost,1433, loopback-only (sa / Rankings_Dev1!)
+docker compose up -d --wait                              # SQL Server 2022 on localhost,1433, loopback-only (sa / Rankings_Dev1!); the repo root's compose file
 dotnet tool restore                                      # dotnet-ef
-dotnet ef database update --project SportsRankingService --startup-project SportsRankingService # create the database and schema
-dotnet run --project SportsRankingService                # fetch every enabled feed once and exit
-dotnet run --project SportsRankingService -- --only "Cricket ODI Women" --only Soccer   # rerun a subset
-dotnet test SportsRankingService.Tests                   # fixture-based tests, no external network or database (needs curl on the PATH)
+dotnet ef database update --project src/SportsRankingService   # create the database and the dbo schema
+dotnet run --project src/SportsRankingService            # fetch every enabled feed once and exit
+dotnet run --project src/SportsRankingService -- --only "Cricket ODI Women" --only Soccer   # rerun a subset
+dotnet test tests/SportsRankingService.Tests             # fixture-based tests, no external network or database (needs curl on the PATH)
 ```
 
 The process exits 0 when every enabled feed was saved and 1 when any feed failed, so a scheduler's
@@ -27,6 +27,17 @@ nothing is fetched; disabled feeds stay disabled. Copy the name from a "Feed ...
 just that feed.
 
 ## Scheduling a weekly run
+
+As a container (`src/SportsRankingService/Dockerfile`, built from the repo root; it carries curl and runs as a
+non-root user; the exit code is the process's, so a scheduler or a Container Apps Job sees a failed feed):
+
+```powershell
+docker build -f src/SportsRankingService/Dockerfile -t worldrankguesser-scraper .
+docker run --rm -e "ConnectionStrings__WorldRankGuesserConnection=Server=...;Database=WorldRankGuesser;..." worldrankguesser-scraper                # every enabled feed
+docker run --rm -e "ConnectionStrings__WorldRankGuesserConnection=..." worldrankguesser-scraper --only Soccer   # a subset
+```
+
+In this repo's compose stack it is `docker compose run --rm scraper`.
 
 Windows Task Scheduler (after `dotnet publish -c Release -o publish`):
 
@@ -60,7 +71,7 @@ machine's `curl` instead. Seven feeds need it: the five BWF badminton feeds, bec
 refuses .NET's TLS handshake yet answers curl, and the two ice hockey feeds, because Wikimedia asks
 scripts to send a descriptive User-Agent, which only the Curl fetcher does. `curl` must therefore be on
 the PATH: Windows 10 and later, macOS and most Linux distributions ship it (slim container images may
-not: `apt-get install -y curl`). curl is started directly, never through a shell, so the same code runs
+not; the Dockerfile installs it). curl is started directly, never through a shell, so the same code runs
 on all three; without it only those seven feeds fail, each with a log line that says so.
 
 Ice hockey comes from Wikipedia's "IIHF World Ranking" article rather than iihf.com, which answers
