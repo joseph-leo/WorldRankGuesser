@@ -19,6 +19,11 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\WorldRankGuesser.Api\WorldRankGuesser.Api.csproj" />
+    <!-- Only for the SQL fixture: the scraper's migrations create the real dbo.CurrentCountryRankings view. The API never references the scraper.
+         Both referenced projects copy an appsettings.json into this output directory and the scraper's wins; that is harmless because
+         WebApplicationFactory reads the API's settings from the API project's own folder (the content root Microsoft.AspNetCore.Mvc.Testing
+         records in MvcTestingAppManifest.json), never from here. -->
+    <ProjectReference Include="..\..\src\SportsRankingService\SportsRankingService.csproj" />
   </ItemGroup>
 
 </Project>

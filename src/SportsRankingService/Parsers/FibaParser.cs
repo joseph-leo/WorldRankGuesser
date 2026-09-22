@@ -1,0 +1,61 @@
+using System.Globalization;
+using System.Text.RegularExpressions;
+using HtmlAgilityPack;
+using SportsRankingService.Parsing;
+using SportsRankingService.Utilities;
+
+namespace SportsRankingService.Parsers;
+
+/// <summary>
+/// FIBA ranking page. The table has no country code column and the country name is localized,
+/// so the country is read from the English slug of the team link (/xx/teams/154-usa). Columns are
+/// "#, country, zone rank, PTS, +/-". The page also holds "biggest movers" and "biggest drops" widget
+/// tables after the ranking, so only the first table is read.
+/// </summary>
+public sealed partial class FibaParser : HtmlRankingParser
+{
+    public override string SourceName => "Fiba";
+
+    protected override string RowXPath => "(//table)[1]//tbody/tr";
+
+    protected override RankEntry? MapRow(HtmlNode row)
+    {
+        HtmlNode? link = row.SelectSingleNode(".//a[contains(@href, '/teams/')]");
+        if (link is null)
+        {
+            return null;
+        }
+
+        Match slug = TeamSlug().Match(link.GetAttributeValue("href", ""));
+        if (!slug.Success)
+        {
+            return null;
+        }
+
+        string name = slug.Groups[1].Value.Replace('-', ' ');
+        if (!CountryUtil.TryGetISO3FromCountry(name, out string? iso3))
+        {
+            throw new ParseException(SourceName, $"no ISO3 mapping for team slug '{slug.Groups[1].Value}'");
+        }
+
+        string positionText = row.SelectSingleNode("td")?.InnerText.Trim().TrimEnd('.') ?? "";
+        short position = short.Parse(positionText);
+
+        HtmlNodeCollection cells = row.SelectNodes("td");
+        decimal? points = cells.Count > 3 && decimal.TryParse(cells[3].InnerText.Trim(), NumberStyles.Number, CultureInfo.InvariantCulture, out decimal pts) ? pts : null;
+
+        return new RankEntry(position, iso3!, Points: points);
+    }
+
+    /// <summary>The page's ranking-date dropdown lists releases newest first with the current one selected.</summary>
+    protected override DateOnly? GetRankingDate(HtmlDocument document)
+    {
+        HtmlNode? option = document.DocumentNode.SelectSingleNode("//select[@name='rankingDatesselect']/option[@selected]")
+            ?? document.DocumentNode.SelectSingleNode("//select[@name='rankingDatesselect']/option[1]");
+
+        return option is null ? null : IsoDate.Parse(SourceName, option.GetAttributeValue("value", null));
+    }
+
+    [GeneratedRegex(@"/teams/\d+-([a-z0-9-]+)")]
+    private static partial Regex TeamSlug();
+}

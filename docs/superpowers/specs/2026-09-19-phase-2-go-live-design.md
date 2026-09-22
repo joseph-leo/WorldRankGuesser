@@ -90,7 +90,7 @@ Rules and documents that change:
 - **Two independent migration sets.** The scraper owns `dbo` (`dbo.__EFMigrationsHistory`), the game owns `game` (`game.__EFMigrationsHistory`). On a new database `dbo` goes first.
 - **View-contract test.** `tests/WorldRankGuesser.Api.Tests` references the scraper project. Its Testcontainers fixture applies the scraper's real migrations in place of the hand-written stand-in view, and `RankingsSeed` inserts `RankingReleases` and `RankingRows` so the real view yields the 12 seeded countries. Renaming a column the view projects then fails the game's tests. This is the only reference between the two, and only tests have it.
 - Parent design: section 4.1 gets this layout; section 12's "Required outside this repo" paragraph is replaced by a pointer to this document.
-- Root `CLAUDE.md` also gains the release flow of section 8.1: `main` deploys to staging, `prod` is only ever fast-forwarded and deploys to production, `stage/*` is for trying unmerged work in Azure, and production never builds.
+- Root `CLAUDE.md` also gains the release flow of section 8.1: `main` deploys to staging, `prod` is only ever fast-forwarded and deploys to production, `stage/*` is for trying unmerged work in Azure, and production never builds. This lands with the workflows in plan 2c, when those branches exist; plan 2a deliberately left it out.
 
 `dotnet test WorldRankGuesser.slnx` now also runs the scraper's tests (fixtures and in-memory SQLite, no network).
 
