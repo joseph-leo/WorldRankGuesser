@@ -1,6 +1,7 @@
 # Both Dockerfiles build with the repo root as context; keep outputs, dependencies, tooling, tests and docs out of it.
 .git
 .claude
+.superpowers
 .github
 .idea
 .vs
@@ -16,3 +17,5 @@ tools
 **/playwright-report
 **/BenchmarkDotNet.Artifacts
 **/publish
+# The web build is copied in whole; nothing local belongs in the API's wwwroot.
+src/WorldRankGuesser.Api/wwwroot
