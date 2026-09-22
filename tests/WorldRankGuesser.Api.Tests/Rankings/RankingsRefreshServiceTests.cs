@@ -141,11 +141,11 @@ public class RankingsRefreshServiceTests
         await Task.Delay(50);
         Assert.Equal(1, reader.Attempts);                        // no backoff once a snapshot exists: the next try is on the hour
 
-        await AdvanceUntil(time, () => reader.Attempts == 2, TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(8));
+        await AdvanceUntil(time, () => reader.Attempts == 2, TimeSpan.FromMinutes(10), TimeSpan.FromMinutes(8));
         await Task.Delay(50);
         Assert.Same(first, store.Current);                       // the failed refresh kept the previous snapshot
 
-        await AdvanceUntil(time, () => !ReferenceEquals(first, store.Current), TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(61));
+        await AdvanceUntil(time, () => !ReferenceEquals(first, store.Current), TimeSpan.FromMinutes(10), TimeSpan.FromMinutes(61));
         Assert.Equal(3, reader.Attempts);
 
         await service.StopAsync(CancellationToken.None);
@@ -156,6 +156,23 @@ public class RankingsRefreshServiceTests
     {
         var time = new FakeTimeProvider(TestData.LoadedAt);
         var reader = new ScriptedReader(Array.Empty<CountryRankingRow>(), Rows);   // the scraper has not run yet, then it has
+        var (service, store) = Create(reader, time);
+
+        await service.StartAsync(CancellationToken.None);       // the first attempt runs at once; Holds only lets its continuation land
+        Assert.True(await Holds(() => reader.Attempts == 1));
+        Assert.Null(store.Current);                              // /readyz stays 503 rather than offering an undrawable board
+
+        await AdvanceUntil(time, () => store.Current is not null, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(6));
+        Assert.Equal(2, reader.Attempts);
+
+        await service.StopAsync(CancellationToken.None);
+    }
+
+    [Fact]
+    public async Task A_view_one_country_short_of_a_board_does_not_count_as_loaded_either()
+    {
+        var time = new FakeTimeProvider(TestData.LoadedAt);
+        var reader = new ScriptedReader(Rows[..3], Rows);        // one category's country short of a board, then a full one
         var (service, store) = Create(reader, time);
 
         await service.StartAsync(CancellationToken.None);       // the first attempt runs at once; Holds only lets its continuation land
