@@ -1,11 +1,17 @@
-# Local SQL Server for development. Start with `docker compose up -d --wait`.
+# Local SQL Server for development: `docker compose up -d --wait` starts only it. Behind the `stack` profile, the
+# production-shaped stack: migrations (dbo, then game), the game image on http://localhost:8080 as Production, and
+# the scraper image on demand:
+#   docker compose --profile stack up --build -d
+#   docker compose --profile stack run --rm scraper            # or `... scraper --only Soccer`
+#   docker compose --profile stack down                        # the database volume stays
 # The SA password is a dev-only credential for this container; it is also in
-# src/SportsRankingService/appsettings.json. Override the connection string elsewhere with the
-# ConnectionStrings__WorldRankGuesserConnection environment variable.
-# The project name is the old SportsRankingService repo's folder name, which Compose used as its project name,
-# so this file keeps addressing that repo's container and its volume (sportsrankingservice_sqldata): local data
-# survives the scraper's move into this repo.
-name: sportsrankingservice
+# src/SportsRankingService/appsettings.json and src/WorldRankGuesser.Api/appsettings.Development.json. Override the
+# connection string elsewhere with the ConnectionStrings__WorldRankGuesserConnection environment variable.
+name: worldrankguesser
+
+x-stack-connection: &stack-connection
+  ConnectionStrings__WorldRankGuesserConnection: "Server=sql,1433;Database=WorldRankGuesser;User Id=sa;Password=Rankings_Dev1!;TrustServerCertificate=True"
+
 services:
   sql:
     image: mcr.microsoft.com/mssql/server:2022-latest
@@ -25,5 +31,68 @@ services:
       retries: 10
       start_period: 20s
 
+  # One shot: applies the scraper's dbo migrations, then the game's, and exits; game waits for it.
+  # On a VPS it is an explicit `docker compose --profile stack run --rm migrate` before each release.
+  migrate:
+    profiles: ["stack"]
+    image: worldrankguesser-migrate:local
+    build:
+      context: .
+      target: migrate
+    environment:
+      <<: *stack-connection
+    depends_on:
+      sql:
+        condition: service_healthy
+
+  game:
+    profiles: ["stack"]
+    image: worldrankguesser-game:local
+    build:
+      context: .
+    ports:
+      - "127.0.0.1:8080:8080"
+    environment:
+      <<: *stack-connection
+      ASPNETCORE_ENVIRONMENT: Production
+      # Hosting__TrustForwardedHeaders stays off: this container is reached directly, not through a proxy.
+    depends_on:
+      sql:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+
+  # Runs once and exits (1 if any feed failed).
+  scraper:
+    profiles: ["stack"]
+    image: worldrankguesser-scraper:local
+    build:
+      context: .
+      dockerfile: src/SportsRankingService/Dockerfile
+    environment:
+      <<: *stack-connection
+    depends_on:
+      sql:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+
+  # On a VPS the Production cookie is Secure (browsers exempt only localhost), so the game needs TLS in front of it.
+  # Caddy obtains a certificate by itself. To use it: uncomment this service and the caddy_data volume, put the
+  # hostname in, drop the game's `ports` (Caddy reaches it on the compose network), and set
+  # `Hosting__TrustForwardedHeaders: "true"` on game so the per-IP rate limit keys on the caller's address.
+  # caddy:
+  #   profiles: ["stack"]
+  #   image: caddy:2
+  #   ports:
+  #     - "80:80"
+  #     - "443:443"
+  #   command: caddy reverse-proxy --from game.example.com --to game:8080
+  #   volumes:
+  #     - caddy_data:/data
+  #   depends_on:
+  #     - game
+
 volumes:
   sqldata:
+  # caddy_data:
