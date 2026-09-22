@@ -48,3 +48,12 @@ export async function pick(id: string, categoryId: string): Promise<{ state: Gam
 
 	throw new ApiError(response.status, 'The pick was rejected.');
 }
+
+/** Whether the API has rankings and can reach its database (`/readyz`). False on any failure, a network error included. */
+export async function isReady(): Promise<boolean> {
+	try {
+		return (await fetch('/readyz', { credentials: 'same-origin' })).ok;
+	} catch {
+		return false;
+	}
+}
