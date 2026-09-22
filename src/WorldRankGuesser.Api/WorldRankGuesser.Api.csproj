@@ -12,6 +12,8 @@
   <ItemGroup>
     <Content Remove="Countries\countries.json" />
     <EmbeddedResource Include="Countries\countries.json" LogicalName="countries.json" />
+    <!-- Development settings (the local SQL Server's dev credentials) never go into a publish output or an image. -->
+    <Content Update="appsettings.Development.json" CopyToPublishDirectory="Never" />
   </ItemGroup>
 
   <ItemGroup>
