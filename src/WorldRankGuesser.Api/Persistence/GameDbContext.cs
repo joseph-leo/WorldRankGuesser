@@ -29,7 +29,12 @@ public sealed class GameDbContext(DbContextOptions<GameDbContext> options) : DbC
 
     /// <summary>The one place the provider and the migrations history table are configured (Program, tests, design time).</summary>
     public static void Configure(DbContextOptionsBuilder options, string connectionString) =>
-        options.UseSqlServer(connectionString, sql => sql.MigrationsHistoryTable("__EFMigrationsHistory", Schema));
+        options.UseSqlServer(connectionString, sql => sql
+            .MigrationsHistoryTable("__EFMigrationsHistory", Schema)
+            // A paused Azure SQL database refuses connections while it resumes; retry instead of failing the first
+            // visitor. Only the provider's transient errors retry: a unique index or a row version firing is not one,
+            // so a losing simultaneous pick still becomes the 409 in GameService.
+            .EnableRetryOnFailure(maxRetryCount: 6, maxRetryDelay: TimeSpan.FromSeconds(30), errorNumbersToAdd: null));
 
     protected override void OnModelCreating(ModelBuilder model)
     {
