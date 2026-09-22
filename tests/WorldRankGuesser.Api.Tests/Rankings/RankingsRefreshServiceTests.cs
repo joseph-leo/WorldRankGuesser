@@ -8,8 +8,13 @@ using WorldRankGuesser.Api.Rankings;
 namespace WorldRankGuesser.Api.Tests.Rankings;
 
 /// <summary>
-/// The refresh service on a fake clock: nothing here waits in real time except <see cref="Eventually"/>, which only
-/// lets the service's thread-pool continuations run.
+/// The refresh service on a fake clock. The clock only moves when the test calls <see cref="FakeTimeProvider.Advance(TimeSpan)"/>,
+/// so no assertion here ever advances it before checking a state the service already set — that is what let the
+/// service's timer registrations race a test's advances before this rewrite. A state the first attempt sets at once
+/// is settled with <see cref="Holds"/> alone (real time only, never the fake clock). A state that needs a timer to
+/// fire is awaited with <see cref="AdvanceUntil"/>, which advances the clock a slice at a time — never the whole
+/// distance in one jump — so a timer the service registers just after one slice is still caught by a later one,
+/// instead of its due time being skipped over.
 /// </summary>
 public class RankingsRefreshServiceTests
 {
@@ -63,14 +68,36 @@ public class RankingsRefreshServiceTests
         return (service, store);
     }
 
-    /// <summary>Waits, briefly and in real time, for the service's continuations to reach a state.</summary>
-    private static async Task Eventually(Func<bool> condition)
+    /// <summary>Settles: polls briefly in real time so the service's already-due continuations get a chance to run, then reports whether the condition holds.</summary>
+    private static async Task<bool> Holds(Func<bool> condition)
     {
-        var deadline = DateTime.UtcNow.AddSeconds(5);
-        while (!condition())
+        for (var i = 0; i < 20; i++)
         {
-            if (DateTime.UtcNow > deadline) throw new TimeoutException("The service did not reach the expected state.");
+            if (condition()) return true;
             await Task.Delay(10);
+        }
+
+        return condition();
+    }
+
+    /// <summary>
+    /// Advances the fake clock a slice at a time, settling with <see cref="Holds"/> after each one, until the
+    /// condition holds. Throws once the clock has moved forward by <paramref name="within"/> without the condition
+    /// holding; <paramref name="within"/> is the expected wait plus a few slices of slack (more than one where a
+    /// timer's continuation shares the process with other tests' background work and needs more than one settle to
+    /// land), so a genuinely wrong delay still fails the test instead of looping forever.
+    /// </summary>
+    private static async Task AdvanceUntil(FakeTimeProvider time, Func<bool> condition, TimeSpan slice, TimeSpan within)
+    {
+        var advanced = TimeSpan.Zero;
+
+        while (true)
+        {
+            if (await Holds(condition)) return;
+            if (advanced >= within) throw new TimeoutException($"The service did not reach the expected state within {within} of fake time.");
+
+            time.Advance(slice);
+            advanced += slice;
         }
     }
 
@@ -81,20 +108,18 @@ public class RankingsRefreshServiceTests
         var reader = new ScriptedReader(Down, Down, Rows);
         var (service, store) = Create(reader, time);
 
-        await service.StartAsync(CancellationToken.None);       // returns at once; the first attempt runs in the background
-        await Eventually(() => reader.Attempts == 1);
+        await service.StartAsync(CancellationToken.None);       // the first attempt runs at once; Holds only lets its continuation land
+        Assert.True(await Holds(() => reader.Attempts == 1));
         Assert.Null(store.Current);
 
         time.Advance(TimeSpan.FromSeconds(4));
         await Task.Delay(50);
         Assert.Equal(1, reader.Attempts);                        // the second attempt waits the full 5 seconds
 
-        time.Advance(TimeSpan.FromSeconds(1));
-        await Eventually(() => reader.Attempts == 2);
+        await AdvanceUntil(time, () => reader.Attempts == 2, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(8));
         Assert.Null(store.Current);
 
-        time.Advance(TimeSpan.FromSeconds(10));                  // 5, then 10: the third attempt lands 15 seconds in
-        await Eventually(() => store.Current is not null);
+        await AdvanceUntil(time, () => store.Current is not null, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(11));   // 5, then 10: the third attempt lands 15 seconds in
         Assert.Equal(3, reader.Attempts);
         Assert.Equal(4, store.Current!.DrawableCountries.Count);
 
@@ -108,22 +133,20 @@ public class RankingsRefreshServiceTests
         var reader = new ScriptedReader(Rows, Down, Rows);
         var (service, store) = Create(reader, time, refreshMinutes: 60);
 
-        await service.StartAsync(CancellationToken.None);
-        await Eventually(() => store.Current is not null);
+        await service.StartAsync(CancellationToken.None);       // the first attempt runs at once; Holds only lets its continuation land
+        Assert.True(await Holds(() => store.Current is not null));
         var first = store.Current;
 
         time.Advance(TimeSpan.FromMinutes(59));
         await Task.Delay(50);
         Assert.Equal(1, reader.Attempts);                        // no backoff once a snapshot exists: the next try is on the hour
 
-        time.Advance(TimeSpan.FromMinutes(1));
-        await Eventually(() => reader.Attempts == 2);
+        await AdvanceUntil(time, () => reader.Attempts == 2, TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(8));
         await Task.Delay(50);
         Assert.Same(first, store.Current);                       // the failed refresh kept the previous snapshot
 
-        time.Advance(TimeSpan.FromMinutes(60));
-        await Eventually(() => reader.Attempts == 3);
-        await Eventually(() => !ReferenceEquals(first, store.Current));
+        await AdvanceUntil(time, () => !ReferenceEquals(first, store.Current), TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(61));
+        Assert.Equal(3, reader.Attempts);
 
         await service.StopAsync(CancellationToken.None);
     }
@@ -135,13 +158,11 @@ public class RankingsRefreshServiceTests
         var reader = new ScriptedReader(Array.Empty<CountryRankingRow>(), Rows);   // the scraper has not run yet, then it has
         var (service, store) = Create(reader, time);
 
-        await service.StartAsync(CancellationToken.None);
-        await Eventually(() => reader.Attempts == 1);
-        await Task.Delay(50);
+        await service.StartAsync(CancellationToken.None);       // the first attempt runs at once; Holds only lets its continuation land
+        Assert.True(await Holds(() => reader.Attempts == 1));
         Assert.Null(store.Current);                              // /readyz stays 503 rather than offering an undrawable board
 
-        time.Advance(TimeSpan.FromSeconds(5));
-        await Eventually(() => store.Current is not null);
+        await AdvanceUntil(time, () => store.Current is not null, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(6));
         Assert.Equal(2, reader.Attempts);
 
         await service.StopAsync(CancellationToken.None);
