@@ -64,4 +64,38 @@ describe('ServerReadiness', () => {
 		await waiting;
 		expect(server.phase).toBe('ready');
 	});
+
+	it('treats a check that throws as not ready', async () => {
+		let calls = 0;
+		const check = vi.fn(async () => {
+			calls++;
+			if (calls === 1) throw new Error('network error');
+			return true;
+		});
+		const server = new ServerReadiness(check);
+
+		const waiting = server.wait();
+		await vi.advanceTimersByTimeAsync(2000);
+		await waiting;
+
+		expect(server.phase).toBe('ready');
+		expect(check).toHaveBeenCalledTimes(2);
+	});
+
+	it('returns the wait already in flight instead of starting another', async () => {
+		const answers = [false, true];
+		const check = vi.fn(async () => answers.shift() ?? true);
+		const server = new ServerReadiness(check);
+
+		const first = server.wait();
+		const second = server.wait();
+		expect(second).toBe(first);
+
+		await vi.advanceTimersByTimeAsync(2000);
+		await first;
+		await second;
+
+		expect(server.phase).toBe('ready');
+		expect(check).toHaveBeenCalledTimes(2);
+	});
 });
