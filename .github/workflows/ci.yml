@@ -9,8 +9,8 @@ jobs:
   api:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-dotnet@v6
         with:
           global-json-file: global.json
       - run: dotnet build WorldRankGuesser.slnx
@@ -24,8 +24,8 @@ jobs:
       run:
         working-directory: src/WorldRankGuesser.Web
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: npm
@@ -36,3 +36,16 @@ jobs:
       - run: npm run check
       - run: npm test -- --passWithNoTests
       - run: npm run build
+
+  # Both images, and the compose stack's migrate target, build on every pull request; nothing is pushed here.
+  # The deploy workflows are what push (docs/superpowers/specs/2026-09-19-phase-2-go-live-design.md, section 8).
+  images:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - name: The game image
+        run: docker build -t worldrankguesser-game .
+      - name: The migrate target
+        run: docker build --target migrate -t worldrankguesser-migrate .
+      - name: The scraper image
+        run: docker build -f src/SportsRankingService/Dockerfile -t worldrankguesser-scraper .
