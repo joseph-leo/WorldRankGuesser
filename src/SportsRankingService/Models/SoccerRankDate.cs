@@ -1,21 +1,11 @@
-﻿using Newtonsoft.Json;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+namespace SportsRankingService.Models;
 
-namespace SportsRankingService.Models
+/// <summary>One entry of FIFA's ranking-schedule list inside the page's __NEXT_DATA__; Newtonsoft binds it by property name.</summary>
+public class SoccerRankDate
 {
-    public class SoccerRankDate
-    {
-        //[JsonProperty("id")]
-        public string id { get; set; }
+    public required string id { get; set; }
 
-        public string iso { get; set; }
+    public required string iso { get; set; }
 
-        //[JsonProperty(s)]
-        public string dateText { get; set; }
-
-    }
+    public required string dateText { get; set; }
 }
