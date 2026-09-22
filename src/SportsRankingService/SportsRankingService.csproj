@@ -16,6 +16,8 @@
   <ItemGroup>
     <!-- Loaded from the content root (AppContext.BaseDirectory) at startup, so they must sit next to the binaries. -->
     <None Update="appsettings.json;appsettings.Development.json;serviceconfig.json" CopyToOutputDirectory="PreserveNewest" />
+    <!-- Development settings never go into a publish output or an image. -->
+    <None Update="appsettings.Development.json" CopyToPublishDirectory="Never" />
   </ItemGroup>
 
   <ItemGroup>
