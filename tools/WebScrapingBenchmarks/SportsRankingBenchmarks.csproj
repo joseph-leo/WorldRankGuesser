@@ -12,7 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\SportsRankingService\SportsRankingService.csproj" />
+    <ProjectReference Include="..\..\src\SportsRankingService\SportsRankingService.csproj" />
   </ItemGroup>
 
 </Project>
