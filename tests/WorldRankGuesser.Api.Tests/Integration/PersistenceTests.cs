@@ -37,6 +37,15 @@ public class PersistenceTests(SqlServerFixture sql)
     };
 
     [Fact]
+    public void The_context_retries_transient_failures()
+    {
+        // A paused Azure SQL database refuses connections while it resumes; the first visitor must not get a 500.
+        using var db = sql.CreateContext();
+
+        Assert.IsType<SqlServerRetryingExecutionStrategy>(db.Database.CreateExecutionStrategy());
+    }
+
+    [Fact]
     public async Task Board_content_round_trips_as_json()
     {
         var board = NewBoard();
