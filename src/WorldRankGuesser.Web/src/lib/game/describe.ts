@@ -2,7 +2,8 @@ import type { Cell } from '$lib/api/client';
 
 /**
  * One line about a country in a category, for example "Viktor Axelsen, world #3 · Badminton Singles Men".
- * It is always shown beside the score, so a rank that equals the score is left out.
+ * It is always shown beside the score, so a rank that equals the score is left out. A rank inherited from
+ * another team names that team first: "West Indies · Cricket ODI Men" for Jamaica.
  */
 export function describeCell(cell: Cell, rankMode: string): string {
 	if (cell.unranked) return 'Unranked';
@@ -15,5 +16,5 @@ export function describeCell(cell: Cell, rankMode: string): string {
 	const who = cell.competitor ? `${cell.competitor}${world}` : null;
 	const feed = [cell.sport, cell.event, cell.gender].filter(Boolean).join(' ');
 
-	return [capped, who, feed].filter(Boolean).join(' · ');
+	return [capped, cell.rankedAs, who, feed].filter(Boolean).join(' · ');
 }

@@ -30,7 +30,7 @@ builder.Services.AddOptions<ScoringOptions>()
 
 builder.Services.AddOptions<GameOptions>()
     .Bind(builder.Configuration.GetSection(GameOptions.Section))
-    .Validate(GameOptions.IsValid, "Game: needs at least one category, unique category IDs, and at least one sport per category.")
+    .Validate(GameOptions.IsValid, "Game: needs at least one category, unique category IDs, at least one sport per category, and limits that are not negative.")
     .ValidateOnStart();
 
 builder.Services.AddOptions<RankingsOptions>()

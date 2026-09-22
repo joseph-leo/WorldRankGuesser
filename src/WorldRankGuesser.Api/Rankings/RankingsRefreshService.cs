@@ -8,6 +8,7 @@ public sealed class RankingsRefreshService(
     IServiceScopeFactory scopes,
     IRankingsStore store,
     IOptions<GameOptions> gameOptions,
+    IOptions<ScoringOptions> scoringOptions,
     IOptions<RankingsOptions> rankingsOptions,
     CountryCatalog catalog,
     TimeProvider time,
@@ -36,7 +37,7 @@ public sealed class RankingsRefreshService(
         {
             await using var scope = scopes.CreateAsyncScope();
             var rows = await scope.ServiceProvider.GetRequiredService<IRankingsReader>().ReadAsync(ct);
-            var snapshot = RankingsSnapshotBuilder.Build(rows, gameOptions.Value, catalog, time.GetUtcNow());
+            var snapshot = RankingsSnapshotBuilder.Build(rows, gameOptions.Value, scoringOptions.Value.Cap, catalog, time.GetUtcNow());
 
             store.Set(snapshot);
             logger.LogInformation(

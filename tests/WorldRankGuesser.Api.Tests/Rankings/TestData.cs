@@ -35,9 +35,9 @@ internal static class TestData
         ["ENG"] = "England", ["SCO"] = "Scotland", ["WI"] = "West Indies", ["ZZZ"] = "Nowhere",
     };
 
-    public static GameOptions Options(int minCategoriesRanked = 1) => new()
+    public static GameOptions Options(int minCategoriesUnderCap = 1) => new()
     {
-        MinCategoriesRanked = minCategoriesRanked,
+        MinCategoriesUnderCap = minCategoriesUnderCap,
         Categories =
         [
             new() { Id = "soccer", Name = "Soccer", Sports = ["Soccer"] },

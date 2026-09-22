@@ -24,6 +24,19 @@ describe('describeCell', () => {
 		expect(describeCell(cellOf(axelsen, 3), 'Entry')).toBe('Viktor Axelsen · Badminton Singles Men');
 	});
 
+	it('names the team an inherited rank came from, where an athlete would be', () => {
+		const cell = cellOf({ sport: 'Cricket', event: 'ODI', rankedAs: 'West Indies' });
+
+		expect(describeCell(cell, 'Country')).toBe('West Indies · Cricket ODI Men');
+		expect(describeCell(cell, 'Entry')).toBe('West Indies · Cricket ODI Men');
+	});
+
+	it('names the team before its athlete when an inherited rank has both', () => {
+		const cell = cellOf({ ...axelsen, rankedAs: 'England' }, 2);
+
+		expect(describeCell(cell, 'Country')).toBe('England · Viktor Axelsen, world #3 · Badminton Singles Men');
+	});
+
 	it('shows a rank the cap replaced', () => {
 		const cell = cellOf({ countryRank: 180, entryRank: 180 }, 150);
 

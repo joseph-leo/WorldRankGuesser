@@ -4,8 +4,17 @@ public sealed class GameOptions
 {
     public const string Section = "Game";
 
-    /// <summary>A country is drawable only if it is ranked in at least this many categories.</summary>
-    public int MinCategoriesRanked { get; set; } = 1;
+    /// <summary>
+    /// A country is drawable only if it scores under Scoring:Cap in at least this many categories, in both rank modes.
+    /// At 1 this keeps out the countries that would cost every player the cap wherever they were placed.
+    /// </summary>
+    public int MinCategoriesUnderCap { get; set; } = 1;
+
+    /// <summary>
+    /// A board is drawn again while more picks than this score the cap in its optimal assignment: one sacrifice is a
+    /// decision, several make the total mostly a fixed penalty. The category count or more turns the rule off.
+    /// </summary>
+    public int MaxCapPicksInOptimal { get; set; } = 1;
 
     public List<CategoryDefinition> Categories { get; set; } = [];
 
@@ -15,7 +24,8 @@ public sealed class GameOptions
     public List<string> NotDrawable { get; set; } = [];
 
     public static bool IsValid(GameOptions options) =>
-        options.MinCategoriesRanked >= 1
+        options.MinCategoriesUnderCap >= 1
+        && options.MaxCapPicksInOptimal >= 0
         && options.Categories.Count > 0
         && options.Categories.All(c => c.Id.Length > 0 && c.Name.Length > 0 && c.Sports.Count > 0)
         && options.Categories.Select(c => c.Id).Distinct(StringComparer.Ordinal).Count() == options.Categories.Count;

@@ -157,7 +157,7 @@ A board is created once and never changes. It holds the categories, the 10 count
 - A **daily** board has a UTC date. All players are scored against the same grid, even if the scraper runs during the day.
 - A **practice** game gets a board of its own.
 
-Countries are drawn uniformly without replacement from the pool of countries ranked in at least `MinCategoriesRanked` categories (default 1). The optimal score is computed when the board is created.
+Countries are drawn uniformly without replacement from the pool of countries that score under the cap, in both rank modes, in at least `MinCategoriesUnderCap` categories (default 1). A country ranked only at or beyond the cap would cost every player the cap wherever it was placed, so it is never drawn. The optimal score is computed when the board is created. A board whose optimal assignment has more than `MaxCapPicksInOptimal` (default 1) picks scoring the cap is drawn again, up to 50 draws: one sacrificed pick is a decision, several make the total mostly a fixed penalty.
 
 ### 5.5 Turns and the timer
 
@@ -272,6 +272,6 @@ Each phase gets its own implementation plan.
 | 0. Reset | Blazor project removed; solution layout in section 4.1; `net11.0`; CI that builds and tests; CLAUDE.md rewritten. Local development uses the SportsRankingService SQL Server container, so no compose file is needed yet. |
 | 1. Practice game | Rankings snapshot, aliases, both scoring modes, boards, games and picks, anonymous player cookie, Svelte game and results screens, tests in section 11 for what exists. |
 | 2. Go live | Dockerfile, `docker-compose.yml` (the image plus SQL Server: the VPS fallback), Bicep, deploy pipeline, Azure SQL, custom domain. The scraper Job runs weekly. |
-| 3. Daily challenge | Daily boards, timer, one attempt per day, streaks, history, nickname, both leaderboards (the verified one is empty until phase 4), share grid, optimal score on results. |
+| 3. Daily challenge | First slice: per-game statistics computed by the server (distance from optimal, the counts of best-sport and optimal picks), kept in history and shown in the share grid as best, optimal or both; see the Statistics decision in the phase 2 design. Then daily boards, timer, one attempt per day, streaks, history, nickname, both leaderboards (the verified one is empty until phase 4), share grid, optimal score on results. |
 | 4. Sign-in | OAuth providers, claim and merge, verified flag. |
 | 5. Visual polish | Design pass; may overlap phases 3 and 4. |

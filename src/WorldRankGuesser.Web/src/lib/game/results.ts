@@ -21,6 +21,23 @@ export function pickOfRow(row: ResultRow, turnIndex: number): Pick {
 	};
 }
 
+/** What a pick earned: its country's best score, or its place in the best possible game. */
+export type Mark = 'best' | 'optimal';
+
+/**
+ * The marks a revealed pick earned. "Best" compares scores, not categories: a country can score the same in
+ * two categories, and the player who chose the other one could not have done better.
+ */
+export function marksOf(results: Results, pick: Pick): Mark[] {
+	const best = results.best.find((row) => row.country.iso3 === pick.country.iso3);
+	const optimal = results.optimal.find((row) => row.category.id === pick.categoryId);
+
+	const marks: Mark[] = [];
+	if (best && pick.score === best.cell.score) marks.push('best');
+	if (optimal?.country.iso3 === pick.country.iso3) marks.push('optimal');
+	return marks;
+}
+
 /**
  * Lays the revealed grid out for the results page. The server chooses the best and optimal categories;
  * this only looks their cells up. Null until the game is complete.

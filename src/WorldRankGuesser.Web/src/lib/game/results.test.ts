@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { pickOfRow, resultsOf } from './results';
+import { marksOf, pickOfRow, resultsOf } from './results';
 import { cellOf, gameState } from './testState';
 
 const denmark = { iso3: 'DNK', iso2: 'DK', name: 'Denmark' };
@@ -46,6 +46,31 @@ describe('resultsOf', () => {
 			['Badminton', 'Korea', 1],
 			['Soccer', 'Denmark', 20]
 		]);
+	});
+});
+
+describe('marksOf', () => {
+	const results = resultsOf(complete)!;
+	const picked = (country: typeof denmark, categoryId: string, score: number) => ({
+		...pickOfRow({ country, category: badminton, cell: cellOf({}, score) }, 0),
+		categoryId
+	});
+
+	it('marks a pick that went to its optimal category', () => {
+		expect(marksOf(results, picked(denmark, 'soccer', 20))).toEqual(['optimal']);
+	});
+
+	it("marks a pick that scored its country's best, and both when it is optimal too", () => {
+		expect(marksOf(results, picked(denmark, 'badminton', 3))).toEqual(['best']);
+		expect(marksOf(results, picked(korea, 'badminton', 1))).toEqual(['best', 'optimal']);
+	});
+
+	it('marks a best score reached in another category, since the player could not have done better', () => {
+		expect(marksOf(results, picked(denmark, 'soccer', 3))).toContain('best');
+	});
+
+	it('marks nothing otherwise', () => {
+		expect(marksOf(results, picked(korea, 'soccer', 90))).toEqual([]);
 	});
 });
 

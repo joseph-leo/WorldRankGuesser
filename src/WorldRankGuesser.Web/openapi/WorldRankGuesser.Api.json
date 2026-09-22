@@ -170,7 +170,8 @@
           "sport",
           "event",
           "gender",
-          "competitor"
+          "competitor",
+          "rankedAs"
         ],
         "type": "object",
         "properties": {
@@ -214,6 +215,12 @@
             ]
           },
           "competitor": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "rankedAs": {
             "type": [
               "null",
               "string"

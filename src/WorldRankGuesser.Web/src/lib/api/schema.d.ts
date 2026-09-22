@@ -72,6 +72,7 @@ export interface components {
             event: null | string;
             gender: null | string;
             competitor: null | string;
+            rankedAs: null | string;
         };
         CountryDto: {
             iso3: string;
