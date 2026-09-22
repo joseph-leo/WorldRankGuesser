@@ -1,29 +1,15 @@
-using Microsoft.EntityFrameworkCore;
-using WorldRankGuesser.Api.Persistence;
+using SportsRankingService.Persistence;
+using SportsRankingService.Services;
 
 namespace WorldRankGuesser.Api.Tests.Integration;
 
 /// <summary>
-/// A stand-in for the scraper's view: a table with the view's exact columns, filled with 12 countries ranked 1-12
-/// in one feed of each of the 10 categories. Deterministic, so tests can predict every score.
+/// Rankings for the tests, written the way the scraper writes them: one release per feed through
+/// <see cref="RankingRepository"/>, so the real dbo.CurrentCountryRankings view serves them. 12 countries ranked 1-12
+/// in one feed of each of the 10 categories, deterministic, so tests can predict every score.
 /// </summary>
 internal static class RankingsSeed
 {
-    public const string CreateTableSql = """
-        CREATE TABLE dbo.CurrentCountryRankings (
-            Sport nvarchar(100) NOT NULL,
-            Event nvarchar(100) NULL,
-            Gender nvarchar(20) NOT NULL,
-            RankingDate date NOT NULL,
-            IsFederationDate bit NOT NULL,
-            Position smallint NOT NULL,
-            ISO3 varchar(3) NOT NULL,
-            TeamName nvarchar(200) NULL,
-            Competitor nvarchar(200) NULL,
-            Points decimal(12,3) NULL,
-            RankedEntrants int NULL);
-        """;
-
     public static readonly string[] Countries =
         ["AUS", "BRA", "CAN", "DEU", "ESP", "FRA", "IND", "ITA", "JPN", "NZL", "USA", "ZAF"];
 
@@ -40,21 +26,25 @@ internal static class RankingsSeed
     /// <summary>Each feed is a rotation of the country list, so every country holds every position 1-12 somewhere.</summary>
     public static short PositionOf(int countryIndex, int feedIndex) => (short)((countryIndex + feedIndex * 5) % Countries.Length + 1);
 
-    public static async Task InsertAsync(GameDbContext db)
+    public static async Task SaveAsync(string connectionString)
     {
+        await using var db = SqlServerFixture.CreateRankingsContext(connectionString);
+        var repository = new RankingRepository(db, TimeProvider.System);
+
         for (var feed = 0; feed < Feeds.Length; feed++)
-        for (var country = 0; country < Countries.Length; country++)
         {
             var (sport, ev, gender) = Feeds[feed];
-            var position = PositionOf(country, feed);
-            var iso3 = Countries[country];
-            var name = Names[country];
+            var entries = Enumerable.Range(0, Countries.Length)
+                .Select(country => new RankingSnapshotEntry(PositionOf(country, feed), Countries[country], Names[country]))
+                .OrderBy(entry => entry.Position)
+                .ToList();
 
-            await db.Database.ExecuteSqlAsync($"""
-                INSERT INTO dbo.CurrentCountryRankings
-                    (Sport, Event, Gender, RankingDate, IsFederationDate, Position, ISO3, TeamName, Competitor, Points, RankedEntrants)
-                VALUES ({sport}, {ev}, {gender}, '2026-09-14', 1, {position}, {iso3}, {name}, NULL, NULL, 1)
-                """);
+            var outcome = await repository.SaveAsync(
+                new RankingSnapshot(sport, ev, gender, new DateOnly(2026, 9, 14), IsFederationDate: true, entries),
+                CancellationToken.None);
+
+            if (outcome != SaveOutcome.Inserted)
+                throw new InvalidOperationException($"Seeding {sport} {ev} {gender}: expected Inserted, got {outcome}.");
         }
     }
 }
