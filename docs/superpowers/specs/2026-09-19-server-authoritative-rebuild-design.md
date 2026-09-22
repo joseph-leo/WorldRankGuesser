@@ -71,9 +71,12 @@ The Blazor project is deleted; git history keeps it.
 ```
 src/WorldRankGuesser.Api/          minimal API, EF Core, net11.0
 src/WorldRankGuesser.Web/          SvelteKit + TypeScript
-tests/WorldRankGuesser.Api.Tests/  xUnit unit and integration tests
+src/SportsRankingService/          the scraper (imported in phase 2; its own CLAUDE.md and README)
+tests/WorldRankGuesser.Api.Tests/  xUnit unit and integration tests; the SQL fixture applies the scraper's migrations too
+tests/SportsRankingService.Tests/  the scraper's fixture-based tests
+tools/                             file-based and standalone tools, outside the solution (country catalog, board simulator, benchmarks)
 Dockerfile                         build web → publish API with web output in wwwroot → runtime image
-docker-compose.yml                 API + SQL Server for local development and the VPS fallback
+docker-compose.yml                 SQL Server for development; the production-shaped stack behind a profile
 infra/                             Bicep
 .github/workflows/                 CI and deploy
 ```
@@ -259,7 +262,7 @@ Schema `game`, EF Core migrations with the history table in the same schema. The
 - **Cold starts:** scale to zero and the SQL free tier's auto-pause both delay the first request after idle. Setting minimum replicas to 1 is the documented remedy if it matters.
 - **Fallback:** `docker-compose.yml` runs the same image with a SQL Server container.
 
-**Required outside this repo (SportsRankingService):** a Dockerfile, a pipeline that publishes its image and updates the Job, its migrations applied to Azure SQL, and the move to .NET 11. Needed by phase 2. Separate spec in that repo.
+**The scraper** lives in this repo since phase 2; its image, Job, migrations and .NET 11 move are in `2026-09-19-phase-2-go-live-design.md`.
 
 **Housekeeping:** the Sportradar trial keys in the old `wwwroot/urls.json` remain in git history after the file is deleted. Revoke them at Sportradar.
 
