@@ -9,10 +9,10 @@ public class GameApiTests(SqlServerFixture sql) : IAsyncLifetime
 {
     private ApiFactory _factory = null!;
 
-    public Task InitializeAsync()
+    public async Task InitializeAsync()
     {
         _factory = new ApiFactory(sql.ConnectionString);
-        return Task.CompletedTask;
+        await _factory.WaitUntilReadyAsync();
     }
 
     public async Task DisposeAsync() => await _factory.DisposeAsync();
@@ -149,6 +149,7 @@ public class GameApiTests(SqlServerFixture sql) : IAsyncLifetime
         {
             ["RateLimits:GameStartsPerPlayerPerHour"] = "2",
         });
+        await limited.WaitUntilReadyAsync();
         var client = limited.CreateClient();
 
         await Start(client);      // creates the player; counted against the anonymous partition
@@ -166,6 +167,7 @@ public class GameApiTests(SqlServerFixture sql) : IAsyncLifetime
         {
             ["RateLimits:GameStartsPerPlayerPerHour"] = "2",
         });
+        await limited.WaitUntilReadyAsync();
         var client = limited.CreateClient();
 
         await Start(client);      // creates the player; counted against the anonymous partition
