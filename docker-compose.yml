@@ -2,7 +2,7 @@
 # production-shaped stack: migrations (dbo, then game), the game image on http://localhost:8080 as Production, and
 # the scraper image on demand:
 #   docker compose --profile stack up --build -d
-#   docker compose --profile stack run --rm scraper            # or `... scraper --only Soccer`
+#   docker compose run --rm scraper                            # once, after up; or `... scraper --only Soccer`
 #   docker compose --profile stack down                        # the database volume stays
 # The SA password is a dev-only credential for this container; it is also in
 # src/SportsRankingService/appsettings.json and src/WorldRankGuesser.Api/appsettings.Development.json. Override the
@@ -62,9 +62,11 @@ services:
       migrate:
         condition: service_completed_successfully
 
-  # Runs once and exits (1 if any feed failed).
+  # Runs once and exits (1 if any feed failed). Its own profile, which `run` enables by itself, so `up` never scrapes:
+  #   docker compose run --rm scraper             # after `--profile stack up`, which migrates the database
+  #   docker compose run --rm scraper --only Soccer
   scraper:
-    profiles: ["stack"]
+    profiles: ["scraper"]
     image: worldrankguesser-scraper:local
     build:
       context: .
@@ -74,8 +76,6 @@ services:
     depends_on:
       sql:
         condition: service_healthy
-      migrate:
-        condition: service_completed_successfully
 
   # On a VPS the Production cookie is Secure (browsers exempt only localhost), so the game needs TLS in front of it.
   # Caddy obtains a certificate by itself. To use it: uncomment this service and the caddy_data volume, put the
