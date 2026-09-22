@@ -26,7 +26,7 @@ dotnet ef migrations add <Name> --project src/SportsRankingService --output-dir 
 
 `appsettings.json` and `serviceconfig.json` are copied next to the binaries and the host's content root is `AppContext.BaseDirectory`, so the process runs from any working directory. There is no timer: the process runs every enabled feed once and exits; schedule it weekly with Task Scheduler or cron (README).
 
-The project inherits `net11.0` from the repo root's `Directory.Build.props` and `global.json`; EF Core is the same 11.0 build as the game's, and `dotnet-ef` comes from the root tool manifest. `dotnet ef` runs `Program` at design time with `--applicationName` to find the host; `Program.cs` skips the command line when `EF.IsDesignTime` is set, so that argument is not a usage error.
+The project inherits `net11.0` from the repo root's `Directory.Build.props`, and the SDK from its `global.json`; EF Core is the same 11.0 build as the game's, and `dotnet-ef` comes from the root tool manifest. `dotnet ef` runs `Program` at design time with `--applicationName` to find the host; `Program.cs` skips the command line when `EF.IsDesignTime` is set, so that argument is not a usage error.
 
 Which benchmark runs is hardcoded in `tools/WebScrapingBenchmarks/Program.cs` (`BenchmarkRunner.Run<ScrapeServiceBenchmark>()`); swap the type to run `CountryUtilBenchmark`. `ScrapeServiceBenchmark` builds the real pipeline from `serviceconfig.json` and hits every enabled live URL, no database.
 

@@ -11,12 +11,12 @@ Design: `docs/superpowers/specs/2026-09-19-server-authoritative-rebuild-design.m
 ## Commands
 
 ```powershell
+dotnet tool restore                                                      # installs dotnet-ef from .config/dotnet-tools.json
 docker compose up -d --wait                                              # local SQL Server 2022 (sa / Rankings_Dev1!, loopback-only)
 dotnet ef database update --project src/SportsRankingService             # the scraper's dbo schema and views; on a new database, before the game's
 dotnet run --project src/SportsRankingService                            # scrape every enabled feed once into the local database (exit 1 if a feed failed)
 dotnet run --project src/SportsRankingService -- --only Soccer           # a subset; see src/SportsRankingService/CLAUDE.md
 dotnet ef migrations add <Name> --project src/SportsRankingService --output-dir Persistence/Migrations   # scraper schema change
-dotnet tool restore                                                      # installs dotnet-ef from .config/dotnet-tools.json
 dotnet ef database update --project src/WorldRankGuesser.Api            # apply the game schema; the API never migrates itself
 dotnet ef migrations add <Name> --project src/WorldRankGuesser.Api --output-dir Persistence/Migrations
 

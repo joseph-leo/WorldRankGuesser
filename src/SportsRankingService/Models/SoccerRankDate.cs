@@ -6,6 +6,4 @@ public class SoccerRankDate
     public required string id { get; set; }
 
     public required string iso { get; set; }
-
-    public required string dateText { get; set; }
 }
