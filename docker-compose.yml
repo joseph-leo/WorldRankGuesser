@@ -3,7 +3,7 @@
 # the scraper image on demand:
 #   docker compose --profile stack up --build -d
 #   docker compose run --rm scraper                            # once, after up; or `... scraper --only Soccer`
-#   docker compose --profile stack down                        # the database volume stays
+#   docker compose --profile stack down                        # the database volume stays; `up -d --wait` brings the development database back
 # The SA password is a dev-only credential for this container; it is also in
 # src/SportsRankingService/appsettings.json and src/WorldRankGuesser.Api/appsettings.Development.json. Override the
 # connection string elsewhere with the ConnectionStrings__WorldRankGuesserConnection environment variable.
