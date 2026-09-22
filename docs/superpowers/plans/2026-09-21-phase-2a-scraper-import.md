@@ -394,6 +394,142 @@ FifaDateIdResolver reads unconditionally, so they become required.
 
 ---
 
+### Task 4b: Restore `dotnet ef` for the scraper and keep the local database
+
+Added during execution (2026-09-21) after Task 4's live run found two defects the plan had assumed away.
+
+1. `dotnet ef database update --project src/SportsRankingService` fails with `Unknown argument '--applicationName'`. At design time `dotnet ef` runs the program's `Main` with its own arguments (`--applicationName <assembly>`) to find the host and intercepts `Build()`; the scraper's `FeedFilter.Parse(args)` rejects that argument and exits before the host exists. It broke in the old repo when `--only` was added after the only migration, so nobody noticed. Every future scraper migration and plan 2c's migration bundle depend on it.
+2. `docker compose up -d --wait` from this repo fails with a container-name conflict. The running container was created by the old repo's Compose project, `sportsrankingservice` (Compose names a project after its folder), on volume `sportsrankingservice_sqldata`. From this repo Compose uses another project name, so it fights over `container_name: worldrankguesser-sql` and would create a new, empty volume: the spec's "existing local data survives" (section 6) needs the project name pinned. Task 4's failed attempt also left an empty volume `phase-2a-scraper-import_sqldata` behind.
+
+**Files:**
+- Modify: `src/SportsRankingService/Program.cs:6-18`
+- Modify: `docker-compose.yml:1-5`
+
+**Interfaces:**
+- Consumes: `FeedFilter.All` (`src/SportsRankingService/Configuration/FeedFilter.cs`), `Microsoft.EntityFrameworkCore.EF.IsDesignTime`.
+- Produces: `dotnet ef ... --project src/SportsRankingService` works, which Task 6 documents and plan 2c's bundles need; `docker compose up -d --wait` from this repo reuses the existing container and data, which Task 6 documents.
+
+- [ ] **Step 1: Reproduce both failures (red)**
+
+Docker Desktop must be running.
+
+```powershell
+dotnet ef migrations list --project src/SportsRankingService
+docker compose up -d --wait
+docker volume ls --format '{{.Name}}' | Select-String sqldata
+```
+
+Expected: the first prints `Unknown argument '--applicationName'. usage: SportsRankingService [--only "<Sport [Event [Gender]]>"]...` and fails; the second fails with a message that the container name `worldrankguesser-sql` is already in use; the third lists `sportsrankingservice_sqldata` (the real data) and `phase-2a-scraper-import_sqldata` (the stray, empty one).
+
+- [ ] **Step 2: Skip the command line at design time**
+
+In `src/SportsRankingService/Program.cs`, replace the block from the first comment through the closing brace of the `catch` (currently lines 6 to 18):
+
+```csharp
+// A run-once console app: an external scheduler (Task Scheduler, cron) runs it weekly.
+// `--only <feed>` (repeatable) reruns a subset, e.g. the feeds a previous run reported as failed.
+FeedFilter filter;
+
+try
+{
+    filter = FeedFilter.Parse(args);
+}
+catch (ArgumentException ex)
+{
+    Console.Error.WriteLine(ex.Message);
+    return 1;
+}
+```
+
+with
+
+```csharp
+// A run-once console app: an external scheduler (Task Scheduler, cron) runs it weekly.
+// `--only <feed>` (repeatable) reruns a subset, e.g. the feeds a previous run reported as failed.
+// At design time `dotnet ef` runs this program with its own arguments (--applicationName) only to find the host,
+// so they are not a feed filter.
+FeedFilter filter = FeedFilter.All;
+
+if (!EF.IsDesignTime)
+{
+    try
+    {
+        filter = FeedFilter.Parse(args);
+    }
+    catch (ArgumentException ex)
+    {
+        Console.Error.WriteLine(ex.Message);
+        return 1;
+    }
+}
+```
+
+`EF` is `Microsoft.EntityFrameworkCore.EF`; the file already has `using Microsoft.EntityFrameworkCore;`. Nothing else in the file changes: the host is still built outside the `try`, which is what lets `dotnet ef` intercept it.
+
+- [ ] **Step 3: Verify `dotnet ef` (green)**
+
+```powershell
+dotnet build src/SportsRankingService
+dotnet ef migrations list --project src/SportsRankingService
+dotnet ef database update --project src/SportsRankingService
+dotnet run --project src/SportsRankingService -- --bogus
+```
+
+Expected: the build has 0 errors and no new warnings; `migrations list` prints `20260917221403_InitialSchema` (the local database, if reachable, marks it applied; if the database is not reachable the list still prints and the tool warns); `database update` prints `No migrations were applied. The database is already up to date.`; the last command still prints `Unknown argument '--bogus'. usage: ...` and exits 1 (`$LASTEXITCODE`), which shows the usage error is intact outside design time.
+
+- [ ] **Step 4: Pin the Compose project name**
+
+In `docker-compose.yml`, replace the four comment lines at the top (lines 1 to 4) with
+
+```yaml
+# Local SQL Server for development. Start with `docker compose up -d --wait`.
+# The SA password is a dev-only credential for this container; it is also in
+# src/SportsRankingService/appsettings.json. Override the connection string elsewhere with the
+# ConnectionStrings__WorldRankGuesserConnection environment variable.
+# The project name is the old SportsRankingService repo's folder name, which Compose used as its project name,
+# so this file keeps addressing that repo's container and its volume (sportsrankingservice_sqldata): local data
+# survives the scraper's move into this repo.
+name: sportsrankingservice
+```
+
+The `services:` line and everything below it stay as they are.
+
+- [ ] **Step 5: Verify Compose reuses the container, and remove the stray volume**
+
+```powershell
+docker compose up -d --wait
+docker compose ps --format '{{.Name}} {{.Status}}'
+docker inspect worldrankguesser-sql --format '{{index .Config.Labels "com.docker.compose.project"}} {{range .Mounts}}{{.Name}}{{end}}'
+docker volume rm phase-2a-scraper-import_sqldata
+docker volume ls --format '{{.Name}}' | Select-String sqldata
+```
+
+Expected: `up` exits 0 and reports the service running/healthy (it adopts the existing container; if it says the container was recreated, that is also fine, because the volume is the same); `ps` shows `worldrankguesser-sql` healthy; `inspect` prints `sportsrankingservice sportsrankingservice_sqldata`; the `volume rm` succeeds (the stray volume is empty and attached to nothing; if Docker refuses because it is in use, stop and report instead of forcing); the last line lists only `sportsrankingservice_sqldata`.
+
+- [ ] **Step 6: Scraper tests and commit**
+
+```powershell
+dotnet test tests/SportsRankingService.Tests
+git status --short
+```
+
+Expected: 354 passed, 1 skipped; status shows only the two modified files (plus the openapi line-ending churn if you built the solution, which is not committed).
+
+```powershell
+git add src/SportsRankingService/Program.cs docker-compose.yml
+git commit -m @'
+Let dotnet ef run the scraper at design time; pin the Compose project
+
+dotnet ef starts the program with --applicationName to find the host,
+and FeedFilter rejected it before the host existed, so no scraper
+migration could be listed, applied or bundled. The command line is now
+skipped at design time. The Compose project name is pinned to the old
+repo's, so this file keeps using the existing container and volume.
+'@
+```
+
+---
+
 ### Task 5: The view-contract test
 
 The game's SQL fixture stops creating a stand-in table and applies the scraper's real migrations, which create `dbo.RankingReleases`, `dbo.RankingRows` and the two views. The seed then saves one `RankingSnapshot` per feed through the scraper's `RankingRepository`, so `dbo.CurrentCountryRankings` yields the same 12 countries × 10 feeds the existing tests expect (`RankedEntrants` is 1 for every row because each country has one entry per feed). Renaming a column the view projects now fails these tests, because `RankingsReader` selects every mapped column.
@@ -762,10 +898,35 @@ In `docs/superpowers/specs/2026-09-19-server-authoritative-rebuild-design.md`:
    **The scraper** lives in this repo since phase 2; its image, Job, migrations and .NET 11 move are in `2026-09-19-phase-2-go-live-design.md`.
    ```
 
+- [ ] **Step 3b: The scraper's own CLAUDE.md (added during execution)**
+
+`src/SportsRankingService/CLAUDE.md` still describes the old repo. Change only what the import made false; leave the Architecture, Persistence and Current state sections alone.
+
+1. First paragraph: `A .NET 8 run-once console app` becomes `A .NET 11 run-once console app, imported into the WorldRankGuesser repo on 2026-09-21 (`src/SportsRankingService`),`. Replace the last sentence, from `` `WebScrapingBenchmarks` holds `` to the end of the paragraph, with: `` `tools/WebScrapingBenchmarks` holds BenchmarkDotNet benchmarks (outside the solution) and `tests/SportsRankingService.Tests` holds xUnit tests. ``
+2. Replace the whole `## Commands` code block with
+
+   ```powershell
+   docker compose up -d --wait                              # local SQL Server 2022 (sa / Rankings_Dev1!, port 1433, loopback-only); the repo root's compose file
+   dotnet tool restore                                      # repo-local dotnet-ef (the version in .config/dotnet-tools.json at the repo root)
+   dotnet ef database update --project src/SportsRankingService   # apply the dbo migrations (the app never migrates itself); on a new database, before the game's
+   dotnet build WorldRankGuesser.slnx                       # the whole solution, this project included
+   dotnet run --project src/SportsRankingService            # fetch every enabled feed once, save, exit (0 = all saved, 1 = a feed failed)
+   dotnet run --project src/SportsRankingService -- --only "Cricket Women" --only Soccer   # only the feeds whose "Sport Event Gender" name contains a pattern's words in order
+   dotnet run --project tools/WebScrapingBenchmarks --configuration Release   # run benchmarks
+   dotnet test tests/SportsRankingService.Tests             # parser, resolver, fetcher, snapshot and repository tests; no external network (the curl tests use loopback and need curl on the PATH), SQLite in-memory for the repository
+   dotnet ef migrations add <Name> --project src/SportsRankingService --output-dir Persistence/Migrations   # after changing the entities
+   ```
+
+   and, in the sentence after it, `` `SportsRankingService.Tests/Fixtures/` `` becomes `` `tests/SportsRankingService.Tests/Fixtures/` ``.
+3. Replace the paragraph starting `` `global.json` pins SDK 8.0.0 `` with: `` The project inherits `net11.0` from the repo root's `Directory.Build.props` and `global.json`; EF Core is the same 11.0 build as the game's, and `dotnet-ef` comes from the root tool manifest. `dotnet ef` runs `Program` at design time with `--applicationName` to find the host; `Program.cs` skips the command line when `EF.IsDesignTime` is set, so that argument is not a usage error. ``
+4. In the paragraph starting `Which benchmark runs is hardcoded in`, `` `WebScrapingBenchmarks/Program.cs` `` becomes `` `tools/WebScrapingBenchmarks/Program.cs` ``.
+5. In `## Persistence`, `` Code-first EF Core in `SportsRankingService/Persistence/` `` becomes `` Code-first EF Core in `Persistence/` ``.
+6. In "Adding a feed", `` `SportsRankingService.Tests/Fixtures/` `` becomes `` `tests/SportsRankingService.Tests/Fixtures/` ``.
+
 - [ ] **Step 4: Commit here**
 
 ```powershell
-git add CLAUDE.md README.md docs/superpowers/specs/2026-09-19-server-authoritative-rebuild-design.md
+git add CLAUDE.md README.md src/SportsRankingService/CLAUDE.md docs/superpowers/specs/2026-09-19-server-authoritative-rebuild-design.md
 git commit -m @'
 Document the imported scraper and the two migration sets
 '@

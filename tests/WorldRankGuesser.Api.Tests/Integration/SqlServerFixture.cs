@@ -1,14 +1,15 @@
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
+using SportsRankingService.Persistence;
 using Testcontainers.MsSql;
 using WorldRankGuesser.Api.Persistence;
 
 namespace WorldRankGuesser.Api.Tests.Integration;
 
 /// <summary>
-/// One SQL Server container for the whole test run. Two databases: one migrated and seeded with rankings,
-/// one migrated but with no rankings table (to test readiness failure). Tests share the seeded database,
-/// so they must never assert on global row counts.
+/// One SQL Server container for the whole test run. Two databases: one with both migration sets (the scraper's dbo,
+/// then the game's game schema) and seeded rankings; one with only the game's migrations and so no rankings view
+/// (to test readiness failure). Tests share the seeded database, so they must never assert on global row counts.
 /// </summary>
 public sealed class SqlServerFixture : IAsyncLifetime
 {
@@ -26,12 +27,18 @@ public sealed class SqlServerFixture : IAsyncLifetime
         ConnectionString = WithDatabase("WorldRankGuesserTests");
         EmptyConnectionString = WithDatabase("WorldRankGuesserEmpty");
 
+        // dbo first, as on a new database in production: the scraper's tables and views, then the game schema.
+        await using (var rankings = CreateRankingsContext(ConnectionString))
+        {
+            await rankings.Database.MigrateAsync();
+        }
+
         await using (var db = CreateContext(ConnectionString))
         {
             await db.Database.MigrateAsync();
-            await db.Database.ExecuteSqlRawAsync(RankingsSeed.CreateTableSql);
-            await RankingsSeed.InsertAsync(db);
         }
+
+        await RankingsSeed.SaveAsync(ConnectionString);
 
         await using (var empty = CreateContext(EmptyConnectionString))
         {
@@ -42,6 +49,10 @@ public sealed class SqlServerFixture : IAsyncLifetime
     public Task DisposeAsync() => _container.DisposeAsync().AsTask();
 
     public GameDbContext CreateContext() => CreateContext(ConnectionString);
+
+    /// <summary>The scraper's context, for the fixture and the seed only; the API never sees it.</summary>
+    public static RankingsDbContext CreateRankingsContext(string connectionString) =>
+        new(new DbContextOptionsBuilder<RankingsDbContext>().UseSqlServer(connectionString).Options);
 
     private static GameDbContext CreateContext(string connectionString)
     {

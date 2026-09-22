@@ -4,20 +4,25 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-A server-authoritative guessing game. The player is dealt ten countries one at a time and assigns each to a different sport category; each pick scores the country's world rank in that category (lower total wins; unranked or below 150th scores 150). `src/WorldRankGuesser.Api` (ASP.NET Core minimal API, .NET 11, EF Core, SQL Server) owns every rule and all state. `src/WorldRankGuesser.Web` (SvelteKit, Svelte 5, TypeScript, static single-page app) only renders what the API returns. Rankings come from the `dbo.CurrentCountryRankings` view that the separate **SportsRankingService** repo fills weekly; that view is the only link between the repos.
+A server-authoritative guessing game. The player is dealt ten countries one at a time and assigns each to a different sport category; each pick scores the country's world rank in that category (lower total wins; unranked or below 150th scores 150). `src/WorldRankGuesser.Api` (ASP.NET Core minimal API, .NET 11, EF Core, SQL Server) owns every rule and all state. `src/WorldRankGuesser.Web` (SvelteKit, Svelte 5, TypeScript, static single-page app) only renders what the API returns. Rankings come from the `dbo.CurrentCountryRankings` view, filled weekly by `src/SportsRankingService`, the scraper imported from its own repo in phase 2 (it has its own `CLAUDE.md`). Coupling rule: `WorldRankGuesser.Api` never references `SportsRankingService`; the view is the only runtime link, and only the SQL test fixture may use the scraper's migrations.
 
 Design: `docs/superpowers/specs/2026-09-19-server-authoritative-rebuild-design.md`. Built so far: phases 0–1 (practice mode). Not built yet: deployment, the daily challenge, the timer, streaks, leaderboards, sign-in.
 
 ## Commands
 
 ```powershell
-# Database: the SQL Server container lives in the SportsRankingService repo (docker compose up -d --wait there).
 dotnet tool restore                                                      # installs dotnet-ef from .config/dotnet-tools.json
+docker compose up -d --wait                                              # local SQL Server 2022 (sa / Rankings_Dev1!, loopback-only)
+dotnet ef database update --project src/SportsRankingService             # the scraper's dbo schema and views; on a new database, before the game's
+dotnet run --project src/SportsRankingService                            # scrape every enabled feed once into the local database (exit 1 if a feed failed)
+dotnet run --project src/SportsRankingService -- --only Soccer           # a subset; see src/SportsRankingService/CLAUDE.md
+dotnet ef migrations add <Name> --project src/SportsRankingService --output-dir Persistence/Migrations   # scraper schema change
 dotnet ef database update --project src/WorldRankGuesser.Api            # apply the game schema; the API never migrates itself
 dotnet ef migrations add <Name> --project src/WorldRankGuesser.Api --output-dir Persistence/Migrations
 
 dotnet build WorldRankGuesser.slnx                                      # also regenerates src/WorldRankGuesser.Web/openapi/*.json
 dotnet test WorldRankGuesser.slnx                                       # needs Docker (Testcontainers SQL Server)
+dotnet test tests/SportsRankingService.Tests                            # the scraper alone: fixtures and SQLite, no Docker
 dotnet test WorldRankGuesser.slnx --filter "FullyQualifiedName~ScoringEngineTests"   # one class; add .Method_name for one test
 dotnet run --project src/WorldRankGuesser.Api                           # http://localhost:5170, /readyz says whether rankings loaded
 dotnet run tools/SimulateBoards/simulate.cs -- 20000                    # read-only board statistics on the live rankings, both modes; optional 2nd arg overrides the cap
@@ -48,8 +53,10 @@ CI fails if the committed OpenAPI document or `schema.d.ts` is out of date. `dot
 
 **Persistence.** The API owns SQL schema `game` (history table `game.__EFMigrationsHistory`) and never touches `dbo`. The view is mapped keyless with `ToView`, so it never appears in migrations. Filtered unique indexes enforce one board per daily date and one daily game per player per date; a plain unique index enforces one pick per category per game. `Games.RowVersion` plus those indexes make a pick atomic — a losing simultaneous pick becomes a `409` carrying the current state. Some columns (streaks, deadlines, external login) exist for later phases and are unused today.
 
+**Two migration sets.** The scraper owns schema `dbo` (history table `dbo.__EFMigrationsHistory`, `src/SportsRankingService/Persistence/Migrations`); the game owns `game`. They never share a migration. On a new database apply `dbo` first. `git tag scraper-net8-baseline` marks the scraper as imported, before its move to .NET 11.
+
 **Identity.** An anonymous player is created on the first `POST /api/games` (not on page load) and carried in the HttpOnly `wrg_player` cookie via ASP.NET Core cookie authentication; data-protection keys are stored in the database so cookies survive restarts. Same-origin hosting is a design requirement: in development Vite proxies `/api`; in production the API serves the built front end.
 
 **Front end.** `GameStore` (`src/lib/game/gameStore.svelte.ts`) holds the last server state and has no game rules; a `409` or a failed pick means "adopt or reload the server state". The one exception to "server state only" is `pendingPick`: the pick in flight, shown on its card at once (country only, never a score) and dropped when the server answers, so a pick that did not apply reopens its card. The spinner cycles decoy flags from `src/lib/countries/iso2.json` (no rank data) while a pick is in flight and lands when the next country arrives. Types in `src/lib/api/schema.d.ts` are generated — never edit them by hand. `svelte.config.js` is hand-maintained: the current `sv` CLI scaffold no longer emits one, so don't expect it to reappear from a `sv` regeneration.
 
-**Tests.** Pure logic (scoring, snapshot builder, board generator, optimal assignment) is unit-tested without a database. Everything touching SQL runs against a real SQL Server in Testcontainers (xUnit collection `"sql"`), because the model depends on filtered indexes, row versions and a view; `RankingsSeed` stands in for the scraper's view with 12 countries ranked 1–12 in one feed per category. Tests share one database, so never assert on global row counts.
+**Tests.** Pure logic (scoring, snapshot builder, board generator, optimal assignment) is unit-tested without a database. Everything touching SQL runs against a real SQL Server in Testcontainers (xUnit collection `"sql"`), because the model depends on filtered indexes, row versions and a view. The fixture applies the scraper's migrations and then the game's, so `dbo.CurrentCountryRankings` is the real view, and `RankingsSeed` writes 12 countries ranked 1–12 in one feed per category through the scraper's `RankingRepository`; `ViewContractTests` pins the view's columns. Tests share one database, so never assert on global row counts.
