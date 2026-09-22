@@ -49,7 +49,7 @@ public class FigParserTests
 
         var leaders = rows.Where(r => r.Position == 1).Select(r => r.ISO3).ToList();
         Assert.Equal(["BGR", "DEU"], leaders);
-        Assert.Empty(rows.Where(r => r.Position == 2));
+        Assert.DoesNotContain(rows, r => r.Position == 2);
     }
 
     [Fact]
