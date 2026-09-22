@@ -1,0 +1,18 @@
+# Both Dockerfiles build with the repo root as context; keep outputs, dependencies, tooling, tests and docs out of it.
+.git
+.claude
+.github
+.idea
+.vs
+docs
+tests
+tools
+**/bin
+**/obj
+**/node_modules
+**/build
+**/.svelte-kit
+**/test-results
+**/playwright-report
+**/BenchmarkDotNet.Artifacts
+**/publish
