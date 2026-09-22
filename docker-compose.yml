@@ -1,7 +1,11 @@
 # Local SQL Server for development. Start with `docker compose up -d --wait`.
 # The SA password is a dev-only credential for this container; it is also in
-# SportsRankingService/appsettings.json. Override the connection string elsewhere with the
+# src/SportsRankingService/appsettings.json. Override the connection string elsewhere with the
 # ConnectionStrings__WorldRankGuesserConnection environment variable.
+# The project name is the old SportsRankingService repo's folder name, which Compose used as its project name,
+# so this file keeps addressing that repo's container and its volume (sportsrankingservice_sqldata): local data
+# survives the scraper's move into this repo.
+name: sportsrankingservice
 services:
   sql:
     image: mcr.microsoft.com/mssql/server:2022-latest

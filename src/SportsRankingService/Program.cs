@@ -5,16 +5,21 @@ using SportsRankingService.Services;
 
 // A run-once console app: an external scheduler (Task Scheduler, cron) runs it weekly.
 // `--only <feed>` (repeatable) reruns a subset, e.g. the feeds a previous run reported as failed.
-FeedFilter filter;
+// At design time `dotnet ef` runs this program with its own arguments (--applicationName) only to find the host,
+// so they are not a feed filter.
+FeedFilter filter = FeedFilter.All;
 
-try
+if (!EF.IsDesignTime)
 {
-    filter = FeedFilter.Parse(args);
-}
-catch (ArgumentException ex)
-{
-    Console.Error.WriteLine(ex.Message);
-    return 1;
+    try
+    {
+        filter = FeedFilter.Parse(args);
+    }
+    catch (ArgumentException ex)
+    {
+        Console.Error.WriteLine(ex.Message);
+        return 1;
+    }
 }
 
 // The generic host is kept only as the configuration / logging / DI container.
