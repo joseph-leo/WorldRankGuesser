@@ -5,8 +5,8 @@ namespace WorldRankGuesser.Api.Tests.Rankings;
 
 public class RankingsSnapshotBuilderTests
 {
-    private static RankingsSnapshot Build(IReadOnlyList<CountryRankingRow> rows, int minCategoriesRanked = 1) =>
-        RankingsSnapshotBuilder.Build(rows, Options(minCategoriesRanked), Catalog, LoadedAt);
+    private static RankingsSnapshot Build(IReadOnlyList<CountryRankingRow> rows, int minCategoriesUnderCap = 1, int cap = 150) =>
+        RankingsSnapshotBuilder.Build(rows, Options(minCategoriesUnderCap), cap, Catalog, LoadedAt);
 
     [Fact]
     public void Country_rank_is_competition_ranking_of_countries_by_best_entry()
@@ -106,6 +106,37 @@ public class RankingsSnapshotBuilderTests
     }
 
     [Fact]
+    public void An_inherited_rank_names_the_team_it_came_from()
+    {
+        var snapshot = Build(
+        [
+            Row("Cricket", "ODI", "Men", 9, "WI"),
+            Row("Soccer", null, "Men", 4, "ENG"),
+            Row("Soccer", null, "Men", 40, "SCO"),
+            Row("Soccer", null, "Men", 60, "JAM"),
+        ]);
+
+        Assert.Equal("West Indies", snapshot.Find("cricket", "JAM")!.BestByEntry.RankedAs);
+        Assert.Equal("West Indies", snapshot.Find("cricket", "JAM")!.BestByCountry.RankedAs);
+        Assert.Equal("England", snapshot.Find("soccer", "GBR")!.BestByEntry.RankedAs);
+    }
+
+    [Fact]
+    public void A_rank_of_its_own_names_no_other_team()
+    {
+        var snapshot = Build(
+        [
+            Row("Soccer", null, "Men", 4, "GBR"),
+            Row("Soccer", null, "Men", 40, "SCO"),    // worse than the United Kingdom's own rank, so not inherited
+            Row("Soccer", null, "Men", 60, "JAM"),
+        ]);
+
+        Assert.Null(snapshot.Find("soccer", "GBR")!.BestByEntry.RankedAs);
+        Assert.Null(snapshot.Find("soccer", "JAM")!.BestByEntry.RankedAs);
+        Assert.Null(snapshot.Find("soccer", "SCO")!.BestByEntry.RankedAs);
+    }
+
+    [Fact]
     public void Not_drawable_codes_are_left_out_of_the_pool()
     {
         var snapshot = Build(
@@ -121,7 +152,7 @@ public class RankingsSnapshotBuilderTests
     }
 
     [Fact]
-    public void The_pool_is_ordered_by_iso3_and_filtered_by_min_categories_ranked()
+    public void The_pool_is_ordered_by_iso3_and_filtered_by_min_categories_under_cap()
     {
         IReadOnlyList<CountryRankingRow> rows =
         [
@@ -132,7 +163,50 @@ public class RankingsSnapshotBuilderTests
         ];
 
         Assert.Equal(["AUS", "IND", "JPN"], Build(rows).DrawableCountries.Select(c => c.Iso3));
-        Assert.Equal(["IND"], Build(rows, minCategoriesRanked: 2).DrawableCountries.Select(c => c.Iso3));
+        Assert.Equal(["IND"], Build(rows, minCategoriesUnderCap: 2).DrawableCountries.Select(c => c.Iso3));
+    }
+
+    [Fact]
+    public void A_country_at_or_beyond_the_cap_in_every_category_is_not_drawable()
+    {
+        // Such a country scores the cap wherever it is placed, so drawing it costs every player the same.
+        var snapshot = Build(
+        [
+            Row("Soccer", null, "Men", 1, "JPN"),
+            Row("Soccer", null, "Men", 2, "IND"),     // one under the cap
+            Row("Soccer", null, "Men", 3, "AUS"),     // at the cap in both modes
+        ], cap: 3);
+
+        Assert.Equal(["IND", "JPN"], snapshot.DrawableCountries.Select(c => c.Iso3));
+    }
+
+    [Fact]
+    public void A_category_counts_only_when_it_is_under_the_cap_in_both_modes()
+    {
+        // Australia is the second country but its entry is 5th: under the cap by country rank only. The pool
+        // must not depend on Scoring:RankMode, so that is not enough.
+        var snapshot = Build(
+        [
+            Row("Soccer", null, "Men", 1, "JPN"),
+            Row("Soccer", null, "Men", 5, "AUS"),
+        ], cap: 3);
+
+        Assert.Equal(2, snapshot.Find("soccer", "AUS")!.BestByCountry.CountryRank);
+        Assert.Equal(["JPN"], snapshot.DrawableCountries.Select(c => c.Iso3));
+    }
+
+    [Fact]
+    public void Min_categories_under_cap_ignores_categories_at_or_beyond_the_cap()
+    {
+        var snapshot = Build(
+        [
+            Row("Soccer", null, "Men", 1, "IND"),
+            Row("Cricket", "ODI", "Men", 1, "IND"),
+            Row("Soccer", null, "Men", 2, "JPN"),
+            Row("Cricket", "ODI", "Men", 9, "JPN"),   // ranked, but beyond the cap
+        ], minCategoriesUnderCap: 2, cap: 3);
+
+        Assert.Equal(["IND"], snapshot.DrawableCountries.Select(c => c.Iso3));
     }
 
     [Fact]

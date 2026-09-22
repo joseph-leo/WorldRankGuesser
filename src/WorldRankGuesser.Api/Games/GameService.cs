@@ -28,6 +28,7 @@ public sealed class GameService(
     GameDbContext db,
     IRankingsStore rankings,
     IOptions<ScoringOptions> scoring,
+    IOptions<GameOptions> gameOptions,
     Random random,
     TimeProvider time,
     ILogger<GameService> logger)
@@ -35,7 +36,14 @@ public sealed class GameService(
     public async Task<GameStateDto> StartPracticeAsync(Guid playerId, CancellationToken ct)
     {
         var snapshot = rankings.Current ?? throw new RankingsUnavailableException();
-        var generated = BoardGenerator.Generate(snapshot, scoring.Value, random);
+        var generated = BoardGenerator.Generate(snapshot, scoring.Value, gameOptions.Value.MaxCapPicksInOptimal, random);
+        if (generated.CapPicksInOptimal > gameOptions.Value.MaxCapPicksInOptimal)
+        {
+            logger.LogWarning(
+                "No board within Game:MaxCapPicksInOptimal ({Limit}) was drawn; using one with {CapPicks} cap picks in its optimal.",
+                gameOptions.Value.MaxCapPicksInOptimal, generated.CapPicksInOptimal);
+        }
+
         var now = time.GetUtcNow();
 
         var game = new Game

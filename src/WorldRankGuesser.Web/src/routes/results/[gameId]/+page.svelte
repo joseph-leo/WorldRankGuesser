@@ -5,12 +5,26 @@
 	import Flag from '$lib/components/Flag.svelte';
 	import { describeCell } from '$lib/game/describe';
 	import { GameStore } from '$lib/game/gameStore.svelte';
-	import { pickOfRow, resultsOf, type ResultRow } from '$lib/game/results';
+	import { marksOf, pickOfRow, resultsOf, type Mark } from '$lib/game/results';
 
 	const store = new GameStore();
 	let missing = $state(false);
 
 	const results = $derived(store.state ? resultsOf(store.state) : null);
+
+	/** What each country's pick earned, by ISO3. */
+	const marks = $derived(
+		new Map(results ? store.state!.picks.map((pick) => [pick.country.iso3, marksOf(results, pick)]) : [])
+	);
+
+	const letters = {
+		best: { kind: 'best', glyph: 'B', label: 'Best sport' },
+		optimal: { kind: 'optimal', glyph: 'O', label: 'Optimal pick' }
+	} as const;
+
+	function earned(iso3: string, mark: Mark): boolean {
+		return marks.get(iso3)?.includes(mark) ?? false;
+	}
 
 	$effect(() => {
 		const id = page.params.gameId;
@@ -26,10 +40,6 @@
 		const id = await store.start();
 		if (id) await goto(`/play/${id}`);
 	}
-
-	function wasPicked(row: ResultRow): boolean {
-		return store.pickFor(row.category.id)?.country.iso3 === row.country.iso3;
-	}
 </script>
 
 {#if missing}
@@ -43,9 +53,20 @@
 
 	<div class="cards">
 		{#each store.state.categories as category (category.id)}
-			<CategoryCard {category} pick={store.pickFor(category.id)} rankMode={store.state.rankMode} testid="result-card" />
+			{@const pick = store.pickFor(category.id)}
+			<CategoryCard
+				{category}
+				{pick}
+				rankMode={store.state.rankMode}
+				marks={(marks.get(pick?.country.iso3 ?? '') ?? []).map((mark) => letters[mark])}
+				testid="result-card"
+			/>
 		{/each}
 	</div>
+	<p class="muted legend">
+		<span><span class="mark best" aria-hidden="true">B</span> Best sport</span>
+		<span><span class="mark optimal" aria-hidden="true">O</span> Optimal pick</span>
+	</p>
 
 	<h2>Each country's best sport</h2>
 	<ol>
@@ -55,7 +76,9 @@
 				<div class="what">
 					<div>
 						<strong>{row.country.name}</strong> · {row.category.name}
-						{#if wasPicked(row)}<span class="badge">your pick</span>{/if}
+						{#if earned(row.country.iso3, 'best')}
+							<span class="mark best" role="img" title="You scored this" aria-label="You scored this" data-testid="best-tick">✓</span>
+						{/if}
 					</div>
 					<div class="muted detail">{describeCell(row.cell, store.state.rankMode)}</div>
 				</div>
@@ -64,18 +87,14 @@
 		{/each}
 	</ol>
 
-	<h2>The best possible game</h2>
-	<p class="muted">
-		Every sport can be used once, so a country beaten in its best sport takes the next one where it costs least.
-		This adds up to {store.state.optimalScore}.
-	</p>
+	<h2>The best possible game: {store.state.optimalScore}</h2>
 	<div class="cards optimal">
 		{#each results.optimal as row, index (row.category.id)}
 			<CategoryCard
 				category={row.category}
 				pick={pickOfRow(row, index)}
 				rankMode={store.state.rankMode}
-				badge={wasPicked(row) ? 'your pick' : undefined}
+				marks={earned(row.country.iso3, 'optimal') ? [{ kind: 'optimal', glyph: '✓', label: 'Your pick' }] : []}
 				testid="optimal-row"
 			/>
 		{/each}
@@ -119,8 +138,27 @@
 		font-size: 0.85rem;
 	}
 
-	.optimal {
+	.cards.optimal {
 		margin-bottom: 1.5rem;
+	}
+
+	.legend {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.25rem 1rem;
+		margin: 0.5rem 0 0;
+		font-size: 0.85rem;
+	}
+
+	.legend > span {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.35rem;
+	}
+
+	li .mark {
+		margin-left: 0.25rem;
+		vertical-align: text-bottom;
 	}
 
 	.score {

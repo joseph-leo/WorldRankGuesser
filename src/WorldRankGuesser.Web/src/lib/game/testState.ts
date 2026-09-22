@@ -33,6 +33,7 @@ export function cellOf(overrides: Partial<Cell> = {}, score = 3): Cell {
 		event: null,
 		gender: 'Men',
 		competitor: null,
+		rankedAs: null,
 		...overrides
 	};
 }

@@ -25,6 +25,7 @@ public static class ScoringEngine
             feed.Sport,
             feed.Event,
             feed.Gender,
-            feed.Competitor);
+            feed.Competitor,
+            feed.RankedAs);
     }
 }

@@ -58,4 +58,13 @@ public class ScoringEngineTests
         Assert.False(cell.Unranked);
         Assert.Equal(180, cell.CountryRank);
     }
+
+    [Fact]
+    public void An_inherited_rank_keeps_the_name_of_the_team_it_came_from()
+    {
+        var feed = new FeedRank(EntryRank: 9, CountryRank: 9, "Cricket", "ODI", "Men", null, RankedAs: "West Indies");
+        var cell = ScoringEngine.Score(new CategoryRank(feed, feed), RankMode.Country, cap: 150);
+
+        Assert.Equal("West Indies", cell.RankedAs);
+    }
 }

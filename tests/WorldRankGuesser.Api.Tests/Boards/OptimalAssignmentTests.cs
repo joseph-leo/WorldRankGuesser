@@ -71,6 +71,7 @@ public class OptimalAssignmentTests
         Assert.Equal(21, solution.Total);
     }
 
+
     [Fact]
     public void Ties_go_to_the_earliest_category_for_the_earliest_country()
     {

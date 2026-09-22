@@ -58,16 +58,16 @@ public static class GameStateMapper
 
     private static GridDto ToGrid(BoardContent content)
     {
-        var scores = content.Cells.Select(row => (IReadOnlyList<int>)row.Select(cell => cell.Score).ToList()).ToList();
+        var scores = content.Cells.Select(IReadOnlyList<int> (row) => row.Select(cell => cell.Score).ToList()).ToList();
 
         // The board is immutable, so solving it again on read gives the assignment behind the stored OptimalScore.
         var optimal = OptimalAssignment.Solve(scores).CategoryOfCountry;
 
         return new GridDto(
-            content.Countries.Select(ToDto).ToList(),
-            content.Cells.Select(row => (IReadOnlyList<CellDto>)row.Select(ToDto).ToList()).ToList(),
-            scores.Select(row => content.Categories[IndexOfLowest(row)].Id).ToList(),
-            optimal.Select(category => content.Categories[category].Id).ToList());
+            [.. content.Countries.Select(ToDto)],
+            [.. content.Cells.Select(IReadOnlyList<CellDto>(row) => [.. row.Select(ToDto)])],
+            [.. scores.Select(row => content.Categories[IndexOfLowest(row)].Id)],
+            [.. optimal.Select(category => content.Categories[category].Id)]);
     }
 
     /// <summary>The first of equals, so a tie goes to the earlier category.</summary>
@@ -85,5 +85,5 @@ public static class GameStateMapper
     private static CountryDto ToDto(BoardCountry c) => new(c.Iso3, c.Iso2, c.Name);
 
     private static CellDto ToDto(BoardCell c) =>
-        new(c.Score, c.CountryRank, c.EntryRank, c.Unranked, c.Sport, c.Event, c.Gender, c.Competitor);
+        new(c.Score, c.CountryRank, c.EntryRank, c.Unranked, c.Sport, c.Event, c.Gender, c.Competitor, c.RankedAs);
 }

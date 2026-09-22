@@ -8,6 +8,7 @@ public sealed record CategoryDto(string Id, string Name);
 
 public sealed record CountryDto(string Iso3, string Iso2, string Name);
 
+/// <summary>RankedAs is the team an inherited rank came from ("West Indies"); null when the rank is the country's own.</summary>
 public sealed record CellDto(
     int Score,
     int? CountryRank,
@@ -16,7 +17,8 @@ public sealed record CellDto(
     string? Sport,
     string? Event,
     string? Gender,
-    string? Competitor);
+    string? Competitor,
+    string? RankedAs);
 
 /// <summary>
 /// Score is what the pick cost (the cap when late); Result is what the board says for that country and category.

@@ -1,6 +1,7 @@
 using WorldRankGuesser.Api.Boards;
 using WorldRankGuesser.Api.Configuration;
 using WorldRankGuesser.Api.Countries;
+using WorldRankGuesser.Api.Scoring;
 
 namespace WorldRankGuesser.Api.Rankings;
 
@@ -9,6 +10,7 @@ public static class RankingsSnapshotBuilder
     public static RankingsSnapshot Build(
         IReadOnlyList<CountryRankingRow> rows,
         GameOptions options,
+        int cap,
         CountryCatalog catalog,
         DateTimeOffset loadedAt)
     {
@@ -47,9 +49,15 @@ public static class RankingsSnapshotBuilder
             }
         }
 
-        ApplyAliases(ranks, options);
+        // A country's display name is the scraper's TeamName; a code with no row of its own has no name.
+        var names = rows
+            .Where(r => r.TeamName is not null)
+            .GroupBy(r => r.ISO3, StringComparer.Ordinal)
+            .ToDictionary(g => g.Key, g => g.First().TeamName!, StringComparer.Ordinal);
 
-        return new RankingsSnapshot(loadedAt, options.Categories, DrawableCountries(rows, ranks, options, catalog), ranks);
+        ApplyAliases(ranks, options, names);
+
+        return new RankingsSnapshot(loadedAt, options.Categories, DrawableCountries(names, ranks, options, cap, catalog), ranks);
     }
 
     private static void Merge(
@@ -62,7 +70,10 @@ public static class RankingsSnapshotBuilder
             : candidate;
     }
 
-    private static void ApplyAliases(Dictionary<(string CategoryId, string Iso3), CategoryRank> ranks, GameOptions options)
+    private static void ApplyAliases(
+        Dictionary<(string CategoryId, string Iso3), CategoryRank> ranks,
+        GameOptions options,
+        Dictionary<string, string> names)
     {
         // Read from the ranks as published, so one rule's result never feeds another rule.
         var published = new Dictionary<(string, string), CategoryRank>(ranks);
@@ -77,37 +88,40 @@ public static class RankingsSnapshotBuilder
             {
                 if (published.TryGetValue((categoryId, source), out var sourceRank))
                 {
-                    Merge(ranks, (categoryId, target), sourceRank);
+                    // The rank is the source's, so it keeps the source's name: Jamaica's cricket rank is "West Indies".
+                    var rankedAs = names.GetValueOrDefault(source);
+                    Merge(ranks, (categoryId, target), new CategoryRank(
+                        sourceRank.BestByEntry with { RankedAs = rankedAs },
+                        sourceRank.BestByCountry with { RankedAs = rankedAs }));
                 }
             }
         }
     }
 
     private static List<BoardCountry> DrawableCountries(
-        IReadOnlyList<CountryRankingRow> rows,
+        Dictionary<string, string> names,
         Dictionary<(string CategoryId, string Iso3), CategoryRank> ranks,
         GameOptions options,
+        int cap,
         CountryCatalog catalog)
     {
         var notDrawable = options.NotDrawable.ToHashSet(StringComparer.Ordinal);
 
-        // A country's display name is the scraper's TeamName; a code with no row of its own has no name and is not drawn.
-        var names = rows
-            .Where(r => r.TeamName is not null)
-            .GroupBy(r => r.ISO3, StringComparer.Ordinal)
-            .ToDictionary(g => g.Key, g => g.First().TeamName!, StringComparer.Ordinal);
-
-        var categoriesRanked = ranks.Keys
-            .GroupBy(k => k.Iso3, StringComparer.Ordinal)
+        // Under the cap in every mode, so the pool is the same whichever mode is scoring. A country under the cap
+        // nowhere would cost every player the cap wherever it was placed.
+        var categoriesUnderCap = ranks
+            .Where(r => Enum.GetValues<RankMode>().All(mode => ScoringEngine.Score(r.Value, mode, cap).Score < cap))
+            .GroupBy(r => r.Key.Iso3, StringComparer.Ordinal)
             .ToDictionary(g => g.Key, g => g.Count(), StringComparer.Ordinal);
 
         var countries = new List<BoardCountry>();
         var missingIso2 = new List<string>();
 
+        // A code with no name is not drawn.
         foreach (var (iso3, name) in names.OrderBy(n => n.Key, StringComparer.Ordinal))
         {
             if (notDrawable.Contains(iso3)) continue;
-            if (categoriesRanked.GetValueOrDefault(iso3) < options.MinCategoriesRanked) continue;
+            if (categoriesUnderCap.GetValueOrDefault(iso3) < options.MinCategoriesUnderCap) continue;
 
             if (catalog.TryGetIso2(iso3, out var iso2))
             {
