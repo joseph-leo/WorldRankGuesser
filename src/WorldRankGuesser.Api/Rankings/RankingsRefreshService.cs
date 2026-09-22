@@ -21,7 +21,7 @@ public sealed class RankingsRefreshService(
     ILogger<RankingsRefreshService> logger) : BackgroundService
 {
     /// <summary>Waits between attempts while there is no snapshot yet; the last one repeats.</summary>
-    internal static readonly TimeSpan[] StartupBackoff =
+    private static readonly TimeSpan[] StartupBackoff =
     [
         TimeSpan.FromSeconds(5), TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(20), TimeSpan.FromSeconds(40), TimeSpan.FromSeconds(60),
     ];
@@ -63,10 +63,19 @@ public sealed class RankingsRefreshService(
                 "Rankings loaded: {Rows} rows, {Countries} drawable countries.", rows.Count, snapshot.DrawableCountries.Count);
             return true;
         }
-        catch (Exception error) when (error is not OperationCanceledException)
+        catch (Exception error) when (error is not OperationCanceledException || !ct.IsCancellationRequested)
         {
-            // Keep serving the previous snapshot; /readyz reports not-ready only if there has never been one.
-            logger.LogError(error, "Loading the rankings failed; keeping the previous snapshot.");
+            // A cold start meeting a resuming database is expected, so those attempts log a warning without
+            // claiming a previous snapshot; a failure after a snapshot exists is not expected and stays an error.
+            if (store.Current is null)
+            {
+                logger.LogWarning(error, "Loading the rankings failed; no snapshot yet, trying again.");
+            }
+            else
+            {
+                logger.LogError(error, "Loading the rankings failed; keeping the previous snapshot.");
+            }
+
             return false;
         }
     }
