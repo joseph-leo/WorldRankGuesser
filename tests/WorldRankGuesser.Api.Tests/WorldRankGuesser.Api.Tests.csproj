@@ -19,6 +19,8 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\WorldRankGuesser.Api\WorldRankGuesser.Api.csproj" />
+    <!-- Only for the SQL fixture: the scraper's migrations create the real dbo.CurrentCountryRankings view. The API never references the scraper. -->
+    <ProjectReference Include="..\..\src\SportsRankingService\SportsRankingService.csproj" />
   </ItemGroup>
 
 </Project>
