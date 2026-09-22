@@ -3,6 +3,7 @@ using System.Text.Json.Serialization;
 using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.Extensions.Options;
 using WorldRankGuesser.Api.Configuration;
 using WorldRankGuesser.Api.Countries;
@@ -42,6 +43,22 @@ builder.Services.AddOptions<RateLimitOptions>()
     .Bind(builder.Configuration.GetSection(RateLimitOptions.Section))
     .Validate(o => o.GameStartsPerPlayerPerHour > 0 && o.GameStartsPerIpPerHour > 0, "RateLimits: limits must be positive.")
     .ValidateOnStart();
+
+// ---- Hosting: forwarded headers only where a proxy is known to set them ------------------------------------------
+// Read once at startup: whether the middleware exists at all depends on it.
+var hosting = builder.Configuration.GetSection(HostingOptions.Section).Get<HostingOptions>() ?? new HostingOptions();
+if (hosting.TrustForwardedHeaders)
+{
+    builder.Services.Configure<ForwardedHeadersOptions>(options =>
+    {
+        options.ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto;
+        // The ingress appends the caller last, so only that one hop is believed.
+        options.ForwardLimit = 1;
+        // The container is reachable only through the environment's ingress, so every peer is that proxy.
+        options.KnownIPNetworks.Clear();
+        options.KnownProxies.Clear();
+    });
+}
 
 // ---- Persistence ---------------------------------------------------------------------------------------------------
 // The connection string is read when the context is first resolved, so test hosts can override it.
@@ -130,6 +147,11 @@ builder.Services.AddRateLimiter(limiter =>
 builder.Services.AddProblemDetails();
 
 var app = builder.Build();
+
+if (hosting.TrustForwardedHeaders)
+{
+    app.UseForwardedHeaders();     // first, so everything after it sees the caller's address and scheme
+}
 
 app.UseExceptionHandler();
 app.UseStatusCodePages();
