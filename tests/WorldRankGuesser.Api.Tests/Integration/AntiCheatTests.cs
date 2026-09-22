@@ -10,10 +10,10 @@ public class AntiCheatTests(SqlServerFixture sql) : IAsyncLifetime
 {
     private ApiFactory _factory = null!;
 
-    public Task InitializeAsync()
+    public async Task InitializeAsync()
     {
         _factory = new ApiFactory(sql.ConnectionString);
-        return Task.CompletedTask;
+        await _factory.WaitUntilReadyAsync();
     }
 
     public async Task DisposeAsync() => await _factory.DisposeAsync();

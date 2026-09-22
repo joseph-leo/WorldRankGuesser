@@ -8,12 +8,14 @@ namespace WorldRankGuesser.Api.Tests.Integration;
 public class ReadinessTests(SqlServerFixture sql)
 {
     [Fact]
-    public async Task Ready_once_the_rankings_are_loaded()
+    public async Task Alive_at_once_and_ready_once_the_rankings_are_loaded()
     {
         await using var factory = new ApiFactory(sql.ConnectionString);
         var client = factory.CreateClient();
 
-        Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/healthz")).StatusCode);
+        Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/healthz")).StatusCode);   // the host started without waiting for a load
+
+        await factory.WaitUntilReadyAsync();
         Assert.Equal(HttpStatusCode.OK, (await client.GetAsync("/readyz")).StatusCode);
 
         var snapshot = factory.Services.GetRequiredService<IRankingsStore>().Current;
