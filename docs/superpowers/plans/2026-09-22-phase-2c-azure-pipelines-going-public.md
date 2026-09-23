@@ -54,7 +54,7 @@
 |---|---|
 | `.github/actions/promotion-guard/action.yml` | The composite action: `mode: hash` (outputs `hash`, `tag`), `mode: resolve` (also `digest`, or a refusal), `mode: tag` (writes `staged-<hash>` on a digest). |
 | `.github/actions/promotion-guard/hash.sh` | `<hash>` of the tree entries of exactly the given paths at `HEAD`; a path missing from the tree is an error, not a silent omission. |
-| `.github/actions/promotion-guard/resolve.sh` | A `staged-*` tag to a digest with `docker buildx imagetools inspect`, or exit 1 with "never passed staging". |
+| `.github/actions/promotion-guard/resolve.sh` | A `staged-*` tag to a digest from the `Digest:` line of `docker buildx imagetools inspect` (no `--format`: buildx 0.30 mishandles the template), or exit 1 with "never passed staging". |
 | `.github/actions/promotion-guard/tag.sh` | `docker buildx imagetools create` of a tag on a digest. |
 | `.github/actions/promotion-guard/test.sh` | The guard's tests: determinism, sensitivity, working-tree independence, the refusal, the resolve, and the filter/inputs consistency of both deploy workflows. Runs locally (Git Bash) and in CI. |
 | `.github/scripts/build-bundle.sh` | A self-contained `linux-x64` EF migrations bundle for one project. |
@@ -492,7 +492,8 @@ else
   [[ "$out" == *"never passed staging"* ]] && pass "an unknown staged tag is refused, naming the reason" || fail "an unknown staged tag is refused, naming the reason: got '$out'"
 fi
 
-digest="$(bash "$here/resolve.sh" docker.io/library/alpine 3.20 2>/dev/null || true)"
+# Microsoft's registry: no anonymous pull limit, and an image this repository pulls anyway.
+digest="$(bash "$here/resolve.sh" mcr.microsoft.com/dotnet/runtime 11.0.0-rc.1-resolute 2>/dev/null || true)"
 [[ "$digest" == sha256:* ]] && pass "an existing tag resolves to its digest" || fail "an existing tag resolves to its digest: got '$digest'"
 
 # ---- consistency of each deploy workflow's push filter with its hash inputs (added in Task 12) --------------------
@@ -546,8 +547,16 @@ set -euo pipefail
 image="${1:?image}"
 tag="${2:?tag}"
 
-if ! digest="$(docker buildx imagetools inspect "${image}:${tag}" --format '{{.Manifest.Digest}}' 2>/dev/null)"; then
+# The plain output's "Digest:" line, not a --format template: buildx 0.30 (Docker Desktop) mishandles
+# '{{.Manifest.Digest}}', printing the whole report, while the runner's 0.37 does not; the text line is the same in both.
+if ! report="$(docker buildx imagetools inspect "${image}:${tag}" 2>/dev/null)"; then
   echo "::error::${image}:${tag} does not exist: these sources never passed staging" >&2
+  exit 1
+fi
+
+digest="$(printf '%s\n' "$report" | awk '/^Digest:/ { print $2; exit }')"
+if [[ "$digest" != sha256:* ]]; then
+  echo "::error::no digest in the inspect output for ${image}:${tag}: ${report}" >&2
   exit 1
 fi
 
@@ -574,7 +583,7 @@ echo "tagged ${image}:${tag} -> ${digest}"
 
 In Git Bash: `bash .github/actions/promotion-guard/test.sh`
 
-Expected: nine `ok` lines and "all guard tests passed". The two registry checks need the network; `docker buildx imagetools` needs Docker Desktop running.
+Expected: nine `ok` lines and "all guard tests passed". The two registry checks need the network; `docker buildx imagetools` needs Docker Desktop running. Neither check touches Docker Hub, whose anonymous pull limit would make the test flaky.
 
 - [ ] **Step 5: The action**
 
