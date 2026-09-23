@@ -93,8 +93,17 @@ which sees none of the Windows tools: call `& "C:\Program Files\Git\bin\bash.exe
    gh variable set DEPLOYS_ENABLED --body true
    ```
 
-   Production: the environment `production` admits only `prod`; its variables are `AZURE_CLIENT_ID` and
-   `AZURE_RESOURCE_GROUP=rg-wrg-production`; no `ALLOWED_IPS`; `AZURE_MONITOR_CLIENT_ID_PRODUCTION` at repository level.
+   Production, once its bootstrap outputs exist (`$b` below is the parsed JSON of `az deployment sub create ... --query properties.outputs`):
+
+   ```powershell
+   gh api -X PUT repos/joseph-leo/WorldRankGuesser/environments/production -F 'deployment_branch_policy[protected_branches]=false' -F 'deployment_branch_policy[custom_branch_policies]=true'
+   gh api -X POST repos/joseph-leo/WorldRankGuesser/environments/production/deployment-branch-policies -f name=prod -f type=branch
+   gh variable set AZURE_CLIENT_ID --env production --body <deployClientId>
+   gh variable set AZURE_RESOURCE_GROUP --env production --body rg-wrg-production
+   gh variable set AZURE_MONITOR_CLIENT_ID_PRODUCTION --body <monitorClientId>
+   ```
+
+   No `ALLOWED_IPS` for production, ever.
 
 5. **Production only: DNS, before the first game deploy.** At the DNS host of `foweeti.com` (Google), add a CNAME
    `games` pointing at `ca-wrg-production-game.<environmentDefaultDomain>` and a TXT `asuid.games` whose value is
@@ -102,6 +111,21 @@ which sees none of the Windows tools: call `& "C:\Program Files\Git\bin\bash.exe
    `nslookup -type=TXT asuid.games.foweeti.com`). The CNAME must point directly at the app, not through another
    CNAME. The certificate is issued by the first game deploy; if that deploy fails at the certificate, the records
    had not propagated: run it again.
+
+   If it fails a second time with the app refusing the hostname or the certificate never binding, fall back to two
+   passes and record it in the first-deploy notes: deploy once without the domain, add the hostname, create the
+   certificate, bind it, and let the next pipeline deploy declare the bound hostname again (`bindingType: 'Auto'`
+   keeps an existing binding):
+
+   ```powershell
+   $env:GAME_IMAGE = '<the image by digest the workflow would deploy>'
+   az deployment group create --resource-group rg-wrg-production --name game-first --parameters infra/production/game.bicepparam --parameters customDomain=
+   az containerapp hostname add --hostname games.foweeti.com --resource-group rg-wrg-production --name ca-wrg-production-game
+   az containerapp env certificate create --name cae-wrg-production --resource-group rg-wrg-production --hostname games.foweeti.com --validation-method CNAME --certificate-name cert-games-foweeti-com
+   az containerapp hostname bind --hostname games.foweeti.com --resource-group rg-wrg-production --name ca-wrg-production-game --environment cae-wrg-production --certificate cert-games-foweeti-com
+   ```
+
+   (`az containerapp env certificate create --help` if a flag has moved.)
 
 6. **First deploys**, as manual dispatches, scraper first because the game's smoke test needs rankings:
 
@@ -121,7 +145,7 @@ which sees none of the Windows tools: call `& "C:\Program Files\Git\bin\bash.exe
    the dispatches use `--ref prod` (`-f run_job=true` on the scraper, so the database has rankings).
 
    The first image push creates the two GHCR packages; they must be **public** (package settings, Danger Zone,
-   change visibility) before Container Apps can pull them. Going public (plan 2c, Task 16) creates them ahead of time.
+   change visibility) before Container Apps can pull them. Going public (plan 2c, Task 16) creates them ahead of time; a package created outside Actions must also grant the repository write access (package settings, Manage Actions access, add `WorldRankGuesser` with the Write role), which the images' `org.opencontainers.image.source` label also arranges for packages the workflows create.
 
 ## Everyday operations
 

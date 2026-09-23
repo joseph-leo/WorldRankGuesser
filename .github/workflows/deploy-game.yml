@@ -112,15 +112,19 @@ jobs:
         if: always() && steps.sql.outcome != 'skipped'
         run: .github/scripts/sql-firewall.sh close
 
+      - name: Pin Bicep
+        run: az bicep install --version v0.47.16
       - name: Deploy the app by digest
         env:
           GAME_IMAGE: ${{ env.IMAGE }}@${{ steps.build.outputs.digest }}
           ALLOWED_IPS: ${{ secrets.ALLOWED_IPS }}
-        run: >
-          az deployment group create --resource-group "$RG" --name "game-${{ github.run_id }}"
-          --template-file infra/game.bicep --parameters infra/staging/game.bicepparam --output none
+        run: |
+          [[ -n "$ALLOWED_IPS" ]] || { echo "::error::ALLOWED_IPS is empty: staging would be public" >&2; exit 1; }
+          az deployment group create --resource-group "$RG" --name "game-${{ github.run_id }}" --template-file infra/game.bicep --parameters infra/staging/game.bicepparam --output none
       - id: app
-        run: echo "fqdn=$(az containerapp show --name "$APP" --resource-group "$RG" --query properties.configuration.ingress.fqdn -o tsv)" >> "$GITHUB_OUTPUT"
+        run: |
+          fqdn="$(az containerapp show --name "$APP" --resource-group "$RG" --query properties.configuration.ingress.fqdn -o tsv)"
+          echo "fqdn=$fqdn" >> "$GITHUB_OUTPUT"
 
       # Staging only: an Allow rule denies everyone else, which is why production's job has no such step.
       - id: ingress
@@ -216,6 +220,8 @@ jobs:
         if: always() && steps.sql.outcome != 'skipped'
         run: .github/scripts/sql-firewall.sh close
 
+      - name: Pin Bicep
+        run: az bicep install --version v0.47.16
       - name: Deploy the app by digest
         env:
           GAME_IMAGE: ${{ env.IMAGE }}@${{ steps.guard.outputs.digest }}
@@ -223,4 +229,6 @@ jobs:
           az deployment group create --resource-group "$RG" --name "game-${{ github.run_id }}"
           --template-file infra/game.bicep --parameters infra/production/game.bicepparam --output none
       - name: Wait for /readyz
-        run: .github/scripts/wait-ready.sh "https://$(az containerapp show --name "$APP" --resource-group "$RG" --query properties.configuration.ingress.fqdn -o tsv)" 180
+        run: |
+          fqdn="$(az containerapp show --name "$APP" --resource-group "$RG" --query properties.configuration.ingress.fqdn -o tsv)"
+          .github/scripts/wait-ready.sh "https://$fqdn" 180

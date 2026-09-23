@@ -17,7 +17,7 @@ case "$action" in
     az sql server firewall-rule create --resource-group "$RG" --server "$server" --name "$RULE" \
       --start-ip-address "$ip" --end-ip-address "$ip" --output none
     fqdn="$(az sql server show --resource-group "$RG" --name "$server" --query fullyQualifiedDomainName -o tsv)"
-    echo "admitted $ip to $fqdn as $RULE"
+    echo "admitted $ip as $RULE"
     echo "fqdn=$fqdn" >> "${GITHUB_OUTPUT:-/dev/stdout}"
     ;;
   close)

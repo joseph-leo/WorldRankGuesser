@@ -40,6 +40,8 @@ jobs:
           client-id: ${{ vars.AZURE_CLIENT_ID }}
           tenant-id: ${{ vars.AZURE_TENANT_ID }}
           subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      - name: Pin Bicep
+        run: az bicep install --version v0.47.16
       - name: Deploy main.bicep
         run: >
           az deployment group create --resource-group "$RG" --name "main-${{ github.run_id }}"
