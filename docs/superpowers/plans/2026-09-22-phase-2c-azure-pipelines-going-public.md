@@ -22,6 +22,7 @@
 - **Migrations** run from the runner as self-contained `linux-x64` bundles with `Authentication=Active Directory Default`, through a firewall rule named `gha-<run id>-<run attempt>` that an `if: always()` step removes. On a new database the scraper's `dbo` bundle runs before the game's. Migrations run before the new revision starts, so every migration must work with the revision already running (add first, remove in a later deploy).
 - **No secret in the repo and no SQL password anywhere.** The SQL server is Entra-only; the owner's UPN and object ID, the budget email and the owner's IP are GitHub environment variables and secrets that `.bicepparam` files read with `readEnvironmentVariable(...)`, with a placeholder default so `az bicep build` works without them.
 - **Kill switch:** every deploy workflow's job runs only when the repository variable `DEPLOYS_ENABLED` is `true`, so merging the workflows before an environment exists produces skipped runs, not red ones.
+- **API versions:** Microsoft.App resources (`managedEnvironments`, `containerApps`, `jobs`, `managedCertificates`) use `2026-01-01`, the newest stable version Bicep 0.47.16 has type data for (`2026-07-01` compiles only with a BCP081 warning, which CI treats as a failure); CI pins that Bicep version.
 - **Runner** `ubuntu-24.04` (pinned; `ubuntu-latest` is about to move). Its image already has Docker with buildx 0.37, Azure CLI 2.90 with Bicep 0.46, gh, jq, yq, Node 22; it has no .NET 11, so every .NET step uses `actions/setup-dotnet@v6` with `global-json-file: global.json`.
 - **Branches** (spec 8.1): `main` deploys to staging; `stage/*` deploys to staging with no CI first; `prod` is only ever fast-forwarded to a commit of `main` (`git push origin main:prod`) and deploys to production. GitHub cannot enforce "fast-forward only"; the `prod` ruleset blocks force pushes, deletion and merge commits, and the guard refuses an image that never passed staging.
 - **Every commit passes** `dotnet build WorldRankGuesser.slnx` and `dotnet test WorldRankGuesser.slnx` (Docker Desktop running); `npm run check` and `npm test` in `src/WorldRankGuesser.Web` when the front end changed; `az bicep build` and `az bicep lint` with zero warnings for every `.bicep` and `.bicepparam` when `infra/` changed; `actionlint` when `.github/` changed; `bash .github/actions/promotion-guard/test.sh` when the guard or a deploy workflow changed. `src/WorldRankGuesser.Web/openapi/*.json` and `src/lib/api/schema.d.ts` never change in this plan.
@@ -1060,7 +1061,7 @@ resource log 'Microsoft.OperationalInsights/workspaces@2026-03-01' = {
 
 // A workload-profiles environment with only the built-in Consumption profile has no environment charge; only
 // replicas are billed. Every app and job in it says workloadProfileName: 'Consumption'.
-resource cae 'Microsoft.App/managedEnvironments@2026-07-01' = {
+resource cae 'Microsoft.App/managedEnvironments@2026-01-01' = {
   name: 'cae-wrg-${env}'
   location: location
   properties: {
@@ -1307,7 +1308,7 @@ param refreshMinutes int = 720
 
 var uniq = uniqueString(resourceGroup().id)
 
-resource cae 'Microsoft.App/managedEnvironments@2026-07-01' existing = {
+resource cae 'Microsoft.App/managedEnvironments@2026-01-01' existing = {
   name: 'cae-wrg-${env}'
 }
 
@@ -1319,7 +1320,7 @@ resource identity 'Microsoft.ManagedIdentity/userAssignedIdentities@2024-11-30' 
   name: 'id-wrg-${env}-game'
 }
 
-resource app 'Microsoft.App/containerApps@2026-07-01' = {
+resource app 'Microsoft.App/containerApps@2026-01-01' = {
   name: 'ca-wrg-${env}-game'
   location: location
   identity: {
@@ -1442,7 +1443,7 @@ resource app 'Microsoft.App/containerApps@2026-07-01' = {
 
 // A free managed certificate for the custom hostname, validated through the CNAME. The hostname must be on the app
 // first (dependsOn) and the DNS records must exist before this deployment (infra/README.md).
-resource certificate 'Microsoft.App/managedEnvironments/managedCertificates@2026-07-01' = if (!empty(customDomain)) {
+resource certificate 'Microsoft.App/managedEnvironments/managedCertificates@2026-01-01' = if (!empty(customDomain)) {
   parent: cae
   name: 'cert-${replace(customDomain, '.', '-')}'
   location: location
@@ -1558,7 +1559,7 @@ param cron string
 
 var uniq = uniqueString(resourceGroup().id)
 
-resource cae 'Microsoft.App/managedEnvironments@2026-07-01' existing = {
+resource cae 'Microsoft.App/managedEnvironments@2026-01-01' existing = {
   name: 'cae-wrg-${env}'
 }
 
@@ -1570,7 +1571,7 @@ resource identity 'Microsoft.ManagedIdentity/userAssignedIdentities@2024-11-30' 
   name: 'id-wrg-${env}-scraper'
 }
 
-resource job 'Microsoft.App/jobs@2026-07-01' = {
+resource job 'Microsoft.App/jobs@2026-01-01' = {
   name: 'caj-wrg-${env}-scraper'
   location: location
   identity: {
@@ -1749,6 +1750,10 @@ In `.github/workflows/ci.yml`, replace every `runs-on: ubuntu-latest` with `runs
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
+      # The same Bicep as on the owner's machine: a build fails on any warning, and an older Bicep lacks type data
+      # for newer API versions (BCP081). Microsoft.App resources use 2026-01-01, the newest this version can validate.
+      - name: Pin Bicep
+        run: az bicep install --version v0.47.16 && az bicep version
       - name: Build and lint the templates
         run: |
           set -euo pipefail
