@@ -116,7 +116,7 @@
       "Note": "https://www.atptour.com/en/rankings/doubles sits behind a Cloudflare challenge (2026-09-15). No parser yet; needs a new source.",
       "Url": "https://www.atptour.com/en/rankings/doubles?rankRange=0-5000" },
     { "Sport": "Tennis", "Event": "Doubles", "Gender": "Women", "Source": "Wta", "FirstPage": 0,
-      "Note": "The API caps pageSize at 100 whatever is asked (checked 2026-09-17), so the list (about 1,700 players on 2026-09-22) is fetched page by page from page 0 until a page answers an empty array.",
+      "Note": "The API caps pageSize at 100 whatever is asked (checked 2026-09-17), so the list (about 1,800 players over 19 pages on 2026-09-22) is fetched page by page from page 0 until a page answers an empty array.",
       "Url": "https://api.wtatennis.com/tennis/players/ranked?page={page}&pageSize=100&type=rankDoubles&sort=asc&name=&metric=DOUBLES" },
 
     { "Sport": "Volleyball", "Gender": "Men", "Source": "VolleyballWorld",

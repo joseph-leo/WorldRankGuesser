@@ -14,7 +14,7 @@ namespace SportsRankingService.Models
         /// <summary>Stored on every row: "Men", "Women" or "Mixed".</summary>
         public required string Gender { get; set; }
 
-        /// <summary>URL to fetch. May contain a {0} placeholder filled by the <see cref="UrlResolver"/>.</summary>
+        /// <summary>URL to fetch. May contain a {0} placeholder filled by the <see cref="UrlResolver"/>, or a {page} placeholder (see <see cref="FirstPage"/>).</summary>
         public required string Url { get; set; }
 
         /// <summary><see cref="Parsing.IRankingParser.SourceName"/> of the parser for this feed's response.</summary>

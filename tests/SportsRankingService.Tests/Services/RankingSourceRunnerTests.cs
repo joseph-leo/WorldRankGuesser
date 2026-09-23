@@ -28,9 +28,28 @@ public class RankingSourceRunnerTests
         }
     }
 
+    /// <summary>
+    /// A parser for pages written as "&lt;date or nothing&gt;|&lt;position&gt;:&lt;ISO3&gt;,...", so a test can give one page a
+    /// ranking date and another none, which no real parser of a paged feed can be made to do.
+    /// </summary>
+    private sealed class FakeParser : IRankingParser
+    {
+        public string SourceName => "Fake";
+
+        public ParsedRanking Parse(string response, string? selector = null)
+        {
+            string[] parts = response.Split('|');
+            List<RankEntry> entries = parts[1].Split(',', StringSplitOptions.RemoveEmptyEntries)
+                .Select(e => e.Split(':'))
+                .Select(e => new RankEntry(short.Parse(e[0]), e[1]))
+                .ToList();
+            return new ParsedRanking(entries, parts[0].Length == 0 ? null : DateOnly.Parse(parts[0]));
+        }
+    }
+
     private static RankingSourceRunner Runner(FakeFetcher fetcher, params FakeFetcher[] otherFetchers) =>
         new([fetcher, .. otherFetchers],
-            [new FihParser(), new FifaV3Parser(), new FigParser(), new WtaParser()],
+            [new FihParser(), new FifaV3Parser(), new FigParser(), new WtaParser(), new FakeParser()],
             [new IdentityUrlResolver(), new FifaDateIdResolver(fetcher)],
             new FakeTimeProvider(Now),
             NullLogger<RankingSourceRunner>.Instance);
@@ -113,6 +132,66 @@ public class RankingSourceRunnerTests
 
         Assert.Contains("100", ex.Message);
         Assert.Equal(100, fetcher.Requested.Count);
+    }
+
+    /// <summary>The rule is symmetric: the first page sets the date, dated or not, and every later page must agree.</summary>
+    [Fact]
+    public async Task A_dated_page_after_a_dateless_first_page_fails_the_parse_too()
+    {
+        var fetcher = new FakeFetcher(new()
+        {
+            ["http://fake?page=1"] = "|1:USA,2:FRA",
+            ["http://fake?page=2"] = "2026-09-14|3:DEU",
+            ["http://fake?page=3"] = "|",
+        });
+        var item = new RankingItem { Sport = "Chess", Gender = "Men", Url = "http://fake?page={page}", Source = "Fake" };
+
+        var ex = await Assert.ThrowsAsync<ParseException>(() => Runner(fetcher).RunAsync(item, CancellationToken.None));
+
+        Assert.Contains("2026-09-14", ex.Message);
+    }
+
+    [Fact]
+    public async Task A_paged_url_without_a_first_page_counts_from_1()
+    {
+        var fetcher = new FakeFetcher(new()
+        {
+            ["http://wta?page=1&pageSize=100"] = WtaPage("2026-09-14T00:00:00Z", (1, "USA", "Ann")),
+            ["http://wta?page=2&pageSize=100"] = "[]",
+        });
+
+        RankingSnapshot? snapshot = await Runner(fetcher).RunAsync(PagedWtaItem(firstPage: null), CancellationToken.None);
+
+        Assert.NotNull(snapshot);
+        Assert.Equal(["http://wta?page=1&pageSize=100", "http://wta?page=2&pageSize=100"], fetcher.Requested);
+        Assert.Single(snapshot.Entries);
+    }
+
+    /// <summary>An empty snapshot is what the updater refuses to save (RankingUpdaterTests), so an empty list stores no release.</summary>
+    [Fact]
+    public async Task An_empty_first_page_yields_a_snapshot_with_no_entries()
+    {
+        var fetcher = new FakeFetcher(new() { ["http://wta?page=0&pageSize=100"] = "[]" });
+
+        RankingSnapshot? snapshot = await Runner(fetcher).RunAsync(PagedWtaItem(), CancellationToken.None);
+
+        Assert.NotNull(snapshot);
+        Assert.Empty(snapshot.Entries);
+        Assert.Equal(["http://wta?page=0&pageSize=100"], fetcher.Requested);
+    }
+
+    /// <summary>The resolvers that discover an id or date string.Format the URL, where {page} is a format error, not a page.</summary>
+    [Fact]
+    public async Task A_paged_url_with_a_formatting_resolver_is_a_configuration_error()
+    {
+        var fetcher = new FakeFetcher([]);
+        var item = new RankingItem { Sport = "Soccer", Gender = "Men", Url = "http://fifa/api?id={0}&page={page}", Source = "FifaV3", UrlResolver = "FifaDateId", FirstPage = 1 };
+
+        var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => Runner(fetcher).RunAsync(item, CancellationToken.None));
+
+        Assert.Contains("FifaDateId", ex.Message);
+        Assert.Contains("{page}", ex.Message);
+        Assert.Empty(fetcher.Requested);
     }
 
     [Fact]
