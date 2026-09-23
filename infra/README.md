@@ -129,8 +129,9 @@ which sees none of the Windows tools: call `& "C:\Program Files\Git\bin\bash.exe
 - **Roll back the game:** `gh workflow run deploy-game.yml --ref prod -f staged_tag=staged-<hash>` with an earlier
   tag from `gh api /users/joseph-leo/packages/container/worldrankguesser-game/versions --jq '.[].metadata.container.tags[]'`.
   Migrations are skipped; the earlier image must work with the current schema (add first, remove later).
-- **Scrape on demand:** `az containerapp job start --name caj-wrg-<env>-scraper --resource-group rg-wrg-<env>`, then
-  `bash .github/scripts/check-job.sh caj-wrg-<env>-scraper rg-wrg-<env> 3600`.
+- **Scrape on demand:** `bash .github/scripts/run-job.sh caj-wrg-<env>-scraper rg-wrg-<env> 3900` starts the Job
+  and waits for the execution to succeed (`check-job.sh` only reads the latest execution; it is the scheduled
+  check's tool, not a wait).
 - **Admit another address to staging** (a phone on mobile data) until the next deploy resets the list:
   `az containerapp ingress access-restriction set --name ca-wrg-staging-game --resource-group rg-wrg-staging --rule-name phone --ip-address <ip>/32 --action Allow`.
   The owner's own address changed? Update the `ALLOWED_IPS` secret and dispatch `deploy-game.yml` on `main`.
