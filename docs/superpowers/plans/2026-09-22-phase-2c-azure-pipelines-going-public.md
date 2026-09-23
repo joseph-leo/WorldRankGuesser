@@ -57,6 +57,7 @@
 | `.github/actions/promotion-guard/hash.sh` | `<hash>` of the tree entries of exactly the given paths at `HEAD`; a path missing from the tree is an error, not a silent omission. |
 | `.github/actions/promotion-guard/resolve.sh` | A `staged-*` tag to a digest from the `Digest:` line of `docker buildx imagetools inspect` (no `--format`: buildx 0.30 mishandles the template), or exit 1 with "never passed staging". |
 | `.github/actions/promotion-guard/tag.sh` | `docker buildx imagetools create` of a tag on a digest. |
+| `.github/actions/promotion-guard/staged-tag.sh` | Refuses a rollback tag that is not `staged-*`; the action runs it on a dispatch override. |
 | `.github/actions/promotion-guard/test.sh` | The guard's tests: determinism, sensitivity, working-tree independence, the refusal, the resolve, and the filter/inputs consistency of both deploy workflows. Runs locally (Git Bash) and in CI. |
 | `.github/scripts/build-bundle.sh` | A self-contained `linux-x64` EF migrations bundle for one project. |
 | `.github/scripts/sql-firewall.sh` | `open` / `close` the runner's firewall rule on the environment's one SQL server; prints the server FQDN. |
@@ -85,6 +86,7 @@
 | `src/WorldRankGuesser.Web/src/lib/api/readiness.svelte.ts`, `readiness.test.ts` | "waking" after 1.5 s of silence on the first check (Task 2). |
 | `src/WorldRankGuesser.Web/playwright.config.ts` | `E2E_BASE_URL=""` counts as unset (Task 2). |
 | `src/WorldRankGuesser.Api/WorldRankGuesser.Api.csproj`, `src/SportsRankingService/SportsRankingService.csproj`, `tests/WorldRankGuesser.Api.Tests/Integration/PersistenceTests.cs` | The SqlClient Azure extension, with a test that it ships (Task 5). |
+| `Dockerfile`, `src/SportsRankingService/Dockerfile` | The `org.opencontainers.image.source` label on the final stage, which connects each image's GHCR package to the repository (added in the final review's fix wave; see Task 16, Step 3). |
 | `.github/workflows/ci.yml` | `infra`, `actions` and `guard` jobs; the runner pinned (Task 10). |
 | `README.md` | "All rights reserved" and the live URL (Task 14). |
 | `CLAUDE.md` | Commands for the CLIs, the release flow, the environments (Task 14). |
@@ -425,10 +427,11 @@ One composite action that both deploy workflows use (spec section 9), so the sta
 - Create: `.github/actions/promotion-guard/hash.sh`
 - Create: `.github/actions/promotion-guard/resolve.sh`
 - Create: `.github/actions/promotion-guard/tag.sh`
+- Create: `.github/actions/promotion-guard/staged-tag.sh`
 - Create: `.github/actions/promotion-guard/test.sh`
 
 **Interfaces:**
-- Produces: `hash.sh <path>...` prints 12 hex characters (exit 2 naming a path that is not in `HEAD`'s tree); `resolve.sh <image> <tag>` prints `sha256:...` or exits 1 with `never passed staging`; `tag.sh <image> <digest> <tag>`; the action `./.github/actions/promotion-guard` with inputs `image`, `paths` (newline-separated), `mode` (`hash` default, `resolve`, `tag`), `digest` (for `tag`), `tag` (for `resolve`: a `staged-*` tag to use instead of the computed one), and outputs `hash`, `tag`, `digest`.
+- Produces: `hash.sh <path>...` prints 12 hex characters (exit 2 naming a path that is not in `HEAD`'s tree); `resolve.sh <image> <tag>` prints `sha256:...` or exits 1 with `never passed staging`; `tag.sh <image> <digest> <tag>`; `staged-tag.sh <tag>` exits 1 unless the tag is `staged-*` (a rollback may name nothing else); the action `./.github/actions/promotion-guard` with inputs `image`, `paths` (newline-separated), `mode` (`hash` default, `resolve`, `tag`), `digest` (for `tag`), `tag` (for `resolve`: a `staged-*` tag to use instead of the computed one), and outputs `hash`, `tag`, `digest`.
 - Task 12 extends `test.sh` with the filter/inputs consistency check once the deploy workflows exist.
 
 - [ ] **Step 1: Write the failing tests**
@@ -491,6 +494,13 @@ if out="$(bash "$here/resolve.sh" ghcr.io/joseph-leo/worldrankguesser-game stage
   fail "an unknown staged tag is refused"
 else
   [[ "$out" == *"never passed staging"* ]] && pass "an unknown staged tag is refused, naming the reason" || fail "an unknown staged tag is refused, naming the reason: got '$out'"
+fi
+
+if bash "$here/staged-tag.sh" staged-0123456789ab >/dev/null 2>&1; then pass "a staged tag is accepted as a rollback target"; else fail "a staged tag is accepted as a rollback target"; fi
+if out="$(bash "$here/staged-tag.sh" sha-0123456789abcdef 2>&1)"; then
+  fail "a tag that is not staged-* is refused as a rollback target"
+else
+  [[ "$out" == *"not a staged-<hash> tag"* ]] && pass "a tag that is not staged-* is refused as a rollback target" || fail "a tag that is not staged-* is refused as a rollback target: got '$out'"
 fi
 
 # Microsoft's registry: no anonymous pull limit, and an image this repository pulls anyway.
@@ -580,11 +590,28 @@ docker buildx imagetools create --tag "${image}:${tag}" "${image}@${digest}"
 echo "tagged ${image}:${tag} -> ${digest}"
 ```
 
+Create `.github/actions/promotion-guard/staged-tag.sh`:
+
+```bash
+#!/usr/bin/env bash
+# Accepts a tag only if it is a staged-<hash> tag: a rollback may name one of those and nothing else, because a
+# sha-<sha> tag says "built", never "passed staging".
+#   staged-tag.sh staged-0123456789ab
+set -euo pipefail
+
+tag="${1:?tag}"
+
+if [[ "$tag" != staged-* ]]; then
+  echo "::error::'${tag}' is not a staged-<hash> tag: only an image that passed staging may be deployed to production" >&2
+  exit 1
+fi
+```
+
 - [ ] **Step 4: Run the tests and see them pass**
 
 In Git Bash: `bash .github/actions/promotion-guard/test.sh`
 
-Expected: nine `ok` lines and "all guard tests passed". The two registry checks need the network; `docker buildx imagetools` needs Docker Desktop running. Neither check touches Docker Hub, whose anonymous pull limit would make the test flaky.
+Expected: eleven `ok` lines and "all guard tests passed". The two registry checks need the network; `docker buildx imagetools` needs Docker Desktop running. Neither check touches Docker Hub, whose anonymous pull limit would make the test flaky.
 
 - [ ] **Step 5: The action**
 
@@ -636,6 +663,7 @@ runs:
         set -euo pipefail
         mapfile -t paths < <(printf '%s\n' "$PATHS" | sed '/^[[:space:]]*$/d')
         hash="$("$GITHUB_ACTION_PATH/hash.sh" "${paths[@]}")"
+        if [[ -n "$OVERRIDE_TAG" ]]; then "$GITHUB_ACTION_PATH/staged-tag.sh" "$OVERRIDE_TAG"; fi
         tag="${OVERRIDE_TAG:-staged-$hash}"
         echo "inputs hash $hash, tag $tag"
         echo "hash=$hash" >> "$GITHUB_OUTPUT"
@@ -668,7 +696,7 @@ runs:
 ```powershell
 actionlint
 git add .github/actions/promotion-guard
-git update-index --chmod=+x .github/actions/promotion-guard/hash.sh .github/actions/promotion-guard/resolve.sh .github/actions/promotion-guard/tag.sh .github/actions/promotion-guard/test.sh .github/scripts/build-bundle.sh
+git update-index --chmod=+x .github/actions/promotion-guard/hash.sh .github/actions/promotion-guard/resolve.sh .github/actions/promotion-guard/tag.sh .github/actions/promotion-guard/staged-tag.sh .github/actions/promotion-guard/test.sh .github/scripts/build-bundle.sh
 git ls-files -s .github/actions/promotion-guard .github/scripts
 ```
 
@@ -1855,7 +1883,7 @@ case "$action" in
     az sql server firewall-rule create --resource-group "$RG" --server "$server" --name "$RULE" \
       --start-ip-address "$ip" --end-ip-address "$ip" --output none
     fqdn="$(az sql server show --resource-group "$RG" --name "$server" --query fullyQualifiedDomainName -o tsv)"
-    echo "admitted $ip to $fqdn as $RULE"
+    echo "admitted $ip as $RULE"
     echo "fqdn=$fqdn" >> "${GITHUB_OUTPUT:-/dev/stdout}"
     ;;
   close)
@@ -2015,15 +2043,19 @@ jobs:
         if: always() && steps.sql.outcome != 'skipped'
         run: .github/scripts/sql-firewall.sh close
 
+      - name: Pin Bicep
+        run: az bicep install --version v0.47.16
       - name: Deploy the app by digest
         env:
           GAME_IMAGE: ${{ env.IMAGE }}@${{ steps.build.outputs.digest }}
           ALLOWED_IPS: ${{ secrets.ALLOWED_IPS }}
-        run: >
-          az deployment group create --resource-group "$RG" --name "game-${{ github.run_id }}"
-          --template-file infra/game.bicep --parameters infra/staging/game.bicepparam --output none
+        run: |
+          [[ -n "$ALLOWED_IPS" ]] || { echo "::error::ALLOWED_IPS is empty: staging would be public" >&2; exit 1; }
+          az deployment group create --resource-group "$RG" --name "game-${{ github.run_id }}" --template-file infra/game.bicep --parameters infra/staging/game.bicepparam --output none
       - id: app
-        run: echo "fqdn=$(az containerapp show --name "$APP" --resource-group "$RG" --query properties.configuration.ingress.fqdn -o tsv)" >> "$GITHUB_OUTPUT"
+        run: |
+          fqdn="$(az containerapp show --name "$APP" --resource-group "$RG" --query properties.configuration.ingress.fqdn -o tsv)"
+          echo "fqdn=$fqdn" >> "$GITHUB_OUTPUT"
 
       # Staging only: an Allow rule denies everyone else, which is why production's job has no such step.
       - id: ingress
@@ -2119,6 +2151,8 @@ jobs:
         if: always() && steps.sql.outcome != 'skipped'
         run: .github/scripts/sql-firewall.sh close
 
+      - name: Pin Bicep
+        run: az bicep install --version v0.47.16
       - name: Deploy the app by digest
         env:
           GAME_IMAGE: ${{ env.IMAGE }}@${{ steps.guard.outputs.digest }}
@@ -2126,7 +2160,9 @@ jobs:
           az deployment group create --resource-group "$RG" --name "game-${{ github.run_id }}"
           --template-file infra/game.bicep --parameters infra/production/game.bicepparam --output none
       - name: Wait for /readyz
-        run: .github/scripts/wait-ready.sh "https://$(az containerapp show --name "$APP" --resource-group "$RG" --query properties.configuration.ingress.fqdn -o tsv)" 180
+        run: |
+          fqdn="$(az containerapp show --name "$APP" --resource-group "$RG" --query properties.configuration.ingress.fqdn -o tsv)"
+          .github/scripts/wait-ready.sh "https://$fqdn" 180
 ```
 
 - [ ] **Step 4: Lint, mode bits, and the guard tests**
@@ -2378,6 +2414,8 @@ jobs:
         if: always() && steps.sql.outcome != 'skipped'
         run: .github/scripts/sql-firewall.sh close
 
+      - name: Pin Bicep
+        run: az bicep install --version v0.47.16
       - name: Deploy the Job by digest
         env:
           SCRAPER_IMAGE: ${{ env.IMAGE }}@${{ steps.build.outputs.digest }}
@@ -2450,6 +2488,8 @@ jobs:
         if: always() && steps.sql.outcome != 'skipped'
         run: .github/scripts/sql-firewall.sh close
 
+      - name: Pin Bicep
+        run: az bicep install --version v0.47.16
       - name: Deploy the Job by digest
         env:
           SCRAPER_IMAGE: ${{ env.IMAGE }}@${{ steps.guard.outputs.digest }}
@@ -2592,6 +2632,8 @@ jobs:
           client-id: ${{ vars.AZURE_CLIENT_ID }}
           tenant-id: ${{ vars.AZURE_TENANT_ID }}
           subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      - name: Pin Bicep
+        run: az bicep install --version v0.47.16
       - name: Deploy main.bicep
         run: >
           az deployment group create --resource-group "$RG" --name "main-${{ github.run_id }}"
@@ -2610,6 +2652,7 @@ name: Scraper check
 # (docs/superpowers/specs/2026-09-19-phase-2-go-live-design.md, section 8.6). Scheduled runs use main, which the
 # production environment does not admit, so the check logs in as the environment's monitor identity: Reader on its
 # resource group, federated to refs/heads/main, repository variables rather than environment ones.
+# Until an environment's monitor variable exists, and while DEPLOYS_ENABLED is not true, the check has nothing to do and stays green.
 on:
   schedule:
     - cron: '0 9 * * 1,5'
@@ -2627,6 +2670,7 @@ permissions:
 
 jobs:
   check:
+    if: vars.DEPLOYS_ENABLED == 'true'
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
@@ -2641,17 +2685,21 @@ jobs:
           else env_name=staging
           fi
           echo "env=$env_name" >> "$GITHUB_OUTPUT"
-          if [[ "$env_name" == "production" ]]; then
-            echo "client_id=${{ vars.AZURE_MONITOR_CLIENT_ID_PRODUCTION }}" >> "$GITHUB_OUTPUT"
-          else
-            echo "client_id=${{ vars.AZURE_MONITOR_CLIENT_ID_STAGING }}" >> "$GITHUB_OUTPUT"
+          if [[ "$env_name" == "production" ]]; then client_id="${{ vars.AZURE_MONITOR_CLIENT_ID_PRODUCTION }}"
+          else client_id="${{ vars.AZURE_MONITOR_CLIENT_ID_STAGING }}"
           fi
+          if [[ -z "$client_id" ]]; then
+            echo "::notice::no monitor identity for $env_name yet (its AZURE_MONITOR_CLIENT_ID variable is unset): nothing to check"
+          fi
+          echo "client_id=$client_id" >> "$GITHUB_OUTPUT"
       - uses: azure/login@v3
+        if: steps.pick.outputs.client_id != ''
         with:
           client-id: ${{ steps.pick.outputs.client_id }}
           tenant-id: ${{ vars.AZURE_TENANT_ID }}
           subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
       - name: The latest execution succeeded within a day
+        if: steps.pick.outputs.client_id != ''
         run: .github/scripts/check-job.sh "caj-wrg-${{ steps.pick.outputs.env }}-scraper" "rg-wrg-${{ steps.pick.outputs.env }}" 86400
 ```
 
@@ -2795,8 +2843,17 @@ which sees none of the Windows tools: call `& "C:\Program Files\Git\bin\bash.exe
    gh variable set DEPLOYS_ENABLED --body true
    ```
 
-   Production: the environment `production` admits only `prod`; its variables are `AZURE_CLIENT_ID` and
-   `AZURE_RESOURCE_GROUP=rg-wrg-production`; no `ALLOWED_IPS`; `AZURE_MONITOR_CLIENT_ID_PRODUCTION` at repository level.
+   Production, once its bootstrap outputs exist (`$b` below is the parsed JSON of `az deployment sub create ... --query properties.outputs`):
+
+   ```powershell
+   gh api -X PUT repos/joseph-leo/WorldRankGuesser/environments/production -F 'deployment_branch_policy[protected_branches]=false' -F 'deployment_branch_policy[custom_branch_policies]=true'
+   gh api -X POST repos/joseph-leo/WorldRankGuesser/environments/production/deployment-branch-policies -f name=prod -f type=branch
+   gh variable set AZURE_CLIENT_ID --env production --body <deployClientId>
+   gh variable set AZURE_RESOURCE_GROUP --env production --body rg-wrg-production
+   gh variable set AZURE_MONITOR_CLIENT_ID_PRODUCTION --body <monitorClientId>
+   ```
+
+   No `ALLOWED_IPS` for production, ever.
 
 5. **Production only: DNS, before the first game deploy.** At the DNS host of `foweeti.com` (Google), add a CNAME
    `games` pointing at `ca-wrg-production-game.<environmentDefaultDomain>` and a TXT `asuid.games` whose value is
@@ -2804,6 +2861,21 @@ which sees none of the Windows tools: call `& "C:\Program Files\Git\bin\bash.exe
    `nslookup -type=TXT asuid.games.foweeti.com`). The CNAME must point directly at the app, not through another
    CNAME. The certificate is issued by the first game deploy; if that deploy fails at the certificate, the records
    had not propagated: run it again.
+
+   If it fails a second time with the app refusing the hostname or the certificate never binding, fall back to two
+   passes and record it in the first-deploy notes: deploy once without the domain, add the hostname, create the
+   certificate, bind it, and let the next pipeline deploy declare the bound hostname again (`bindingType: 'Auto'`
+   keeps an existing binding):
+
+   ```powershell
+   $env:GAME_IMAGE = '<the image by digest the workflow would deploy>'
+   az deployment group create --resource-group rg-wrg-production --name game-first --parameters infra/production/game.bicepparam --parameters customDomain=
+   az containerapp hostname add --hostname games.foweeti.com --resource-group rg-wrg-production --name ca-wrg-production-game
+   az containerapp env certificate create --name cae-wrg-production --resource-group rg-wrg-production --hostname games.foweeti.com --validation-method CNAME --certificate-name cert-games-foweeti-com
+   az containerapp hostname bind --hostname games.foweeti.com --resource-group rg-wrg-production --name ca-wrg-production-game --environment cae-wrg-production --certificate cert-games-foweeti-com
+   ```
+
+   (`az containerapp env certificate create --help` if a flag has moved.)
 
 6. **First deploys**, as manual dispatches, scraper first because the game's smoke test needs rankings:
 
@@ -2823,7 +2895,7 @@ which sees none of the Windows tools: call `& "C:\Program Files\Git\bin\bash.exe
    the dispatches use `--ref prod` (`-f run_job=true` on the scraper, so the database has rankings).
 
    The first image push creates the two GHCR packages; they must be **public** (package settings, Danger Zone,
-   change visibility) before Container Apps can pull them. Going public (plan 2c, Task 16) creates them ahead of time.
+   change visibility) before Container Apps can pull them. Going public (plan 2c, Task 16) creates them ahead of time; a package created outside Actions must also grant the repository write access (package settings, Manage Actions access, add `WorldRankGuesser` with the Write role), which the images' `org.opencontainers.image.source` label also arranges for packages the workflows create.
 
 ## Everyday operations
 
@@ -2856,15 +2928,15 @@ which sees none of the Windows tools: call `& "C:\Program Files\Git\bin\bash.exe
 Replace the last line of `README.md` (`Design and plans are in \`docs/superpowers/\`.`) with:
 
 ```markdown
-The game is live at https://games.foweeti.com. Design and plans are in `docs/superpowers/`; how it is deployed is in
-`infra/README.md`.
+The game will be live at https://games.foweeti.com (phase 2c, going live, is in progress). Design and plans are in
+`docs/superpowers/`; how it is deployed is in `infra/README.md`.
 
 No licence is granted: the code is published to be read, and all rights are reserved. Nobody may rehost the game.
 ```
 
 - [ ] **Step 3: CLAUDE.md**
 
-1. In "What this is", replace `Built so far: phases 0–1 (practice mode). Not built yet: deployment, the daily challenge, the timer, streaks, leaderboards, sign-in.` with `Built so far: phases 0–2 (practice mode, live at https://games.foweeti.com through a staging environment; \`infra/README.md\` is the runbook). Not built yet: the daily challenge, the timer, streaks, leaderboards, sign-in.`
+1. In "What this is", replace `Built so far: phases 0–1 (practice mode). Not built yet: deployment, the daily challenge, the timer, streaks, leaderboards, sign-in.` with `Built so far: phases 0–1 (practice mode) and phase 2's code (the Azure templates, the pipelines and the runbook \`infra/README.md\`); going live at https://games.foweeti.com through a staging environment is phase 2c's Parts B and C, in progress. Not built yet: the daily challenge, the timer, streaks, leaderboards, sign-in.` (Task 23 rewords it once the game is live.)
 2. In "Commands", after the `docker build ...` line, add:
 
    ```
@@ -2887,7 +2959,7 @@ No licence is granted: the code is published to be read, and all rights are rese
 
 In `docs/superpowers/specs/2026-09-19-phase-2-go-live-design.md`:
 
-1. Replace `2c not yet written (sections 7 and 8, and the promotion-guard action of section 9).` in the status line with `2c \`docs/superpowers/plans/2026-09-22-phase-2c-azure-pipelines-going-public.md\` (sections 7 and 8, the promotion-guard action of section 9; the custom domain and its certificate deploy in one pass with \`bindingType: 'Auto'\`; consumption-only environments being legacy, the environment uses the built-in Consumption workload profile).`
+1. Replace `2c not yet written (sections 7 and 8, and the promotion-guard action of section 9).` in the status line with `2c \`docs/superpowers/plans/2026-09-22-phase-2c-azure-pipelines-going-public.md\` (sections 7 and 8, the promotion-guard action of section 9; the custom domain and its certificate are declared for one pass with \`bindingType: 'Auto'\`, to be confirmed in Part C, with a two-pass fallback in the runbook; consumption-only environments being legacy, the environment uses the built-in Consumption workload profile).`
 2. In section 2's "Custom domain" row, replace `The hostname is a value in \`infra/production/game.bicepparam\`.` with `The hostname is \`games.foweeti.com\`, a value in \`infra/production/game.bicepparam\` (decided 2026-09-22; the DNS is at Google).`
 
 - [ ] **Step 5: Commit**
@@ -3001,7 +3073,7 @@ docker push ghcr.io/joseph-leo/worldrankguesser-scraper:bootstrap
 docker logout ghcr.io
 ```
 
-**Owner:** on GitHub, for each package (https://github.com/joseph-leo?tab=packages), Package settings, Danger Zone, Change visibility, Public. Then:
+**Owner:** on GitHub, for each package (https://github.com/joseph-leo?tab=packages), Package settings, Danger Zone, Change visibility, Public; then Package settings, Manage Actions access, Add repository `WorldRankGuesser`, role Write (a package created outside Actions is not connected to the repository, so the workflows' token could not push tags to it; the images' `org.opencontainers.image.source` label connects the packages the workflows create). Then:
 
 ```powershell
 gh api /users/joseph-leo/packages/container/worldrankguesser-game --jq .visibility
@@ -3425,7 +3497,7 @@ $run = gh run list --workflow deploy-game.yml --branch prod --limit 1 --json dat
 gh run watch $run --exit-status
 ```
 
-Expected: the guard resolves `staged-<hash>` (the same hash staging tagged, because the sources are the same tree entries); the `game` migrations; the deployment creates the app with `games.foweeti.com` and issues the managed certificate (the deployment can take several minutes at the certificate); `/readyz` 200 at the default hostname. If the deployment fails at the certificate (`InvalidDomainControlValidation`, "CNAME record not found"): the records had not propagated to Azure's resolver; wait ten minutes and dispatch again. If the guard refuses ("never passed staging"): `prod` is not at a commit whose game inputs staging tagged; compare `bash .github/actions/promotion-guard/hash.sh <the PATHS list>` on `prod` and on `main`.
+Expected: the guard resolves `staged-<hash>` (the same hash staging tagged, because the sources are the same tree entries); the `game` migrations; the deployment creates the app with `games.foweeti.com` and issues the managed certificate (the deployment can take several minutes at the certificate); `/readyz` 200 at the default hostname. If the deployment fails at the certificate (`InvalidDomainControlValidation`, "CNAME record not found"): the records had not propagated to Azure's resolver; wait ten minutes and dispatch again. If it fails a second time with the hostname refused or the certificate never binding, the runbook's two-pass fallback (step 5 of the first deploy) applies, recorded in the first-deploy notes. If the guard refuses ("never passed staging"): `prod` is not at a commit whose game inputs staging tagged; compare `bash .github/actions/promotion-guard/hash.sh <the PATHS list>` on `prod` and on `main`.
 
 ---
 
@@ -3470,7 +3542,8 @@ Expected: `amount: 5`; `public`, `public`; `PUBLIC`; `true`.
 On a `stage/close-2c` branch, by pull request (`main` is protected):
 
 1. `infra/README.md`: `## First-deploy notes (production, <date>)` with the time to ready, the certificate issuance time, anything that differed.
-2. The plan's status line at the top (after the header blockquote): `Status: executed; staging accepted <date>, production accepted <date>; Monday's check: <pending | passed <date>>.`
-3. Merge; then promote the docs commit too, so `prod` and `main` stay identical: `git push origin main:prod` (docs only: nothing deploys).
+2. `README.md`: "The game will be live at https://games.foweeti.com (phase 2c, going live, is in progress)." becomes "The game is live at https://games.foweeti.com."; `CLAUDE.md`'s "Built so far" sentence becomes `Built so far: phases 0–2 (practice mode, live at https://games.foweeti.com through a staging environment; \`infra/README.md\` is the runbook). Not built yet: the daily challenge, the timer, streaks, leaderboards, sign-in.`
+3. The plan's status line at the top (after the header blockquote): `Status: executed; staging accepted <date>, production accepted <date>; Monday's check: <pending | passed <date>>.`
+4. Merge; then promote the docs commit too, so `prod` and `main` stay identical: `git push origin main:prod` (docs only: nothing deploys).
 
 Phase 2c is complete when every step of Tasks 20 and 23 was observed. What it leaves for later, deliberately: the `within` slack in `RankingsRefreshServiceTests`, one Competitor and Points value in `RankingsSeed`, the Caddy sketch in `docker-compose.yml`, the BenchmarkDotNet runtime-async spike, a `gitleaks` job in CI, and cost stage 2 when the game has players.
