@@ -2747,6 +2747,9 @@ az extension add --name containerapp --upgrade
 gh auth login --web -s workflow -s write:packages -s read:packages; gh auth setup-git
 ```
 
+The `.sh` scripts and the guard's tests run in Git Bash. From PowerShell, plain `bash` can resolve to WSL's launcher,
+which sees none of the Windows tools: call `& "C:\Program Files\Git\bin\bash.exe" <script>` instead.
+
 ## An environment's first deploy (staging first; production the same with `production`)
 
 1. **Bootstrap** (owner only; the only template with role assignments):
