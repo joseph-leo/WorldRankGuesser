@@ -31,7 +31,9 @@ HostApplicationBuilder builder = Host.CreateApplicationBuilder(new HostApplicati
     ContentRootPath = AppContext.BaseDirectory,
 });
 
-builder.Configuration.AddJsonFile("serviceconfig.json", optional: false);
+// Required at run time, where it is the feed list; optional at design time (dotnet ef, a migrations bundle), where
+// only the DbContext matters and no configuration file travels with a self-contained bundle.
+builder.Configuration.AddJsonFile("serviceconfig.json", optional: EF.IsDesignTime);
 
 builder.Services.Configure<RankingSourcesOptions>(builder.Configuration);
 builder.Services.AddDbContext<RankingsDbContext>(
