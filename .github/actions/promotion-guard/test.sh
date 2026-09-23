@@ -59,7 +59,20 @@ fi
 digest="$(bash "$here/resolve.sh" mcr.microsoft.com/dotnet/runtime 11.0.0-rc.1-resolute 2>/dev/null || true)"
 [[ "$digest" == sha256:* ]] && pass "an existing tag resolves to its digest" || fail "an existing tag resolves to its digest: got '$digest'"
 
-# ---- consistency of each deploy workflow's push filter with its hash inputs (added in Task 12) --------------------
+# ---- each deploy workflow's push filter equals its env.PATHS (directories listed there without /**) ---------------
+for wf in deploy-game deploy-scraper; do
+  file="$repo_root/.github/workflows/$wf.yml"
+  if [[ ! -f "$file" ]]; then fail "$wf.yml exists"; continue; fi
+  if ! command -v yq >/dev/null 2>&1; then echo "skip - yq is not installed: $wf filter/inputs consistency"; continue; fi
+  filter="$(yq -r '.["on"].push.paths[]' "$file" | sed 's|/\*\*$||' | sort)"
+  inputs="$(yq -r '.env.PATHS' "$file" | sed '/^[[:space:]]*$/d' | sort)"
+  if [[ "$filter" == "$inputs" ]]; then
+    pass "$wf: the push filter and the hash inputs agree"
+  else
+    fail "$wf: the push filter and the hash inputs differ"
+    diff <(echo "$filter") <(echo "$inputs") || true
+  fi
+done
 
 echo
 if [[ "$failures" -eq 0 ]]; then echo "all guard tests passed"; else echo "$failures guard test(s) failed"; exit 1; fi
