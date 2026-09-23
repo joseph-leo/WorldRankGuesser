@@ -1,0 +1,70 @@
+name: Promotion guard
+description: >
+  Hashes a deploy workflow's inputs (the tree entries of exactly the paths in its push filter) and, by mode, resolves
+  or writes the image tag staged-<hash>. Production never builds: it deploys the digest behind that tag or is refused.
+inputs:
+  image:
+    description: The image, e.g. ghcr.io/joseph-leo/worldrankguesser-game
+    required: true
+  paths:
+    description: Newline-separated repository paths, exactly the workflow's push filter (directories without /**)
+    required: true
+  mode:
+    description: hash (default), resolve (the staged tag to a digest, or a refusal) or tag (write the staged tag)
+    required: false
+    default: hash
+  digest:
+    description: For mode tag, the digest to tag
+    required: false
+    default: ''
+  tag:
+    description: For mode resolve, a staged-* tag to resolve instead of the computed one (a rollback)
+    required: false
+    default: ''
+outputs:
+  hash:
+    description: The 12-character hash of the inputs at HEAD
+    value: ${{ steps.hash.outputs.hash }}
+  tag:
+    description: staged-<hash>, or the tag given for a rollback
+    value: ${{ steps.hash.outputs.tag }}
+  digest:
+    description: In mode resolve, the digest behind the tag
+    value: ${{ steps.resolve.outputs.digest }}
+runs:
+  using: composite
+  steps:
+    - id: hash
+      shell: bash
+      env:
+        PATHS: ${{ inputs.paths }}
+        OVERRIDE_TAG: ${{ inputs.tag }}
+      run: |
+        set -euo pipefail
+        mapfile -t paths < <(printf '%s\n' "$PATHS" | sed '/^[[:space:]]*$/d')
+        hash="$("$GITHUB_ACTION_PATH/hash.sh" "${paths[@]}")"
+        tag="${OVERRIDE_TAG:-staged-$hash}"
+        echo "inputs hash $hash, tag $tag"
+        echo "hash=$hash" >> "$GITHUB_OUTPUT"
+        echo "tag=$tag" >> "$GITHUB_OUTPUT"
+    - id: resolve
+      if: inputs.mode == 'resolve'
+      shell: bash
+      env:
+        IMAGE: ${{ inputs.image }}
+        TAG: ${{ steps.hash.outputs.tag }}
+      run: |
+        set -euo pipefail
+        digest="$("$GITHUB_ACTION_PATH/resolve.sh" "$IMAGE" "$TAG")"
+        echo "$IMAGE:$TAG -> $digest"
+        echo "digest=$digest" >> "$GITHUB_OUTPUT"
+    - if: inputs.mode == 'tag'
+      shell: bash
+      env:
+        IMAGE: ${{ inputs.image }}
+        DIGEST: ${{ inputs.digest }}
+        TAG: ${{ steps.hash.outputs.tag }}
+      run: |
+        set -euo pipefail
+        [[ -n "$DIGEST" ]] || { echo "::error::mode tag needs a digest" >&2; exit 1; }
+        "$GITHUB_ACTION_PATH/tag.sh" "$IMAGE" "$DIGEST" "$TAG"
