@@ -37,6 +37,8 @@ ENTRYPOINT ["sh", "-c", "dotnet ef database update --no-build --configuration Re
 # "extra" because Microsoft.Data.SqlClient refuses globalization-invariant mode and only "extra" ships ICU.
 # Non-root (user app), no shell, port 8080. No HEALTHCHECK: Container Apps probes the app itself.
 FROM mcr.microsoft.com/dotnet/aspnet:11.0.0-rc.1-resolute-chiseled-extra AS runtime
+# Connects the image's GHCR package to the repository, so the deploy workflows' token may push tags to it.
+LABEL org.opencontainers.image.source=https://github.com/joseph-leo/WorldRankGuesser
 WORKDIR /app
 COPY --from=api /app .
 EXPOSE 8080

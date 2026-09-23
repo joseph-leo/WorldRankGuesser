@@ -1,0 +1,234 @@
+name: Deploy game
+
+# main and stage/* deploy to staging; prod deploys to production and never builds
+# (docs/superpowers/specs/2026-09-19-phase-2-go-live-design.md, sections 8.1 and 8.3). env.PATHS must list exactly the
+# paths below, directories without /**: the promotion guard's tests check that they agree.
+on:
+  push:
+    branches: [main, 'stage/**', prod]
+    paths:
+      - 'src/WorldRankGuesser.Api/**'
+      - 'src/WorldRankGuesser.Web/**'
+      - 'Dockerfile'
+      - '.dockerignore'
+      - 'Directory.Build.props'
+      - 'global.json'
+      - '.config/dotnet-tools.json'
+      - 'infra/game.bicep'
+      - 'infra/staging/game.bicepparam'
+      - 'infra/production/game.bicepparam'
+      - '.github/workflows/deploy-game.yml'
+      - '.github/actions/promotion-guard/**'
+      - '.github/scripts/**'
+  workflow_dispatch:
+    inputs:
+      staged_tag:
+        description: 'Production only: deploy this staged-<hash> tag instead of the tip of prod (a rollback; migrations are skipped)'
+        required: false
+        type: string
+        default: ''
+
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+
+concurrency:
+  group: deploy-game-${{ github.ref == 'refs/heads/prod' && 'production' || 'staging' }}
+  cancel-in-progress: false
+
+env:
+  IMAGE: ghcr.io/joseph-leo/worldrankguesser-game
+  PATHS: |
+    src/WorldRankGuesser.Api
+    src/WorldRankGuesser.Web
+    Dockerfile
+    .dockerignore
+    Directory.Build.props
+    global.json
+    .config/dotnet-tools.json
+    infra/game.bicep
+    infra/staging/game.bicepparam
+    infra/production/game.bicepparam
+    .github/workflows/deploy-game.yml
+    .github/actions/promotion-guard
+    .github/scripts
+
+jobs:
+  staging:
+    if: github.ref != 'refs/heads/prod' && vars.DEPLOYS_ENABLED == 'true'
+    runs-on: ubuntu-24.04
+    environment:
+      name: staging
+      url: https://${{ steps.app.outputs.fqdn }}
+    env:
+      RG: ${{ vars.AZURE_RESOURCE_GROUP }}
+      APP: ca-wrg-staging-game
+      RULE: gha-${{ github.run_id }}-${{ github.run_attempt }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - id: guard
+        uses: ./.github/actions/promotion-guard
+        with:
+          image: ${{ env.IMAGE }}
+          paths: ${{ env.PATHS }}
+
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/setup-buildx-action@v4
+      - id: build
+        name: Build and push sha-${{ github.sha }}
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          push: true
+          provenance: false
+          tags: ${{ env.IMAGE }}:sha-${{ github.sha }}
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+      - name: Build the game migrations bundle
+        run: .github/scripts/build-bundle.sh src/WorldRankGuesser.Api artifacts/efbundle-game
+
+      - uses: azure/login@v3
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - id: sql
+        name: Admit the runner to the SQL server
+        run: .github/scripts/sql-firewall.sh open
+      - name: Apply the game migrations
+        env:
+          ConnectionStrings__WorldRankGuesserConnection: Server=tcp:${{ steps.sql.outputs.fqdn }},1433;Database=WorldRankGuesser;Authentication=Active Directory Default;Encrypt=True;Connect Timeout=60
+        run: ASPNETCORE_ENVIRONMENT=Production artifacts/efbundle-game
+      - name: Remove the runner from the SQL server
+        if: always() && steps.sql.outcome != 'skipped'
+        run: .github/scripts/sql-firewall.sh close
+
+      - name: Pin Bicep
+        run: az bicep install --version v0.47.16
+      - name: Deploy the app by digest
+        env:
+          GAME_IMAGE: ${{ env.IMAGE }}@${{ steps.build.outputs.digest }}
+          ALLOWED_IPS: ${{ secrets.ALLOWED_IPS }}
+        run: |
+          [[ -n "$ALLOWED_IPS" ]] || { echo "::error::ALLOWED_IPS is empty: staging would be public" >&2; exit 1; }
+          az deployment group create --resource-group "$RG" --name "game-${{ github.run_id }}" --template-file infra/game.bicep --parameters infra/staging/game.bicepparam --output none
+      - id: app
+        run: |
+          fqdn="$(az containerapp show --name "$APP" --resource-group "$RG" --query properties.configuration.ingress.fqdn -o tsv)"
+          echo "fqdn=$fqdn" >> "$GITHUB_OUTPUT"
+
+      # Staging only: an Allow rule denies everyone else, which is why production's job has no such step.
+      - id: ingress
+        name: Admit the runner on the ingress
+        run: >
+          az containerapp ingress access-restriction set --name "$APP" --resource-group "$RG"
+          --rule-name "$RULE" --ip-address "$(curl -fsS https://api.ipify.org)/32" --action Allow --output none
+      - name: Wait for /readyz
+        run: .github/scripts/wait-ready.sh "https://${{ steps.app.outputs.fqdn }}" 180
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: src/WorldRankGuesser.Web/package-lock.json
+      - name: Play the practice game through the ingress
+        working-directory: src/WorldRankGuesser.Web
+        env:
+          E2E_BASE_URL: https://${{ steps.app.outputs.fqdn }}
+        run: |
+          npm ci
+          npx playwright install --with-deps chromium
+          npx playwright test
+      - uses: actions/upload-artifact@v5
+        if: failure()
+        with:
+          name: playwright-report
+          path: src/WorldRankGuesser.Web/playwright-report/
+          retention-days: 14
+      - name: Remove the runner from the ingress
+        if: always() && steps.ingress.outcome != 'skipped'
+        run: az containerapp ingress access-restriction remove --name "$APP" --resource-group "$RG" --rule-name "$RULE" --output none
+
+      - name: Tag the image staged-${{ steps.guard.outputs.hash }}
+        uses: ./.github/actions/promotion-guard
+        with:
+          image: ${{ env.IMAGE }}
+          paths: ${{ env.PATHS }}
+          mode: tag
+          digest: ${{ steps.build.outputs.digest }}
+
+  production:
+    if: github.ref == 'refs/heads/prod' && vars.DEPLOYS_ENABLED == 'true'
+    runs-on: ubuntu-24.04
+    environment:
+      name: production
+      url: https://games.foweeti.com
+    env:
+      RG: ${{ vars.AZURE_RESOURCE_GROUP }}
+      APP: ca-wrg-production-game
+      RULE: gha-${{ github.run_id }}-${{ github.run_attempt }}
+      ROLLBACK: ${{ inputs.staged_tag != '' }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - id: guard
+        name: Resolve the staged tag, or refuse
+        uses: ./.github/actions/promotion-guard
+        with:
+          image: ${{ env.IMAGE }}
+          paths: ${{ env.PATHS }}
+          mode: resolve
+          tag: ${{ inputs.staged_tag }}
+
+      - uses: actions/setup-dotnet@v6
+        if: env.ROLLBACK != 'true'
+        with:
+          global-json-file: global.json
+      - name: Build the game migrations bundle
+        if: env.ROLLBACK != 'true'
+        run: .github/scripts/build-bundle.sh src/WorldRankGuesser.Api artifacts/efbundle-game
+
+      - uses: azure/login@v3
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - id: sql
+        name: Admit the runner to the SQL server
+        if: env.ROLLBACK != 'true'
+        run: .github/scripts/sql-firewall.sh open
+      - name: Apply the game migrations
+        if: env.ROLLBACK != 'true'
+        env:
+          ConnectionStrings__WorldRankGuesserConnection: Server=tcp:${{ steps.sql.outputs.fqdn }},1433;Database=WorldRankGuesser;Authentication=Active Directory Default;Encrypt=True;Connect Timeout=60
+        run: ASPNETCORE_ENVIRONMENT=Production artifacts/efbundle-game
+      - name: Remove the runner from the SQL server
+        if: always() && steps.sql.outcome != 'skipped'
+        run: .github/scripts/sql-firewall.sh close
+
+      - name: Pin Bicep
+        run: az bicep install --version v0.47.16
+      - name: Deploy the app by digest
+        env:
+          GAME_IMAGE: ${{ env.IMAGE }}@${{ steps.guard.outputs.digest }}
+        run: >
+          az deployment group create --resource-group "$RG" --name "game-${{ github.run_id }}"
+          --template-file infra/game.bicep --parameters infra/production/game.bicepparam --output none
+      - name: Wait for /readyz
+        run: |
+          fqdn="$(az containerapp show --name "$APP" --resource-group "$RG" --query properties.configuration.ingress.fqdn -o tsv)"
+          .github/scripts/wait-ready.sh "https://$fqdn" 180

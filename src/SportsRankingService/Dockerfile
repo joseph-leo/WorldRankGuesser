@@ -11,6 +11,8 @@ RUN dotnet publish src/SportsRankingService -c Release -o /app -p:UseAppHost=fal
 
 # The plain runtime, not chiseled: CurlFetcher starts curl as a process, so the image needs curl and root CAs.
 FROM mcr.microsoft.com/dotnet/runtime:11.0.0-rc.1-resolute
+# Connects the image's GHCR package to the repository, so the deploy workflows' token may push tags to it.
+LABEL org.opencontainers.image.source=https://github.com/joseph-leo/WorldRankGuesser
 RUN apt-get update \
     && apt-get install -y --no-install-recommends curl ca-certificates \
     && rm -rf /var/lib/apt/lists/*

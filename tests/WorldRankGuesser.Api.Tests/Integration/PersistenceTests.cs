@@ -46,6 +46,16 @@ public class PersistenceTests(SqlServerFixture sql)
     }
 
     [Fact]
+    public void The_entra_authentication_provider_ships_with_the_api()
+    {
+        // Since SqlClient 7 the Entra modes (Active Directory Managed Identity in Azure) live in a separate package,
+        // without which the first connection in Azure fails; referencing it is the only wiring it needs.
+        var provider = Type.GetType("Microsoft.Data.SqlClient.ActiveDirectoryAuthenticationProvider, Microsoft.Data.SqlClient.Extensions.Azure");
+
+        Assert.NotNull(provider);
+    }
+
+    [Fact]
     public async Task Board_content_round_trips_as_json()
     {
         var board = NewBoard();
