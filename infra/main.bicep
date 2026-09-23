@@ -49,7 +49,7 @@ resource log 'Microsoft.OperationalInsights/workspaces@2026-03-01' = {
 
 // A workload-profiles environment with only the built-in Consumption profile has no environment charge; only
 // replicas are billed. Every app and job in it says workloadProfileName: 'Consumption'.
-resource cae 'Microsoft.App/managedEnvironments@2026-07-01' = {
+resource cae 'Microsoft.App/managedEnvironments@2026-01-01' = {
   name: 'cae-wrg-${env}'
   location: location
   properties: {
