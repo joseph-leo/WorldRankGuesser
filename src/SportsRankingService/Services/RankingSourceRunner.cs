@@ -16,7 +16,7 @@ public sealed class RankingSourceRunner : IRankingSourceRunner
     /// <summary>In a <see cref="RankingItem.Url"/>: replaced by the page number, from <see cref="RankingItem.FirstPage"/> up.</summary>
     public const string PagePlaceholder = "{page}";
 
-    /// <summary>More pages than any feed has (WTA doubles: about 18 of 100); reaching it means the API ignores the page number.</summary>
+    /// <summary>More pages than any feed has (WTA doubles: 19 of 100); reaching it means the API ignores the page number.</summary>
     private const int MaxPages = 100;
 
     private readonly IReadOnlyDictionary<string, IHttpFetcher> _fetchers;
@@ -61,6 +61,12 @@ public sealed class RankingSourceRunner : IRankingSourceRunner
             throw new InvalidOperationException($"FirstPage is set but the Url has no {PagePlaceholder} placeholder ({item.Describe()})");
         }
 
+        // The resolvers that discover an id or date string.Format the Url, where {page} is a format error, not a page.
+        if (item.Url.Contains(PagePlaceholder, StringComparison.Ordinal) && !string.Equals(item.UrlResolver, IdentityUrlResolver.ResolverName, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidOperationException($"A Url with {PagePlaceholder} cannot use the '{item.UrlResolver}' resolver, which formats the Url ({item.Describe()})");
+        }
+
         ResolvedUrl resolved = await resolver.ResolveAsync(item, cancellationToken);
         ParsedRanking? parsed = resolved.Url.Contains(PagePlaceholder, StringComparison.Ordinal)
             ? await ParsePagesAsync(item, resolved.Url, fetcher, parser, cancellationToken)
@@ -79,6 +85,9 @@ public sealed class RankingSourceRunner : IRankingSourceRunner
 
         return snapshot;
     }
+
+    private static string Describe(DateOnly? rankingDate) =>
+        rankingDate?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) ?? "none";
 
     private static async Task<ParsedRanking?> ParseOneAsync(RankingItem item, string url, IHttpFetcher fetcher, IRankingParser parser, CancellationToken cancellationToken)
     {
@@ -100,6 +109,8 @@ public sealed class RankingSourceRunner : IRankingSourceRunner
 
         for (int page = firstPage; ; page++)
         {
+            bool first = page == firstPage;
+
             // An API that ignores the page parameter answers its first page forever.
             if (page - firstPage >= MaxPages)
             {
@@ -121,13 +132,17 @@ public sealed class RankingSourceRunner : IRankingSourceRunner
                 return new ParsedRanking(entries, rankingDate);
             }
 
-            // A new ranking published between two page requests would give a list that is half old and half new.
-            if (rankingDate is not null && parsed.RankingDate != rankingDate)
+            // The first page sets the date, dated or not, and every later page must agree: a new ranking published
+            // between two page requests would give a list that is half old and half new.
+            if (first)
             {
-                throw new ParseException(item.Source, $"page {page} carries ranking date {parsed.RankingDate:yyyy-MM-dd} but the first page {rankingDate:yyyy-MM-dd}: the list changed between pages");
+                rankingDate = parsed.RankingDate;
+            }
+            else if (parsed.RankingDate != rankingDate)
+            {
+                throw new ParseException(item.Source, $"page {page} carries ranking date {Describe(parsed.RankingDate)} but the first page {Describe(rankingDate)}: the list changed between pages");
             }
 
-            rankingDate ??= parsed.RankingDate;
             entries.AddRange(parsed.Entries);
         }
     }
