@@ -66,6 +66,12 @@ content stays the same; use `LastSeenAt` on `RankingReleases` for "as of".
 `serviceconfig.json` lists the feeds; `appsettings.json` holds the connection string. Override it
 outside development with the `ConnectionStrings__WorldRankGuesserConnection` environment variable.
 
+A feed whose list comes in pages puts `{page}` in its URL and, when the API counts from 0, says
+`"FirstPage": 0`: the pages are fetched one after another until one yields no entries, and a page that
+cannot be fetched fails the feed rather than storing a shorter list. WTA doubles is the one such feed
+(the API caps a page at 100 players). Volleyball World and ESPN offer no paging, so their depth is
+whatever one request returns.
+
 A feed is fetched with .NET's `HttpClient` unless its item says `"Fetcher": "Curl"`, which runs the
 machine's `curl` instead. Seven feeds need it: the five BWF badminton feeds, because BWF's Cloudflare rule
 refuses .NET's TLS handshake yet answers curl, and the two ice hockey feeds, because Wikimedia asks

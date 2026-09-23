@@ -42,6 +42,20 @@ public class BwfParserTests
         Assert.InRange(rows.Count, 190, 199);
     }
 
+    /// <summary>
+    /// A player competing independently of their federation is labelled "&lt;COUNTRY&gt; Independent" (men's singles,
+    /// 2026-09-22). Unlike a neutral athlete they still have a country, and they count for it.
+    /// </summary>
+    [Fact]
+    public void An_independent_player_counts_for_the_country_in_the_label()
+    {
+        const string json = """{"results":{"data":[{"rank":1200,"player1_model":{"slug":"x"},"p1_country_model":{"name":"MOROCCO Independent"}}]}}""";
+
+        var rows = _parser.Parse(json).Entries;
+
+        Assert.Equal("MAR", Assert.Single(rows).ISO3);
+    }
+
     [Fact]
     public void An_unknown_country_name_fails_the_parse_naming_it()
     {
