@@ -55,10 +55,11 @@ else
   [[ "$out" == *"never passed staging"* ]] && pass "an unknown staged tag is refused, naming the reason" || fail "an unknown staged tag is refused, naming the reason: got '$out'"
 fi
 
-if out="$(bash "$here/resolve.sh" ghcr.io/joseph-leo/worldrankguesser-game sha-0123456789abcdef 2>&1)"; then
-  fail "a tag that is not staged-* is refused"
+if bash "$here/staged-tag.sh" staged-0123456789ab >/dev/null 2>&1; then pass "a staged tag is accepted as a rollback target"; else fail "a staged tag is accepted as a rollback target"; fi
+if out="$(bash "$here/staged-tag.sh" sha-0123456789abcdef 2>&1)"; then
+  fail "a tag that is not staged-* is refused as a rollback target"
 else
-  [[ "$out" == *"not a staged-<hash> tag"* ]] && pass "a tag that is not staged-* is refused" || fail "a tag that is not staged-* is refused: got '$out'"
+  [[ "$out" == *"not a staged-<hash> tag"* ]] && pass "a tag that is not staged-* is refused as a rollback target" || fail "a tag that is not staged-* is refused as a rollback target: got '$out'"
 fi
 
 # Microsoft's registry: no anonymous pull limit, and an image this repository pulls anyway.

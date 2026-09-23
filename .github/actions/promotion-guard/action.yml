@@ -43,6 +43,7 @@ runs:
         set -euo pipefail
         mapfile -t paths < <(printf '%s\n' "$PATHS" | sed '/^[[:space:]]*$/d')
         hash="$("$GITHUB_ACTION_PATH/hash.sh" "${paths[@]}")"
+        if [[ -n "$OVERRIDE_TAG" ]]; then "$GITHUB_ACTION_PATH/staged-tag.sh" "$OVERRIDE_TAG"; fi
         tag="${OVERRIDE_TAG:-staged-$hash}"
         echo "inputs hash $hash, tag $tag"
         echo "hash=$hash" >> "$GITHUB_OUTPUT"
