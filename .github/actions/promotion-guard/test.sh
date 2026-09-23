@@ -55,6 +55,12 @@ else
   [[ "$out" == *"never passed staging"* ]] && pass "an unknown staged tag is refused, naming the reason" || fail "an unknown staged tag is refused, naming the reason: got '$out'"
 fi
 
+if out="$(bash "$here/resolve.sh" ghcr.io/joseph-leo/worldrankguesser-game sha-0123456789abcdef 2>&1)"; then
+  fail "a tag that is not staged-* is refused"
+else
+  [[ "$out" == *"not a staged-<hash> tag"* ]] && pass "a tag that is not staged-* is refused" || fail "a tag that is not staged-* is refused: got '$out'"
+fi
+
 # Microsoft's registry: no anonymous pull limit, and an image this repository pulls anyway.
 digest="$(bash "$here/resolve.sh" mcr.microsoft.com/dotnet/runtime 11.0.0-rc.1-resolute 2>/dev/null || true)"
 [[ "$digest" == sha256:* ]] && pass "an existing tag resolves to its digest" || fail "an existing tag resolves to its digest: got '$digest'"

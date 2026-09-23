@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 A server-authoritative guessing game. The player is dealt ten countries one at a time and assigns each to a different sport category; each pick scores the country's world rank in that category (lower total wins; unranked or below 150th scores 150). `src/WorldRankGuesser.Api` (ASP.NET Core minimal API, .NET 11, EF Core, SQL Server) owns every rule and all state. `src/WorldRankGuesser.Web` (SvelteKit, Svelte 5, TypeScript, static single-page app) only renders what the API returns. Rankings come from the `dbo.CurrentCountryRankings` view, filled weekly by `src/SportsRankingService`, the scraper imported from its own repo in phase 2 (it has its own `CLAUDE.md`). Coupling rule: `WorldRankGuesser.Api` never references `SportsRankingService`; the view is the only runtime link, and only the SQL test fixture may use the scraper's migrations.
 
-Design: `docs/superpowers/specs/2026-09-19-server-authoritative-rebuild-design.md`. Built so far: phases 0–2 (practice mode, live at https://games.foweeti.com through a staging environment; `infra/README.md` is the runbook). Not built yet: the daily challenge, the timer, streaks, leaderboards, sign-in.
+Design: `docs/superpowers/specs/2026-09-19-server-authoritative-rebuild-design.md`. Built so far: phases 0–1 (practice mode) and phase 2's code (the Azure templates, the pipelines and the runbook `infra/README.md`); going live at https://games.foweeti.com through a staging environment is phase 2c's Parts B and C, in progress. Not built yet: the daily challenge, the timer, streaks, leaderboards, sign-in.
 
 ## Commands
 

@@ -16,7 +16,7 @@ country's world rank in that sport, and the lowest total wins.
 
 Or everything in containers, the way it is deployed: `docker compose --profile stack up --build -d` (SQL Server, both migration sets, then the game on http://localhost:8080) and `docker compose run --rm scraper` once, so it has rankings.
 
-The game is live at https://games.foweeti.com. Design and plans are in `docs/superpowers/`; how it is deployed is in
+The game will be live at https://games.foweeti.com (phase 2c, going live, is in progress). Design and plans are in `docs/superpowers/`; how it is deployed is in
 `infra/README.md`.
 
 No licence is granted: the code is published to be read, and all rights are reserved. Nobody may rehost the game.

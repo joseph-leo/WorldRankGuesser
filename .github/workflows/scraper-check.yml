@@ -5,6 +5,7 @@ name: Scraper check
 # (docs/superpowers/specs/2026-09-19-phase-2-go-live-design.md, section 8.6). Scheduled runs use main, which the
 # production environment does not admit, so the check logs in as the environment's monitor identity: Reader on its
 # resource group, federated to refs/heads/main, repository variables rather than environment ones.
+# Until an environment's monitor variable exists, and while DEPLOYS_ENABLED is not true, the check has nothing to do and stays green.
 on:
   schedule:
     - cron: '0 9 * * 1,5'
@@ -22,6 +23,7 @@ permissions:
 
 jobs:
   check:
+    if: vars.DEPLOYS_ENABLED == 'true'
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
@@ -36,15 +38,19 @@ jobs:
           else env_name=staging
           fi
           echo "env=$env_name" >> "$GITHUB_OUTPUT"
-          if [[ "$env_name" == "production" ]]; then
-            echo "client_id=${{ vars.AZURE_MONITOR_CLIENT_ID_PRODUCTION }}" >> "$GITHUB_OUTPUT"
-          else
-            echo "client_id=${{ vars.AZURE_MONITOR_CLIENT_ID_STAGING }}" >> "$GITHUB_OUTPUT"
+          if [[ "$env_name" == "production" ]]; then client_id="${{ vars.AZURE_MONITOR_CLIENT_ID_PRODUCTION }}"
+          else client_id="${{ vars.AZURE_MONITOR_CLIENT_ID_STAGING }}"
           fi
+          if [[ -z "$client_id" ]]; then
+            echo "::notice::no monitor identity for $env_name yet (its AZURE_MONITOR_CLIENT_ID variable is unset): nothing to check"
+          fi
+          echo "client_id=$client_id" >> "$GITHUB_OUTPUT"
       - uses: azure/login@v3
+        if: steps.pick.outputs.client_id != ''
         with:
           client-id: ${{ steps.pick.outputs.client_id }}
           tenant-id: ${{ vars.AZURE_TENANT_ID }}
           subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
       - name: The latest execution succeeded within a day
+        if: steps.pick.outputs.client_id != ''
         run: .github/scripts/check-job.sh "caj-wrg-${{ steps.pick.outputs.env }}-scraper" "rg-wrg-${{ steps.pick.outputs.env }}" 86400

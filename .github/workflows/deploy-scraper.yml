@@ -113,6 +113,8 @@ jobs:
         if: always() && steps.sql.outcome != 'skipped'
         run: .github/scripts/sql-firewall.sh close
 
+      - name: Pin Bicep
+        run: az bicep install --version v0.47.16
       - name: Deploy the Job by digest
         env:
           SCRAPER_IMAGE: ${{ env.IMAGE }}@${{ steps.build.outputs.digest }}
@@ -185,6 +187,8 @@ jobs:
         if: always() && steps.sql.outcome != 'skipped'
         run: .github/scripts/sql-firewall.sh close
 
+      - name: Pin Bicep
+        run: az bicep install --version v0.47.16
       - name: Deploy the Job by digest
         env:
           SCRAPER_IMAGE: ${{ env.IMAGE }}@${{ steps.guard.outputs.digest }}
