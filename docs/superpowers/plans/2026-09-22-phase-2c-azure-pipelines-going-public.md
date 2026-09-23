@@ -310,9 +310,11 @@ The deploy workflows apply migrations with EF bundles (spec section 4). Both the
 
 **Files:**
 - Create: `.github/scripts/build-bundle.sh`
+- Modify: `src/SportsRankingService/Program.cs:34`
 
 **Interfaces:**
-- Produces: `.github/scripts/build-bundle.sh <project-dir> <output-path>`; the bundle runs as `ASPNETCORE_ENVIRONMENT=Production <output-path> --connection "<connection string>"` and applies only pending migrations.
+- Produces: `.github/scripts/build-bundle.sh <project-dir> <output-path>`; the bundle runs with the connection string in the app's own setting, `ConnectionStrings__WorldRankGuesserConnection=<connection string> ASPNETCORE_ENVIRONMENT=Production <output-path>`, and applies only pending migrations. Not `--connection`: a bundle creates the DbContext through the app's own configuration and startup, where the API's context factory demands a configured string and the scraper's `Program` loads its files, before `--connection` could apply.
+- Modifies: `src/SportsRankingService/Program.cs` so `serviceconfig.json` is optional at design time (a bundle carries no configuration files; `dotnet ef` and a bundle both set `EF.IsDesignTime`).
 
 - [ ] **Step 1: The script**
 
@@ -325,8 +327,9 @@ Create `.github/scripts/build-bundle.sh`:
 #   .github/scripts/build-bundle.sh src/SportsRankingService artifacts/efbundle-scraper
 # `dotnet ef` runs the project's Main at design time to find the DbContext. The API's context factory needs a
 # connection string to be *configured* (nothing is connected to), and Production keeps appsettings.Development.json
-# out; the scraper's appsettings.json carries its own dev string. The bundle's own run gets the real string with
-# --connection. `--target-runtime` is the bundle's option; the common `--runtime` would only set the restore RID.
+# out; the scraper's appsettings.json carries its own dev string. The bundle's own run gets the real string through
+# the same variable (never --connection: the app's startup demands a configured string before it could apply).
+# `--target-runtime` is the bundle's option; the common `--runtime` would only set the restore RID.
 set -euo pipefail
 
 project="${1:?project directory}"
@@ -342,6 +345,24 @@ dotnet ef migrations bundle \
   --output "$output" --force
 ```
 
+- [ ] **Step 1b: The scraper's configuration file is optional at design time**
+
+A bundle carries no configuration files, and the scraper's `Program` requires `serviceconfig.json` before the host is built, so a bundle run fails with "configuration file 'serviceconfig.json' was not found and is not optional". At design time nothing reads the feed list: `dotnet ef` and a bundle both set `EF.IsDesignTime` and only need the DbContext. In `src/SportsRankingService/Program.cs`, replace
+
+```csharp
+builder.Configuration.AddJsonFile("serviceconfig.json", optional: false);
+```
+
+with
+
+```csharp
+// Required at run time, where it is the feed list; optional at design time (dotnet ef, a migrations bundle), where
+// only the DbContext matters and no configuration file travels with a self-contained bundle.
+builder.Configuration.AddJsonFile("serviceconfig.json", optional: EF.IsDesignTime);
+```
+
+`Microsoft.EntityFrameworkCore` is already imported at the top of the file. Then `dotnet test tests/SportsRankingService.Tests` still passes (367 tests, 1 skipped by design) and `dotnet run --project src/SportsRankingService -- --only Soccer` still loads the feed list at run time (it prints "Fetching ..." lines and exits 0).
+
 - [ ] **Step 2: Build both bundles (in Git Bash, from the repo root)**
 
 ```bash
@@ -351,17 +372,17 @@ ls -la artifacts/
 git status --short
 ```
 
-Expected: each ends with "Building bundle..." then "Done."; `artifacts/` holds two files of about 70 MB each (self-contained); `git status` shows only the new script (`artifacts/` is already in `.gitignore`). The game's build also regenerates the OpenAPI document into the Web folder; `git status` must not show `src/WorldRankGuesser.Web/openapi` as modified. If it does, the contract changed elsewhere: stop.
+Expected: each ends with "Building bundle..." then "Done."; `artifacts/` holds two files, about 110 MB (scraper) and 140 MB (game), self-contained; `git status` shows only the new script and the `Program.cs` change of Step 1b (`artifacts/` is already in `.gitignore`). The game's build also regenerates the OpenAPI document into the Web folder; `git status` must not show `src/WorldRankGuesser.Web/openapi` as modified. If it does, the contract changed elsewhere: stop.
 
 - [ ] **Step 3: Run them in a Linux container against a database that does not exist yet**
 
 ```powershell
 docker compose up -d --wait
 $conn = "Server=host.docker.internal,1433;Database=WorldRankGuesserBundleTest;User Id=sa;Password=Rankings_Dev1!;TrustServerCertificate=True"
-docker run --rm -v "${PWD}\artifacts:/b" -e ASPNETCORE_ENVIRONMENT=Production mcr.microsoft.com/dotnet/runtime:11.0.0-rc.1-resolute /b/efbundle-scraper --connection $conn
-docker run --rm -v "${PWD}\artifacts:/b" -e ASPNETCORE_ENVIRONMENT=Production mcr.microsoft.com/dotnet/runtime:11.0.0-rc.1-resolute /b/efbundle-game --connection $conn
+docker run --rm -v "${PWD}\artifacts:/b" -e ASPNETCORE_ENVIRONMENT=Production -e "ConnectionStrings__WorldRankGuesserConnection=$conn" mcr.microsoft.com/dotnet/runtime:11.0.0-rc.1-resolute /b/efbundle-scraper
+docker run --rm -v "${PWD}\artifacts:/b" -e ASPNETCORE_ENVIRONMENT=Production -e "ConnectionStrings__WorldRankGuesserConnection=$conn" mcr.microsoft.com/dotnet/runtime:11.0.0-rc.1-resolute /b/efbundle-game
 docker exec worldrankguesser-sql /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'Rankings_Dev1!' -C -d WorldRankGuesserBundleTest -Q "SELECT s.name + '.' + t.name FROM sys.tables t JOIN sys.schemas s ON s.schema_id = t.schema_id ORDER BY 1"
-docker run --rm -v "${PWD}\artifacts:/b" -e ASPNETCORE_ENVIRONMENT=Production mcr.microsoft.com/dotnet/runtime:11.0.0-rc.1-resolute /b/efbundle-game --connection $conn
+docker run --rm -v "${PWD}\artifacts:/b" -e ASPNETCORE_ENVIRONMENT=Production -e "ConnectionStrings__WorldRankGuesserConnection=$conn" mcr.microsoft.com/dotnet/runtime:11.0.0-rc.1-resolute /b/efbundle-game
 docker exec worldrankguesser-sql /opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'Rankings_Dev1!' -C -Q "DROP DATABASE WorldRankGuesserBundleTest"
 ```
 
@@ -372,14 +393,19 @@ If a bundle fails to *build* with a message about the connection string or the h
 - [ ] **Step 4: Commit**
 
 ```powershell
-git add .github/scripts/build-bundle.sh
+git add .github/scripts/build-bundle.sh src/SportsRankingService/Program.cs
+git update-index --chmod=+x .github/scripts/build-bundle.sh
 git commit -F - @'
 Add the script that builds a migrations bundle for the runner
 
 Both deploy workflows apply migrations with self-contained linux-x64
 EF bundles built on the runner. The script sets what design time needs
 (a configured connection string, the Production environment) and uses
-the bundle's own --target-runtime option. Proven from Windows against
+the bundle's own --target-runtime option. A bundle runs with the
+connection string in the app's own setting rather than --connection,
+because the app's startup demands one before that option could apply,
+and the scraper's feed list is optional at design time, since no
+configuration file travels with a bundle. Proven from Windows against
 the development SQL Server in a Linux container, on a new database.
 
 Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
@@ -1968,9 +1994,9 @@ jobs:
         name: Admit the runner to the SQL server
         run: .github/scripts/sql-firewall.sh open
       - name: Apply the game migrations
-        run: >
-          ASPNETCORE_ENVIRONMENT=Production artifacts/efbundle-game --connection
-          "Server=tcp:${{ steps.sql.outputs.fqdn }},1433;Database=WorldRankGuesser;Authentication=Active Directory Default;Encrypt=True;Connect Timeout=60"
+        env:
+          ConnectionStrings__WorldRankGuesserConnection: Server=tcp:${{ steps.sql.outputs.fqdn }},1433;Database=WorldRankGuesser;Authentication=Active Directory Default;Encrypt=True;Connect Timeout=60
+        run: ASPNETCORE_ENVIRONMENT=Production artifacts/efbundle-game
       - name: Remove the runner from the SQL server
         if: always() && steps.sql.outcome != 'skipped'
         run: .github/scripts/sql-firewall.sh close
@@ -2072,9 +2098,9 @@ jobs:
         run: .github/scripts/sql-firewall.sh open
       - name: Apply the game migrations
         if: env.ROLLBACK != 'true'
-        run: >
-          ASPNETCORE_ENVIRONMENT=Production artifacts/efbundle-game --connection
-          "Server=tcp:${{ steps.sql.outputs.fqdn }},1433;Database=WorldRankGuesser;Authentication=Active Directory Default;Encrypt=True;Connect Timeout=60"
+        env:
+          ConnectionStrings__WorldRankGuesserConnection: Server=tcp:${{ steps.sql.outputs.fqdn }},1433;Database=WorldRankGuesser;Authentication=Active Directory Default;Encrypt=True;Connect Timeout=60
+        run: ASPNETCORE_ENVIRONMENT=Production artifacts/efbundle-game
       - name: Remove the runner from the SQL server
         if: always() && steps.sql.outcome != 'skipped'
         run: .github/scripts/sql-firewall.sh close
@@ -2318,9 +2344,9 @@ jobs:
         name: Admit the runner to the SQL server
         run: .github/scripts/sql-firewall.sh open
       - name: Apply the dbo migrations
-        run: >
-          ASPNETCORE_ENVIRONMENT=Production artifacts/efbundle-scraper --connection
-          "Server=tcp:${{ steps.sql.outputs.fqdn }},1433;Database=WorldRankGuesser;Authentication=Active Directory Default;Encrypt=True;Connect Timeout=60"
+        env:
+          ConnectionStrings__WorldRankGuesserConnection: Server=tcp:${{ steps.sql.outputs.fqdn }},1433;Database=WorldRankGuesser;Authentication=Active Directory Default;Encrypt=True;Connect Timeout=60
+        run: ASPNETCORE_ENVIRONMENT=Production artifacts/efbundle-scraper
       - name: Remove the runner from the SQL server
         if: always() && steps.sql.outcome != 'skipped'
         run: .github/scripts/sql-firewall.sh close
@@ -2390,9 +2416,9 @@ jobs:
         run: .github/scripts/sql-firewall.sh open
       - name: Apply the dbo migrations
         if: env.ROLLBACK != 'true'
-        run: >
-          ASPNETCORE_ENVIRONMENT=Production artifacts/efbundle-scraper --connection
-          "Server=tcp:${{ steps.sql.outputs.fqdn }},1433;Database=WorldRankGuesser;Authentication=Active Directory Default;Encrypt=True;Connect Timeout=60"
+        env:
+          ConnectionStrings__WorldRankGuesserConnection: Server=tcp:${{ steps.sql.outputs.fqdn }},1433;Database=WorldRankGuesser;Authentication=Active Directory Default;Encrypt=True;Connect Timeout=60
+        run: ASPNETCORE_ENVIRONMENT=Production artifacts/efbundle-scraper
       - name: Remove the runner from the SQL server
         if: always() && steps.sql.outcome != 'skipped'
         run: .github/scripts/sql-firewall.sh close
