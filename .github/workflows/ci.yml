@@ -7,7 +7,7 @@ on:
 
 jobs:
   api:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-dotnet@v6
@@ -19,7 +19,7 @@ jobs:
         run: git diff --exit-code -- src/WorldRankGuesser.Web/openapi
 
   web:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     defaults:
       run:
         working-directory: src/WorldRankGuesser.Web
@@ -40,7 +40,7 @@ jobs:
   # Both images, and the compose stack's migrate target, build on every pull request; nothing is pushed here.
   # The deploy workflows are what push (docs/superpowers/specs/2026-09-19-phase-2-go-live-design.md, section 8).
   images:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
       - name: The game image
@@ -49,3 +49,48 @@ jobs:
         run: docker build --target migrate -t worldrankguesser-migrate .
       - name: The scraper image
         run: docker build -f src/SportsRankingService/Dockerfile -t worldrankguesser-scraper .
+
+  # Every template and parameter file compiles with no warning, and every parameter file matches its template.
+  infra:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      # The same Bicep as on the owner's machine: a build fails on any warning, and an older Bicep lacks type data
+      # for newer API versions (BCP081). Microsoft.App resources use 2026-01-01, the newest this version can validate.
+      - name: Pin Bicep
+        run: az bicep install --version v0.47.16 && az bicep version
+      - name: Build and lint the templates
+        run: |
+          set -euo pipefail
+          for f in infra/*.bicep; do
+            echo "== $f"
+            out="$(az bicep build --file "$f" --stdout 2>&1 >/dev/null)" || { echo "$out"; exit 1; }
+            if [[ -n "$out" ]]; then echo "$out"; echo "::error::$f built with warnings"; exit 1; fi
+          done
+      - name: Build the parameter files against their templates
+        run: |
+          set -euo pipefail
+          for f in infra/*/*.bicepparam; do
+            echo "== $f"
+            out="$(az bicep build-params --file "$f" --stdout 2>&1 >/dev/null)" || { echo "$out"; exit 1; }
+            if [[ -n "$out" ]]; then echo "$out"; echo "::error::$f built with warnings"; exit 1; fi
+          done
+
+  # The workflows and the composite action parse and use the actions and contexts correctly.
+  actions:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - id: get_actionlint
+        run: bash <(curl -fsSL https://raw.githubusercontent.com/rhysd/actionlint/main/scripts/download-actionlint.bash)
+        shell: bash
+      - run: ${{ steps.get_actionlint.outputs.executable }} -color
+        shell: bash
+
+  # The promotion guard's own tests: the hash, the refusal, a real resolve, and each deploy workflow's push filter
+  # against its hash inputs (docs/superpowers/specs/2026-09-19-phase-2-go-live-design.md, section 9).
+  guard:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - run: bash .github/actions/promotion-guard/test.sh
