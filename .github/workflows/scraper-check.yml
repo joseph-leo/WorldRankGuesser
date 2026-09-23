@@ -1,0 +1,50 @@
+name: Scraper check
+
+# Three hours after each environment's Job (staging Friday 06:00 UTC, production Monday 06:00 UTC): fails unless the
+# latest execution succeeded within the last day, so GitHub's failed-workflow email is the alert
+# (docs/superpowers/specs/2026-09-19-phase-2-go-live-design.md, section 8.6). Scheduled runs use main, which the
+# production environment does not admit, so the check logs in as the environment's monitor identity: Reader on its
+# resource group, federated to refs/heads/main, repository variables rather than environment ones.
+on:
+  schedule:
+    - cron: '0 9 * * 1,5'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Which environment's Job to check
+        type: choice
+        options: [staging, production]
+        default: staging
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - id: pick
+        name: Friday is staging's day, Monday production's
+        env:
+          INPUT_ENV: ${{ inputs.environment }}
+        run: |
+          set -euo pipefail
+          if [[ -n "$INPUT_ENV" ]]; then env_name="$INPUT_ENV"
+          elif [[ "$(date -u +%u)" == "1" ]]; then env_name=production
+          else env_name=staging
+          fi
+          echo "env=$env_name" >> "$GITHUB_OUTPUT"
+          if [[ "$env_name" == "production" ]]; then
+            echo "client_id=${{ vars.AZURE_MONITOR_CLIENT_ID_PRODUCTION }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "client_id=${{ vars.AZURE_MONITOR_CLIENT_ID_STAGING }}" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: azure/login@v3
+        with:
+          client-id: ${{ steps.pick.outputs.client_id }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      - name: The latest execution succeeded within a day
+        run: .github/scripts/check-job.sh "caj-wrg-${{ steps.pick.outputs.env }}-scraper" "rg-wrg-${{ steps.pick.outputs.env }}" 86400
