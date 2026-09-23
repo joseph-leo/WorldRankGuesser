@@ -35,6 +35,13 @@ namespace SportsRankingService.Models
         /// </summary>
         public string? Selector { get; set; }
 
+        /// <summary>
+        /// For a feed whose list comes in pages: <see cref="Url"/> then carries a {page} placeholder and this is the number of
+        /// the first page (WTA counts from 0). Null when the URL has no {page}, which is every other feed; a URL with {page}
+        /// and no first page counts from 1.
+        /// </summary>
+        public int? FirstPage { get; set; }
+
         /// <summary>False leaves the item in the file for reference without fetching it.</summary>
         public bool Enabled { get; set; } = true;
 

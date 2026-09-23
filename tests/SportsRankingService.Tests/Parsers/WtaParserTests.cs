@@ -31,4 +31,24 @@ public class WtaParserTests
         Assert.Equal(11460m, top.Points);
         Assert.Equal("Katerina Siniakova", top.Competitor);
     }
+
+    /// <summary>
+    /// Deep in the list a few players carry no nationality: countryCode null, or "NCD" (no country declared; neither an
+    /// ISO nor an IOC code), both seen 2026-09-22. A row without a country cannot count for one.
+    /// </summary>
+    [Theory]
+    [InlineData("null")]
+    [InlineData("\"NCD\"")]
+    public void A_player_without_a_country_is_dropped(string countryCodeJson)
+    {
+        string json = $$"""
+            [{"player":{"id":1,"countryCode":"FRA","fullName":"Ann"},"ranking":1415,"points":10,"rankedAt":"2026-09-14T00:00:00Z"},
+             {"player":{"id":2,"countryCode":{{countryCodeJson}},"fullName":"Carolann Delaunay"},"ranking":1416,"points":10,"rankedAt":"2026-09-14T00:00:00Z"},
+             {"player":{"id":3,"countryCode":"USA","fullName":"Bea"},"ranking":1417,"points":9,"rankedAt":"2026-09-14T00:00:00Z"}]
+            """;
+
+        var rows = _parser.Parse(json).Entries;
+
+        Assert.Equal([1415, 1417], rows.Select(r => (int)r.Position));
+    }
 }

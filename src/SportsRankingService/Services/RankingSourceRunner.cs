@@ -1,17 +1,24 @@
-﻿using SportsRankingService.Models;
+﻿using System.Globalization;
+using SportsRankingService.Models;
 using SportsRankingService.Parsing;
 using SportsRankingService.Services.UrlResolvers;
 
 namespace SportsRankingService.Services;
 
 /// <summary>
-/// Runs one configured feed end to end: resolve the URL, fetch it, parse it, build the snapshot.
-/// A failed fetch yields null (already logged by the fetcher). A malformed response throws
-/// <see cref="ParseException"/>; an unknown Source, UrlResolver or Fetcher name throws
+/// Runs one configured feed end to end: resolve the URL, fetch it (page by page when the URL carries {page}),
+/// parse it, build the snapshot. A failed fetch yields null (already logged by the fetcher). A malformed response
+/// throws <see cref="ParseException"/>; an unknown Source, UrlResolver or Fetcher name throws
 /// <see cref="InvalidOperationException"/> because that is a configuration error.
 /// </summary>
 public sealed class RankingSourceRunner : IRankingSourceRunner
 {
+    /// <summary>In a <see cref="RankingItem.Url"/>: replaced by the page number, from <see cref="RankingItem.FirstPage"/> up.</summary>
+    public const string PagePlaceholder = "{page}";
+
+    /// <summary>More pages than any feed has (WTA doubles: about 18 of 100); reaching it means the API ignores the page number.</summary>
+    private const int MaxPages = 100;
+
     private readonly IReadOnlyDictionary<string, IHttpFetcher> _fetchers;
     private readonly IReadOnlyDictionary<string, IRankingParser> _parsers;
     private readonly IReadOnlyDictionary<string, IUrlResolver> _resolvers;
@@ -49,15 +56,21 @@ public sealed class RankingSourceRunner : IRankingSourceRunner
             throw new InvalidOperationException($"No fetcher registered for '{item.Fetcher}' ({item.Describe()}). Known: {string.Join(", ", _fetchers.Keys)}");
         }
 
-        ResolvedUrl resolved = await resolver.ResolveAsync(item, cancellationToken);
-        string? response = await fetcher.GetStringAsync(resolved.Url, cancellationToken);
+        if (item.FirstPage is not null && !item.Url.Contains(PagePlaceholder, StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException($"FirstPage is set but the Url has no {PagePlaceholder} placeholder ({item.Describe()})");
+        }
 
-        if (response is null)
+        ResolvedUrl resolved = await resolver.ResolveAsync(item, cancellationToken);
+        ParsedRanking? parsed = resolved.Url.Contains(PagePlaceholder, StringComparison.Ordinal)
+            ? await ParsePagesAsync(item, resolved.Url, fetcher, parser, cancellationToken)
+            : await ParseOneAsync(item, resolved.Url, fetcher, parser, cancellationToken);
+
+        if (parsed is null)
         {
             return null;
         }
 
-        ParsedRanking parsed = parser.Parse(response, item.Selector);
         DateOnly today = DateOnly.FromDateTime(_clock.GetLocalNow().Date);
         RankingSnapshot snapshot = RankingSnapshotBuilder.Build(item, parsed, resolved.RankingDate, today);
 
@@ -65,5 +78,57 @@ public sealed class RankingSourceRunner : IRankingSourceRunner
             snapshot.Entries.Count, snapshot.Describe(), snapshot.RankingDate, snapshot.IsFederationDate ? "federation" : "scrape date");
 
         return snapshot;
+    }
+
+    private static async Task<ParsedRanking?> ParseOneAsync(RankingItem item, string url, IHttpFetcher fetcher, IRankingParser parser, CancellationToken cancellationToken)
+    {
+        string? response = await fetcher.GetStringAsync(url, cancellationToken);
+        return response is null ? null : parser.Parse(response, item.Selector);
+    }
+
+    /// <summary>
+    /// A paged list is fetched from <see cref="RankingItem.FirstPage"/> up, each page parsed on its own, until a page
+    /// yields no entries (that page is dropped). A page that cannot be fetched fails the whole feed, like any other
+    /// fetch failure: a list with a hole would be stored as a new, shorter release, which is worse than keeping the
+    /// previous one. The ranking date is the first page's.
+    /// </summary>
+    private async Task<ParsedRanking?> ParsePagesAsync(RankingItem item, string urlTemplate, IHttpFetcher fetcher, IRankingParser parser, CancellationToken cancellationToken)
+    {
+        List<RankEntry> entries = [];
+        DateOnly? rankingDate = null;
+        int firstPage = item.FirstPage ?? 1;
+
+        for (int page = firstPage; ; page++)
+        {
+            // An API that ignores the page parameter answers its first page forever.
+            if (page - firstPage >= MaxPages)
+            {
+                throw new ParseException(item.Source, $"still yielding entries after {MaxPages} pages: does the API honour {PagePlaceholder}?");
+            }
+
+            string url = urlTemplate.Replace(PagePlaceholder, page.ToString(CultureInfo.InvariantCulture), StringComparison.Ordinal);
+            string? response = await fetcher.GetStringAsync(url, cancellationToken);
+
+            if (response is null)
+            {
+                _logger.LogWarning("Page {Page} of {Item} could not be fetched; the feed keeps its previous release", page, item.Describe());
+                return null;
+            }
+
+            ParsedRanking parsed = parser.Parse(response, item.Selector);
+            if (parsed.Entries.Count == 0)
+            {
+                return new ParsedRanking(entries, rankingDate);
+            }
+
+            // A new ranking published between two page requests would give a list that is half old and half new.
+            if (rankingDate is not null && parsed.RankingDate != rankingDate)
+            {
+                throw new ParseException(item.Source, $"page {page} carries ranking date {parsed.RankingDate:yyyy-MM-dd} but the first page {rankingDate:yyyy-MM-dd}: the list changed between pages");
+            }
+
+            rankingDate ??= parsed.RankingDate;
+            entries.AddRange(parsed.Entries);
+        }
     }
 }

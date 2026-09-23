@@ -10,7 +10,8 @@ namespace SportsRankingService.Parsers;
 /// BWF ranking table API (vue-rankingtable). Countries come as names only. Doubles rows carry
 /// two players and yield one entry per partner with the pair's position and points; each entry
 /// names its own partner. Players listed as "Athlete Independent Neutral" have no country and
-/// are dropped. The full lists echo some rows inside a block of tied players (a new row id, the same
+/// are dropped; a player competing independently of their federation is labelled "&lt;COUNTRY&gt; Independent"
+/// (2026-09-22) and counts for that country. The full lists echo some rows inside a block of tied players (a new row id, the same
 /// player ids, rank and points); a player or pair is one entry however often it is listed, and an echo
 /// that disagrees on rank or points fails the parse. A player ranked with several partners has an entry
 /// per pair, except that two of his pairs tied on rank and points list him once: an entry names the
@@ -66,7 +67,7 @@ public sealed partial class BwfParser : JsonRankingParser<BwfParser.Root>
                     continue;
                 }
 
-                if (!CountryUtil.TryGetISO3FromCountry(country.Name, out string? iso3))
+                if (!CountryUtil.TryGetISO3FromCountry(WithoutIndependent(country.Name), out string? iso3))
                 {
                     throw new ParseException(SourceName, $"no ISO3 mapping for country name '{country.Name}'");
                 }
@@ -90,6 +91,13 @@ public sealed partial class BwfParser : JsonRankingParser<BwfParser.Root>
 
     private static bool IsNeutral(string countryName) =>
         countryName.Contains("Neutral", StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>"MOROCCO Independent" is a Moroccan player competing outside their federation: the country is the part before the label.</summary>
+    private static string WithoutIndependent(string countryName)
+    {
+        const string suffix = " Independent";
+        return countryName.EndsWith(suffix, StringComparison.OrdinalIgnoreCase) ? countryName[..^suffix.Length] : countryName;
+    }
 
     [GeneratedRegex("<[^>]+>")]
     private static partial Regex Tags();
