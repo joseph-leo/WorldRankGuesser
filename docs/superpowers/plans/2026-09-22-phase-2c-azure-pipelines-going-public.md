@@ -1694,7 +1694,7 @@ Create `infra/production/bootstrap.sql` from the staging file: every `staging` b
 (Get-Content infra/production/bootstrap.sql | Select-String 'id-wrg-production-' -AllMatches).Matches.Count
 ```
 
-Expected: `1` (only the sentence pointing at the staging file) and `10`.
+Expected: `2` (the word "Staging" and the path `infra/staging/` in the one sentence pointing at the staging file) and `10`.
 
 - [ ] **Step 4: The whole folder, as CI will check it**
 
