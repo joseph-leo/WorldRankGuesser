@@ -1,0 +1,48 @@
+name: Deploy infrastructure
+
+# main.bicep with the ref's parameter file (docs/superpowers/specs/2026-09-19-phase-2-go-live-design.md, section
+# 8.5). No image, so nothing records that a change passed staging; it has at least been deployed there, because
+# every change reaches prod through main. A change the game or the scraper needs is two merges, main.bicep first.
+on:
+  push:
+    branches: [main, 'stage/**', prod]
+    paths:
+      - 'infra/main.bicep'
+      - 'infra/staging/main.bicepparam'
+      - 'infra/production/main.bicepparam'
+      - '.github/workflows/infra.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: infra-${{ github.ref == 'refs/heads/prod' && 'production' || 'staging' }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: vars.DEPLOYS_ENABLED == 'true'
+    runs-on: ubuntu-24.04
+    environment:
+      name: ${{ github.ref == 'refs/heads/prod' && 'production' || 'staging' }}
+    env:
+      ENV: ${{ github.ref == 'refs/heads/prod' && 'production' || 'staging' }}
+      RG: ${{ vars.AZURE_RESOURCE_GROUP }}
+      SQL_ADMIN_LOGIN: ${{ secrets.SQL_ADMIN_LOGIN }}
+      SQL_ADMIN_OBJECT_ID: ${{ secrets.SQL_ADMIN_OBJECT_ID }}
+      BUDGET_EMAIL: ${{ secrets.BUDGET_EMAIL }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: azure/login@v3
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+      - name: Pin Bicep
+        run: az bicep install --version v0.47.16
+      - name: Deploy main.bicep
+        run: >
+          az deployment group create --resource-group "$RG" --name "main-${{ github.run_id }}"
+          --template-file infra/main.bicep --parameters "infra/$ENV/main.bicepparam" --output none

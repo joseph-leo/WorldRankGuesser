@@ -65,6 +65,23 @@ describe('ServerReadiness', () => {
 		expect(server.phase).toBe('ready');
 	});
 
+	it('says it is waking the server when the first answer takes longer than 1.5 seconds', async () => {
+		let answer!: (ready: boolean) => void;
+		const check = vi.fn(() => new Promise<boolean>((resolve) => (answer = resolve)));
+		const server = new ServerReadiness(check);
+
+		const waiting = server.wait();
+		await vi.advanceTimersByTimeAsync(1000);
+		expect(server.phase).toBe('checking');
+
+		await vi.advanceTimersByTimeAsync(600);
+		expect(server.phase).toBe('waking');
+
+		answer(true);
+		await waiting;
+		expect(server.phase).toBe('ready');
+	});
+
 	it('treats a check that throws as not ready', async () => {
 		let calls = 0;
 		const check = vi.fn(async () => {

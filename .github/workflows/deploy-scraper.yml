@@ -1,0 +1,201 @@
+name: Deploy scraper
+
+# The scraper's image and Job, promoted like the game (docs/superpowers/specs/2026-09-19-phase-2-go-live-design.md,
+# section 8.4). Promotion moves the image, never the data: each environment scrapes into its own database on its
+# own schedule. env.PATHS must list exactly the paths below, directories without /**.
+on:
+  push:
+    branches: [main, 'stage/**', prod]
+    paths:
+      - 'src/SportsRankingService/**'
+      - '.dockerignore'
+      - 'Directory.Build.props'
+      - 'global.json'
+      - '.config/dotnet-tools.json'
+      - 'infra/scraper.bicep'
+      - 'infra/staging/scraper.bicepparam'
+      - 'infra/production/scraper.bicepparam'
+      - '.github/workflows/deploy-scraper.yml'
+      - '.github/actions/promotion-guard/**'
+      - '.github/scripts/**'
+  workflow_dispatch:
+    inputs:
+      staged_tag:
+        description: 'Production only: deploy this staged-<hash> tag instead of the tip of prod (a rollback; migrations are skipped)'
+        required: false
+        type: string
+        default: ''
+      run_job:
+        description: 'Production only: start the Job once after deploying'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  packages: write
+  id-token: write
+
+concurrency:
+  group: deploy-scraper-${{ github.ref == 'refs/heads/prod' && 'production' || 'staging' }}
+  cancel-in-progress: false
+
+env:
+  IMAGE: ghcr.io/joseph-leo/worldrankguesser-scraper
+  PATHS: |
+    src/SportsRankingService
+    .dockerignore
+    Directory.Build.props
+    global.json
+    .config/dotnet-tools.json
+    infra/scraper.bicep
+    infra/staging/scraper.bicepparam
+    infra/production/scraper.bicepparam
+    .github/workflows/deploy-scraper.yml
+    .github/actions/promotion-guard
+    .github/scripts
+
+jobs:
+  staging:
+    if: github.ref != 'refs/heads/prod' && vars.DEPLOYS_ENABLED == 'true'
+    runs-on: ubuntu-24.04
+    environment:
+      name: staging
+    env:
+      RG: ${{ vars.AZURE_RESOURCE_GROUP }}
+      JOB: caj-wrg-staging-scraper
+      RULE: gha-${{ github.run_id }}-${{ github.run_attempt }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - id: guard
+        uses: ./.github/actions/promotion-guard
+        with:
+          image: ${{ env.IMAGE }}
+          paths: ${{ env.PATHS }}
+
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/setup-buildx-action@v4
+      - id: build
+        name: Build and push sha-${{ github.sha }}
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: src/SportsRankingService/Dockerfile
+          push: true
+          provenance: false
+          tags: ${{ env.IMAGE }}:sha-${{ github.sha }}
+
+      - uses: actions/setup-dotnet@v6
+        with:
+          global-json-file: global.json
+      - name: Build the dbo migrations bundle
+        run: .github/scripts/build-bundle.sh src/SportsRankingService artifacts/efbundle-scraper
+
+      - uses: azure/login@v3
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - id: sql
+        name: Admit the runner to the SQL server
+        run: .github/scripts/sql-firewall.sh open
+      - name: Apply the dbo migrations
+        env:
+          ConnectionStrings__WorldRankGuesserConnection: Server=tcp:${{ steps.sql.outputs.fqdn }},1433;Database=WorldRankGuesser;Authentication=Active Directory Default;Encrypt=True;Connect Timeout=60
+        run: ASPNETCORE_ENVIRONMENT=Production artifacts/efbundle-scraper
+      - name: Remove the runner from the SQL server
+        if: always() && steps.sql.outcome != 'skipped'
+        run: .github/scripts/sql-firewall.sh close
+
+      - name: Pin Bicep
+        run: az bicep install --version v0.47.16
+      - name: Deploy the Job by digest
+        env:
+          SCRAPER_IMAGE: ${{ env.IMAGE }}@${{ steps.build.outputs.digest }}
+        run: >
+          az deployment group create --resource-group "$RG" --name "scraper-${{ github.run_id }}"
+          --template-file infra/scraper.bicep --parameters infra/staging/scraper.bicepparam --output none
+
+      - name: Scrape once and wait for the execution to succeed
+        run: .github/scripts/run-job.sh "$JOB" "$RG" 3900
+
+      - name: Tag the image staged-${{ steps.guard.outputs.hash }}
+        uses: ./.github/actions/promotion-guard
+        with:
+          image: ${{ env.IMAGE }}
+          paths: ${{ env.PATHS }}
+          mode: tag
+          digest: ${{ steps.build.outputs.digest }}
+
+  production:
+    if: github.ref == 'refs/heads/prod' && vars.DEPLOYS_ENABLED == 'true'
+    runs-on: ubuntu-24.04
+    environment:
+      name: production
+    env:
+      RG: ${{ vars.AZURE_RESOURCE_GROUP }}
+      JOB: caj-wrg-production-scraper
+      RULE: gha-${{ github.run_id }}-${{ github.run_attempt }}
+      ROLLBACK: ${{ inputs.staged_tag != '' }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - id: guard
+        name: Resolve the staged tag, or refuse
+        uses: ./.github/actions/promotion-guard
+        with:
+          image: ${{ env.IMAGE }}
+          paths: ${{ env.PATHS }}
+          mode: resolve
+          tag: ${{ inputs.staged_tag }}
+
+      - uses: actions/setup-dotnet@v6
+        if: env.ROLLBACK != 'true'
+        with:
+          global-json-file: global.json
+      - name: Build the dbo migrations bundle
+        if: env.ROLLBACK != 'true'
+        run: .github/scripts/build-bundle.sh src/SportsRankingService artifacts/efbundle-scraper
+
+      - uses: azure/login@v3
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - id: sql
+        name: Admit the runner to the SQL server
+        if: env.ROLLBACK != 'true'
+        run: .github/scripts/sql-firewall.sh open
+      - name: Apply the dbo migrations
+        if: env.ROLLBACK != 'true'
+        env:
+          ConnectionStrings__WorldRankGuesserConnection: Server=tcp:${{ steps.sql.outputs.fqdn }},1433;Database=WorldRankGuesser;Authentication=Active Directory Default;Encrypt=True;Connect Timeout=60
+        run: ASPNETCORE_ENVIRONMENT=Production artifacts/efbundle-scraper
+      - name: Remove the runner from the SQL server
+        if: always() && steps.sql.outcome != 'skipped'
+        run: .github/scripts/sql-firewall.sh close
+
+      - name: Pin Bicep
+        run: az bicep install --version v0.47.16
+      - name: Deploy the Job by digest
+        env:
+          SCRAPER_IMAGE: ${{ env.IMAGE }}@${{ steps.guard.outputs.digest }}
+        run: >
+          az deployment group create --resource-group "$RG" --name "scraper-${{ github.run_id }}"
+          --template-file infra/scraper.bicep --parameters infra/production/scraper.bicepparam --output none
+
+      - name: Scrape once (on request)
+        if: inputs.run_job == true
+        run: .github/scripts/run-job.sh "$JOB" "$RG" 3900
