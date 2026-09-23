@@ -121,7 +121,7 @@ jobs:
           --template-file infra/scraper.bicep --parameters infra/staging/scraper.bicepparam --output none
 
       - name: Scrape once and wait for the execution to succeed
-        run: .github/scripts/run-job.sh "$JOB" "$RG" 2100
+        run: .github/scripts/run-job.sh "$JOB" "$RG" 3900
 
       - name: Tag the image staged-${{ steps.guard.outputs.hash }}
         uses: ./.github/actions/promotion-guard
@@ -194,4 +194,4 @@ jobs:
 
       - name: Scrape once (on request)
         if: inputs.run_job == true
-        run: .github/scripts/run-job.sh "$JOB" "$RG" 2100
+        run: .github/scripts/run-job.sh "$JOB" "$RG" 3900
