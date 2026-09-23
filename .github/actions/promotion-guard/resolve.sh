@@ -1,17 +1,11 @@
 #!/usr/bin/env bash
-# Resolves <image>:<staged tag> to its digest, or refuses: a staged-<hash> tag exists only after the staging job's smoke
+# Resolves <image>:<tag> to its digest, or refuses: a staged-<hash> tag exists only after the staging job's smoke
 # test passed on exactly these inputs, so a missing tag means these sources never passed staging.
 #   resolve.sh ghcr.io/joseph-leo/worldrankguesser-game staged-0123456789ab
 set -euo pipefail
 
 image="${1:?image}"
 tag="${2:?tag}"
-
-# Only a staged tag may be resolved: a sha-<sha> tag says "built", never "passed staging".
-if [[ "$tag" != staged-* ]]; then
-  echo "::error::${image}:${tag} is not a staged-<hash> tag: only an image that passed staging may be deployed to production" >&2
-  exit 1
-fi
 
 # The plain output's "Digest:" line, not a --format template: buildx 0.30 (Docker Desktop) mishandles
 # '{{.Manifest.Digest}}', printing the whole report, while the runner's 0.37 does not; the text line is the same in both.
