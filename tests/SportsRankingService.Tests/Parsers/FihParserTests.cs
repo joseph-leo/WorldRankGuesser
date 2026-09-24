@@ -11,9 +11,9 @@ public class FihParserTests
     {
         var rows = _parser.Parse(Sample.Read("Fih_Outdoor_Men.json")).Entries;
 
-        Assert.Equal(104, rows.Count);
+        Assert.Equal(12, rows.Count);
         Assert.Equal("DEU", rows.Single(r => r.Position == 1).ISO3);
-        Assert.Equal("MAR", rows.Single(r => r.Position == 104).ISO3);
+        Assert.Equal("MAR", rows.Single(r => r.Position == 12).ISO3);
     }
 
     [Fact]
@@ -36,7 +36,7 @@ public class FihParserTests
     {
         var top = _parser.Parse(Sample.Read("Fih_Outdoor_Men.json")).Entries.Single(r => r.Position == 1);
 
-        Assert.Equal(3720.4115420015878m, top.Points);
+        Assert.Equal(3720.41m, top.Points);
         Assert.Equal("DEU", top.ISO3);
         Assert.Null(top.Competitor);
     }

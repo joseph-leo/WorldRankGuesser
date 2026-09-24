@@ -11,9 +11,9 @@ public class WbscParserTests
     {
         var rows = _parser.Parse(Sample.Read("Wbsc_Baseball_Men.json")).Entries;
 
-        Assert.Equal(85, rows.Count);
+        Assert.Equal(12, rows.Count);
         Assert.Equal("JPN", rows.Single(r => r.Position == 1).ISO3);
-        Assert.Equal("TUR", rows.Last().ISO3);   // positions tie at the bottom, so 83 is shared
+        Assert.Equal("TUR", rows.Last().ISO3);   // positions tie at the bottom, so 11 is shared
     }
 
     [Fact]

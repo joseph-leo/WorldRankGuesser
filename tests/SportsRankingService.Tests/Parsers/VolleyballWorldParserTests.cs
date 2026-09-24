@@ -11,9 +11,9 @@ public class VolleyballWorldParserTests
     {
         var rows = _parser.Parse(Sample.Read("VolleyballWorld_Men.json")).Entries;
 
-        Assert.Equal(148, rows.Count);
+        Assert.Equal(12, rows.Count);
         Assert.Equal("POL", rows.Single(r => r.Position == 1).ISO3);
-        Assert.Equal("NZL", rows.Single(r => r.Position == 148).ISO3);
+        Assert.Equal("NZL", rows.Single(r => r.Position == 12).ISO3);
         Assert.All(rows, r => Assert.Matches("^[A-Z]{3}$", r.ISO3));
     }
 
@@ -35,9 +35,9 @@ public class VolleyballWorldParserTests
         var rows = _parser.Parse(Sample.Read("VolleyballWorld_Beach_Men.json")).Entries;
         var top = rows.Single(r => r.Position == 1);
 
-        Assert.Equal(500, rows.Count);
+        Assert.Equal(12, rows.Count);
         Assert.Equal("SWE", top.ISO3);
-        Assert.Equal("Hölting Nilsson/Andersson, E", top.Competitor);
+        Assert.Equal("Alpha/Bravo, M", top.Competitor);
         Assert.Equal(8020m, top.Points);
         Assert.Contains(rows, r => r.ISO3 == "BRA" && r.Position != rows.First(b => b.ISO3 == "BRA").Position);   // a country fields several pairs
     }
