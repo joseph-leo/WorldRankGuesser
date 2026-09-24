@@ -146,6 +146,17 @@ builder.Services.AddRateLimiter(limiter =>
 // Unhandled errors and bare status codes become RFC 9457 problem details, never HTML or stack traces.
 builder.Services.AddProblemDetails();
 
+// Data protection registers a hosted service that preloads the key ring at startup (AddDataProtection, called again by
+// AddCookie, so it is removed here, after every registration). With the keys in the database, that preload holds host
+// startup for as long as a paused Azure SQL database takes to resume (about 40 seconds on staging, 2026-09-24); Kestrel
+// starts only after the hosted services, so the startup probe killed the container before it listened. Without the
+// preload the key ring loads on first use, the first game start, by which time the rankings load has found the database
+// awake. ReadinessTests pins this.
+foreach (var preload in builder.Services.Where(d => d.ServiceType == typeof(IHostedService) && d.ImplementationType?.Name == "DataProtectionHostedService").ToList())
+{
+    builder.Services.Remove(preload);
+}
+
 var app = builder.Build();
 
 if (hosting.TrustForwardedHeaders)
