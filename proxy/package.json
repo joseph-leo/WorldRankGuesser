@@ -1,0 +1,14 @@
+{
+  "name": "wrg-proxy",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "The Cloudflare Worker the scraper fetches through for a feed whose site refuses hosting addresses (WBSC).",
+  "scripts": {
+    "test": "node --test",
+    "deploy": "wrangler deploy"
+  },
+  "devDependencies": {
+    "wrangler": "4.139.0"
+  }
+}
