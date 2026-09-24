@@ -148,7 +148,7 @@ infra/README.md                the runbook
 - Log Analytics workspace, 30-day retention, a daily ingestion cap by parameter. The two caps together stay inside the free 5 GB a month.
 - Container Apps environment, Consumption only, no virtual network.
 - SQL logical server with **Entra-only authentication**; the admin is the owner's account (object ID parameter). No SQL password exists anywhere in Azure.
-- The database, by parameter `sqlSku`: `free` (General Purpose serverless, 0.5 to 1 vCore, free limit on, exhaustion behaviour **auto-pause**, shortest auto-pause delay) or `basic` (Basic DTU).
+- The database, by parameter `sqlSku`: `free` (General Purpose serverless, 0.5 to 1 vCore, free limit on, exhaustion behaviour **auto-pause**, the default auto-pause delay of 60 minutes: with auto-pause on exhaustion the offer refuses any other, found 2026-09-23) or `basic` (Basic DTU).
 - Firewall: the "allow Azure services" rule. A Consumption environment without a virtual network has no fixed outbound address. This admits connections from any Azure tenant to the login endpoint, which is acceptable only because authentication is Entra-only.
 - Two user-assigned managed identities: `id-game` and `id-scraper`.
 - A budget on the resource group with an alert by parameter.

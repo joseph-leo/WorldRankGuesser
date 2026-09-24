@@ -1161,7 +1161,8 @@ resource db 'Microsoft.Sql/servers/databases@2025-01-01' = {
     ? {
         useFreeLimit: true
         freeLimitExhaustionBehavior: 'AutoPause'
-        autoPauseDelay: 15
+        // No autoPauseDelay: the free offer with AutoPause accepts only the default (the service refused 15 with
+        // ProvisioningDisabled, "Only default value for auto pause delay is allowed", 2026-09-23).
         minCapacity: json('0.5')
         maxSizeBytes: 34359738368
         requestedBackupStorageRedundancy: 'Local'
@@ -3215,7 +3216,7 @@ $o = Get-Content "$env:TEMP\staging-main.json" | ConvertFrom-Json
 az sql db show --resource-group rg-wrg-staging --server $o.sqlServerName.value --name WorldRankGuesser --query "{free: useFreeLimit, whenSpent: freeLimitExhaustionBehavior, sku: currentSku.name, pauseAfterMinutes: autoPauseDelay}"
 ```
 
-Expected: `free: true`, `whenSpent: AutoPause`, `sku: GP_S_Gen5`, `pauseAfterMinutes: 15`.
+Expected: `free: true`, `whenSpent: AutoPause`, `sku: GP_S_Gen5`, `pauseAfterMinutes: 60` (the free offer with auto-pause accepts only the default delay; it refused 15 on 2026-09-23).
 
 - [ ] **Step 5: Owner: the database users (first run)**
 
@@ -3343,7 +3344,7 @@ Spec section 9, "Staging". Each item is observed once and recorded in the runboo
 
 - [ ] **Step 1: A cold start plays a game within 90 seconds**
 
-Leave staging alone for 20 minutes (the database pauses after 15, the app scales to zero after 5). First, spec section 10's question, whether a refused request wakes the app: `az containerapp ingress access-restriction remove --name ca-wrg-staging-game --resource-group rg-wrg-staging --rule-name phone` (if the phone was admitted in Task 19), then **Owner:** request the page from the phone on mobile data (refused), then:
+Leave staging alone for 65 minutes (the database pauses after 60, the app scales to zero after 5). First, spec section 10's question, whether a refused request wakes the app: `az containerapp ingress access-restriction remove --name ca-wrg-staging-game --resource-group rg-wrg-staging --rule-name phone` (if the phone was admitted in Task 19), then **Owner:** request the page from the phone on mobile data (refused), then:
 
 ```powershell
 az containerapp replica list --name ca-wrg-staging-game --resource-group rg-wrg-staging --revision (az containerapp show --name ca-wrg-staging-game --resource-group rg-wrg-staging --query properties.latestRevisionName -o tsv) --query "length(@)"

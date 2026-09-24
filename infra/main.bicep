@@ -120,7 +120,8 @@ resource db 'Microsoft.Sql/servers/databases@2025-01-01' = {
     ? {
         useFreeLimit: true
         freeLimitExhaustionBehavior: 'AutoPause'
-        autoPauseDelay: 15
+        // No autoPauseDelay: the free offer with AutoPause accepts only the default (the service refused 15 with
+        // ProvisioningDisabled, "Only default value for auto pause delay is allowed", 2026-09-23).
         minCapacity: json('0.5')
         maxSizeBytes: 34359738368
         requestedBackupStorageRedundancy: 'Local'
