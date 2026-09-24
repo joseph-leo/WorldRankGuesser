@@ -1,0 +1,6 @@
+# The proxy the scraper fetches WBSC through (docs/superpowers/specs/2026-09-24-wbsc-proxy-egress-design.md).
+# One Worker serves staging and production. Deployed by .github/workflows/deploy-proxy.yml; the PROXY_TOKEN secret is
+# set there from the GitHub secret of the same name, and the account comes from CLOUDFLARE_ACCOUNT_ID.
+name = "wrg-proxy"
+main = "src/index.js"
+compatibility_date = "2026-09-01"

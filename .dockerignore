@@ -8,6 +8,7 @@
 docs
 tests
 tools
+proxy
 **/bin
 **/obj
 **/node_modules

@@ -403,3 +403,6 @@ FodyWeavers.xsd
 
 # Real federation responses for the optional capture pass (never committed)
 tests/SportsRankingService.Tests/Captures/
+
+# wrangler's local state for the proxy Worker
+proxy/.wrangler/
