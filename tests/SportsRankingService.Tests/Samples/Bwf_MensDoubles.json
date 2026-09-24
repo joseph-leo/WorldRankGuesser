@@ -1,0 +1,219 @@
+{
+  "results": {
+    "data": [
+      {
+        "id": 200,
+        "rank": 1,
+        "points": "114099.0000",
+        "player1_id": 2000,
+        "player2_id": 2001,
+        "player1_model": {
+          "slug": "player-2000",
+          "name_display_bold": "<span class=\"name-1\">Jonah</span> <span class=\"name-2\">ALPHA</span>"
+        },
+        "player2_model": {
+          "slug": "player-2001",
+          "name_display_bold": "<span class=\"name-1\">Mika</span> <span class=\"name-2\">BRAVO</span>"
+        },
+        "p1_country_model": {
+          "name": "Korea"
+        },
+        "p2_country_model": {
+          "name": "Korea"
+        }
+      },
+      {
+        "id": 201,
+        "rank": 2,
+        "points": "110099.0000",
+        "player1_id": 2002,
+        "player2_id": 2003,
+        "player1_model": {
+          "slug": "player-2002",
+          "name_display_bold": "<span class=\"name-1\">Sacha</span> <span class=\"name-2\">CHARLIE</span>"
+        },
+        "player2_model": {
+          "slug": "player-2003",
+          "name_display_bold": "<span class=\"name-1\">Rene</span> <span class=\"name-2\">DELTA</span>"
+        },
+        "p1_country_model": {
+          "name": "DENMARK"
+        },
+        "p2_country_model": {
+          "name": "DENMARK"
+        }
+      },
+      {
+        "id": 202,
+        "rank": 3,
+        "points": "106099.0000",
+        "player1_id": 2004,
+        "player2_id": 2005,
+        "player1_model": {
+          "slug": "player-2004",
+          "name_display_bold": "<span class=\"name-1\">Toni</span> <span class=\"name-2\">ECHO</span>"
+        },
+        "player2_model": {
+          "slug": "player-2005",
+          "name_display_bold": "<span class=\"name-1\">Kim</span> <span class=\"name-2\">FOXTROT</span>"
+        },
+        "p1_country_model": {
+          "name": "MALAYSIA"
+        },
+        "p2_country_model": {
+          "name": "MALAYSIA"
+        }
+      },
+      {
+        "id": 203,
+        "rank": 4,
+        "points": "102099.0000",
+        "player1_id": 2006,
+        "player2_id": 2007,
+        "player1_model": {
+          "slug": "player-2006",
+          "name_display_bold": "<span class=\"name-1\">Ari</span> <span class=\"name-2\">GOLF</span>"
+        },
+        "player2_model": {
+          "slug": "player-2007",
+          "name_display_bold": "<span class=\"name-1\">Lou</span> <span class=\"name-2\">HOTEL</span>"
+        },
+        "p1_country_model": {
+          "name": "INDONESIA"
+        },
+        "p2_country_model": {
+          "name": "INDONESIA"
+        }
+      },
+      {
+        "id": 204,
+        "rank": 5,
+        "points": "98099.0000",
+        "player1_id": 2008,
+        "player2_id": 2009,
+        "player1_model": {
+          "slug": "player-2008",
+          "name_display_bold": "<span class=\"name-1\">Sam</span> <span class=\"name-2\">INDIA</span>"
+        },
+        "player2_model": {
+          "slug": "player-2009",
+          "name_display_bold": "<span class=\"name-1\">Noa</span> <span class=\"name-2\">JULIET</span>"
+        },
+        "p1_country_model": {
+          "name": "Korea"
+        },
+        "p2_country_model": {
+          "name": "MALAYSIA"
+        }
+      },
+      {
+        "id": 205,
+        "rank": 6,
+        "points": "94099.0000",
+        "player1_id": 2010,
+        "player2_id": 2011,
+        "player1_model": {
+          "slug": "player-2010",
+          "name_display_bold": "<span class=\"name-1\">Eli</span> <span class=\"name-2\">KILO</span>"
+        },
+        "player2_model": {
+          "slug": "player-2011",
+          "name_display_bold": "<span class=\"name-1\">Max</span> <span class=\"name-2\">LIMA</span>"
+        },
+        "p1_country_model": {
+          "name": "JAPAN"
+        },
+        "p2_country_model": {
+          "name": "JAPAN"
+        }
+      },
+      {
+        "id": 206,
+        "rank": 7,
+        "points": "90099.0000",
+        "player1_id": 2012,
+        "player2_id": 2013,
+        "player1_model": {
+          "slug": "player-2012",
+          "name_display_bold": "<span class=\"name-1\">Ola</span> <span class=\"name-2\">MIKE</span>"
+        },
+        "player2_model": {
+          "slug": "player-2013",
+          "name_display_bold": "<span class=\"name-1\">Uma</span> <span class=\"name-2\">NOVEMBER</span>"
+        },
+        "p1_country_model": {
+          "name": "CHINA"
+        },
+        "p2_country_model": {
+          "name": "CHINA"
+        }
+      },
+      {
+        "id": 207,
+        "rank": 8,
+        "points": "86099.0000",
+        "player1_id": 2014,
+        "player2_id": 2015,
+        "player1_model": {
+          "slug": "player-2014",
+          "name_display_bold": "<span class=\"name-1\">Ivo</span> <span class=\"name-2\">OSCAR</span>"
+        },
+        "player2_model": {
+          "slug": "player-2015",
+          "name_display_bold": "<span class=\"name-1\">Zoe</span> <span class=\"name-2\">PAPA</span>"
+        },
+        "p1_country_model": {
+          "name": "Athlete Independent Neutral"
+        },
+        "p2_country_model": {
+          "name": "Athlete Independent Neutral"
+        }
+      },
+      {
+        "id": 208,
+        "rank": 9,
+        "points": "82099.0000",
+        "player1_id": 2016,
+        "player2_id": 2017,
+        "player1_model": {
+          "slug": "player-2016",
+          "name_display_bold": "<span class=\"name-1\">Rae</span> <span class=\"name-2\">QUEBEC</span>"
+        },
+        "player2_model": {
+          "slug": "player-2017",
+          "name_display_bold": "<span class=\"name-1\">Ash</span> <span class=\"name-2\">ROMEO</span>"
+        },
+        "p1_country_model": {
+          "name": "INDIA"
+        },
+        "p2_country_model": {
+          "name": "INDIA"
+        }
+      },
+      {
+        "id": 209,
+        "rank": 10,
+        "points": "78099.0000",
+        "player1_id": 2018,
+        "player2_id": 2019,
+        "player1_model": {
+          "slug": "player-2018",
+          "name_display_bold": "<span class=\"name-1\">Ida</span> <span class=\"name-2\">SIERRA</span>"
+        },
+        "player2_model": {
+          "slug": "player-2019",
+          "name_display_bold": "<span class=\"name-1\">Bo</span> <span class=\"name-2\">TANGO</span>"
+        },
+        "p1_country_model": {
+          "name": "FRANCE"
+        },
+        "p2_country_model": {
+          "name": "FRANCE"
+        }
+      }
+    ],
+    "total": 10,
+    "per_page": 10,
+    "last_page": 1
+  }
+}

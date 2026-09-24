@@ -1,0 +1,64 @@
+{
+  "Results": [
+    {
+      "Rank": 1,
+      "IdCountry": "ESP",
+      "Name": "Spain",
+      "TotalPoints": 2066.8
+    },
+    {
+      "Rank": 2,
+      "IdCountry": "USA",
+      "Name": "USA",
+      "TotalPoints": 2050.1
+    },
+    {
+      "Rank": 3,
+      "IdCountry": "SWE",
+      "Name": "Sweden",
+      "TotalPoints": 2010.3
+    },
+    {
+      "Rank": 4,
+      "IdCountry": "GER",
+      "Name": "Germany",
+      "TotalPoints": 2000
+    },
+    {
+      "Rank": 5,
+      "IdCountry": "ENG",
+      "Name": "England",
+      "TotalPoints": 1990.6
+    },
+    {
+      "Rank": 6,
+      "IdCountry": "FRA",
+      "Name": "France",
+      "TotalPoints": 1960.2
+    },
+    {
+      "Rank": 7,
+      "IdCountry": "JPN",
+      "Name": "Japan",
+      "TotalPoints": 1950.9
+    },
+    {
+      "Rank": 8,
+      "IdCountry": "MRI",
+      "Name": "Mauritius",
+      "TotalPoints": 900
+    },
+    {
+      "Rank": null,
+      "IdCountry": "SMR",
+      "Name": "San Marino",
+      "TotalPoints": null
+    },
+    {
+      "Rank": null,
+      "IdCountry": "AIA",
+      "Name": "Anguilla",
+      "TotalPoints": null
+    }
+  ]
+}

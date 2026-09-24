@@ -11,7 +11,7 @@ public class SvnsSeriesResolverTests
     [Fact]
     public void Extracts_the_series_ids_from_the_standings_page()
     {
-        var ids = SvnsSeriesResolver.ExtractSeriesIds(Fixture.Read("Svns_Standings.html"));
+        var ids = SvnsSeriesResolver.ExtractSeriesIds(Sample.Read("Svns_Standings.html"));
 
         Assert.Equal(["1cbf9c53-7b2f-4973-9619-215c98d7a494", "60023731-b2e9-4d5f-8c19-e6ecf2cf1e89"], ids);
     }
@@ -27,6 +27,6 @@ public class SvnsSeriesResolverTests
     [InlineData("Svns_Series_Women.json", "wrs")]
     public void Reads_the_sport_code_from_the_series_metadata(string fixture, string expected)
     {
-        Assert.Equal(expected, SvnsSeriesResolver.ReadSportCode(Fixture.Read(fixture)));
+        Assert.Equal(expected, SvnsSeriesResolver.ReadSportCode(Sample.Read(fixture)));
     }
 }

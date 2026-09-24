@@ -1,0 +1,76 @@
+{
+  "Results": [
+    {
+      "Rank": 1,
+      "IdCountry": "ESP",
+      "Name": "Spain",
+      "TotalPoints": 1995.881879
+    },
+    {
+      "Rank": 2,
+      "IdCountry": "ARG",
+      "Name": "Argentina",
+      "TotalPoints": 1880.2
+    },
+    {
+      "Rank": 3,
+      "IdCountry": "FRA",
+      "Name": "France",
+      "TotalPoints": 1870.5
+    },
+    {
+      "Rank": 4,
+      "IdCountry": "ENG",
+      "Name": "England",
+      "TotalPoints": 1820
+    },
+    {
+      "Rank": 5,
+      "IdCountry": "BRA",
+      "Name": "Brazil",
+      "TotalPoints": 1790.4
+    },
+    {
+      "Rank": 6,
+      "IdCountry": "GER",
+      "Name": "Germany",
+      "TotalPoints": 1740.1
+    },
+    {
+      "Rank": 7,
+      "IdCountry": "NED",
+      "Name": "Netherlands",
+      "TotalPoints": 1730.9
+    },
+    {
+      "Rank": 8,
+      "IdCountry": "POR",
+      "Name": "Portugal",
+      "TotalPoints": 1725.3
+    },
+    {
+      "Rank": 9,
+      "IdCountry": "BEL",
+      "Name": "Belgium",
+      "TotalPoints": 1700
+    },
+    {
+      "Rank": 10,
+      "IdCountry": "ITA",
+      "Name": "Italy",
+      "TotalPoints": 1690.2
+    },
+    {
+      "Rank": 11,
+      "IdCountry": "MAR",
+      "Name": "Morocco",
+      "TotalPoints": 1680.7
+    },
+    {
+      "Rank": 12,
+      "IdCountry": "SMR",
+      "Name": "San Marino",
+      "TotalPoints": 720
+    }
+  ]
+}

@@ -1,0 +1,201 @@
+{
+  "results": {
+    "data": [
+      {
+        "id": 100,
+        "rank": 1,
+        "points": "87631.0000",
+        "player1_id": 1000,
+        "player2_id": null,
+        "player1_model": {
+          "slug": "player-1000",
+          "name_display_bold": "<span class=\"name-1\">Jonah</span> <span class=\"name-2\">ALPHA</span>"
+        },
+        "player2_model": null,
+        "p1_country_model": {
+          "name": "INDONESIA"
+        },
+        "p2_country_model": null
+      },
+      {
+        "id": 101,
+        "rank": 2,
+        "points": "84631.0000",
+        "player1_id": 1001,
+        "player2_id": null,
+        "player1_model": {
+          "slug": "player-1001",
+          "name_display_bold": "<span class=\"name-1\">Mika</span> <span class=\"name-2\">BRAVO</span>"
+        },
+        "player2_model": null,
+        "p1_country_model": {
+          "name": "DENMARK"
+        },
+        "p2_country_model": null
+      },
+      {
+        "id": 102,
+        "rank": 3,
+        "points": "81631.0000",
+        "player1_id": 1002,
+        "player2_id": null,
+        "player1_model": {
+          "slug": "player-1002",
+          "name_display_bold": "<span class=\"name-1\">Sacha</span> <span class=\"name-2\">CHARLIE</span>"
+        },
+        "player2_model": null,
+        "p1_country_model": {
+          "name": "CHINA"
+        },
+        "p2_country_model": null
+      },
+      {
+        "id": 103,
+        "rank": 4,
+        "points": "78631.0000",
+        "player1_id": 1003,
+        "player2_id": null,
+        "player1_model": {
+          "slug": "player-1003",
+          "name_display_bold": "<span class=\"name-1\">Rene</span> <span class=\"name-2\">DELTA</span>"
+        },
+        "player2_model": null,
+        "p1_country_model": {
+          "name": "JAPAN"
+        },
+        "p2_country_model": null
+      },
+      {
+        "id": 104,
+        "rank": 5,
+        "points": "75631.0000",
+        "player1_id": 1004,
+        "player2_id": null,
+        "player1_model": {
+          "slug": "player-1004",
+          "name_display_bold": "<span class=\"name-1\">Toni</span> <span class=\"name-2\">ECHO</span>"
+        },
+        "player2_model": null,
+        "p1_country_model": {
+          "name": "THAILAND"
+        },
+        "p2_country_model": null
+      },
+      {
+        "id": 105,
+        "rank": 6,
+        "points": "72631.0000",
+        "player1_id": 1005,
+        "player2_id": null,
+        "player1_model": {
+          "slug": "player-1005",
+          "name_display_bold": "<span class=\"name-1\">Kim</span> <span class=\"name-2\">FOXTROT</span>"
+        },
+        "player2_model": null,
+        "p1_country_model": {
+          "name": "MALAYSIA"
+        },
+        "p2_country_model": null
+      },
+      {
+        "id": 106,
+        "rank": 7,
+        "points": "69631.0000",
+        "player1_id": 1006,
+        "player2_id": null,
+        "player1_model": {
+          "slug": "player-1006",
+          "name_display_bold": "<span class=\"name-1\">Ari</span> <span class=\"name-2\">GOLF</span>"
+        },
+        "player2_model": null,
+        "p1_country_model": {
+          "name": "INDIA"
+        },
+        "p2_country_model": null
+      },
+      {
+        "id": 107,
+        "rank": 8,
+        "points": "66631.0000",
+        "player1_id": 1007,
+        "player2_id": null,
+        "player1_model": {
+          "slug": "player-1007",
+          "name_display_bold": "<span class=\"name-1\">Lou</span> <span class=\"name-2\">HOTEL</span>"
+        },
+        "player2_model": null,
+        "p1_country_model": {
+          "name": "FRANCE"
+        },
+        "p2_country_model": null
+      },
+      {
+        "id": 108,
+        "rank": 9,
+        "points": "63631.0000",
+        "player1_id": 1008,
+        "player2_id": null,
+        "player1_model": {
+          "slug": "player-1008",
+          "name_display_bold": "<span class=\"name-1\">Sam</span> <span class=\"name-2\">INDIA</span>"
+        },
+        "player2_model": null,
+        "p1_country_model": {
+          "name": "SINGAPORE"
+        },
+        "p2_country_model": null
+      },
+      {
+        "id": 109,
+        "rank": 10,
+        "points": "60631.0000",
+        "player1_id": 1009,
+        "player2_id": null,
+        "player1_model": {
+          "slug": "player-1009",
+          "name_display_bold": "<span class=\"name-1\">Noa</span> <span class=\"name-2\">JULIET</span>"
+        },
+        "player2_model": null,
+        "p1_country_model": {
+          "name": "Korea"
+        },
+        "p2_country_model": null
+      },
+      {
+        "id": 110,
+        "rank": 11,
+        "points": "57631.0000",
+        "player1_id": 1010,
+        "player2_id": null,
+        "player1_model": {
+          "slug": "player-1010",
+          "name_display_bold": "<span class=\"name-1\">Eli</span> <span class=\"name-2\">KILO</span>"
+        },
+        "player2_model": null,
+        "p1_country_model": {
+          "name": "HONG KONG CHINA"
+        },
+        "p2_country_model": null
+      },
+      {
+        "id": 111,
+        "rank": 12,
+        "points": "54631.0000",
+        "player1_id": 1011,
+        "player2_id": null,
+        "player1_model": {
+          "slug": "player-1011",
+          "name_display_bold": "<span class=\"name-1\">Max</span> <span class=\"name-2\">LIMA</span>"
+        },
+        "player2_model": null,
+        "p1_country_model": {
+          "name": "AZERBAIJAN"
+        },
+        "p2_country_model": null
+      }
+    ],
+    "total": 12,
+    "per_page": 12,
+    "last_page": 1
+  }
+}

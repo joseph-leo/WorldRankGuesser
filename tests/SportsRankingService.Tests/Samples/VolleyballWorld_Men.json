@@ -1,0 +1,88 @@
+{
+  "teams": [
+    {
+      "rankToDisplay": 1,
+      "federationCode": "POL",
+      "name": "Poland",
+      "decimalPoints": 400.16,
+      "points": 400
+    },
+    {
+      "rankToDisplay": 2,
+      "federationCode": "ITA",
+      "name": "Italy",
+      "decimalPoints": 390.4,
+      "points": 390
+    },
+    {
+      "rankToDisplay": 3,
+      "federationCode": "FRA",
+      "name": "France",
+      "decimalPoints": 380.2,
+      "points": 380
+    },
+    {
+      "rankToDisplay": 4,
+      "federationCode": "JPN",
+      "name": "Japan",
+      "decimalPoints": 370,
+      "points": 370
+    },
+    {
+      "rankToDisplay": 5,
+      "federationCode": "BRA",
+      "name": "Brazil",
+      "decimalPoints": 360.7,
+      "points": 361
+    },
+    {
+      "rankToDisplay": 6,
+      "federationCode": "USA",
+      "name": "USA",
+      "decimalPoints": 350.1,
+      "points": 350
+    },
+    {
+      "rankToDisplay": 7,
+      "federationCode": "SLO",
+      "name": "Slovenia",
+      "decimalPoints": 340.3,
+      "points": 340
+    },
+    {
+      "rankToDisplay": 8,
+      "federationCode": "GER",
+      "name": "Germany",
+      "decimalPoints": 330.9,
+      "points": 331
+    },
+    {
+      "rankToDisplay": 9,
+      "federationCode": "ARG",
+      "name": "Argentina",
+      "decimalPoints": 320.5,
+      "points": 321
+    },
+    {
+      "rankToDisplay": 10,
+      "federationCode": "CUB",
+      "name": "Cuba",
+      "decimalPoints": 310,
+      "points": 310
+    },
+    {
+      "rankToDisplay": 11,
+      "federationCode": "SRB",
+      "name": "Serbia",
+      "decimalPoints": 300.2,
+      "points": 300
+    },
+    {
+      "rankToDisplay": 12,
+      "federationCode": "NZL",
+      "name": "New Zealand",
+      "decimalPoints": 40,
+      "points": 40
+    }
+  ]
+}

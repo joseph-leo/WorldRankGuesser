@@ -13,7 +13,7 @@ public class FifaDateIdTests
     [Fact]
     public void Picks_the_newest_date_id_from_the_real_page()
     {
-        string id = FifaDateIdResolver.ExtractLatestDateId(Fixture.Read("Fifa_WorldRanking_Men.html"));
+        string id = FifaDateIdResolver.ExtractLatestDateId(Sample.Read("Fifa_WorldRanking_Men.html"));
 
         Assert.Equal("FRS_Male_Football_20260611", id);
     }
@@ -21,7 +21,7 @@ public class FifaDateIdTests
     [Fact]
     public void Picks_the_newest_womens_date_id_from_the_womens_page()
     {
-        string id = FifaDateIdResolver.ExtractLatestDateId(Fixture.Read("Fifa_WorldRanking_Women.html"));
+        string id = FifaDateIdResolver.ExtractLatestDateId(Sample.Read("Fifa_WorldRanking_Women.html"));
 
         Assert.Equal("FRS_Female_Football_20260419", id);
     }
@@ -54,7 +54,7 @@ public class FifaDateIdTests
     public void The_ranking_date_is_the_iso_timestamp_of_the_newest_entry_not_the_digits_in_its_id()
     {
         // The men's page's newest entry is id FRS_Male_Football_20260611 with iso 2026-07-20; FIFA displays 20 July.
-        SoccerRankDate latest = FifaDateIdResolver.ExtractLatestDate(Fixture.Read("Fifa_WorldRanking_Men.html"));
+        SoccerRankDate latest = FifaDateIdResolver.ExtractLatestDate(Sample.Read("Fifa_WorldRanking_Men.html"));
 
         Assert.Equal("FRS_Male_Football_20260611", latest.id);
         Assert.Equal(new DateOnly(2026, 7, 20), FifaDateIdResolver.ToRankingDate(latest));
@@ -63,7 +63,7 @@ public class FifaDateIdTests
     [Fact]
     public async Task Resolve_formats_the_id_into_the_url_and_returns_the_ranking_date()
     {
-        var fetcher = new FakeFetcher(new() { ["https://inside.fifa.com/fifa-rankings/world-ranking/men"] = Fixture.Read("Fifa_WorldRanking_Men.html") });
+        var fetcher = new FakeFetcher(new() { ["https://inside.fifa.com/fifa-rankings/world-ranking/men"] = Sample.Read("Fifa_WorldRanking_Men.html") });
         var item = new RankingItem { Sport = "Soccer", Gender = "Men", Url = "http://fifa/api?id={0}", Source = "FifaV3", UrlResolver = "FifaDateId" };
 
         ResolvedUrl resolved = await new FifaDateIdResolver(fetcher).ResolveAsync(item, CancellationToken.None);

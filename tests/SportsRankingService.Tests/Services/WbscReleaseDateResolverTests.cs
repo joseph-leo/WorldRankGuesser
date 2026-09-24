@@ -18,19 +18,19 @@ public class WbscReleaseDateResolverTests
     [InlineData("baseball5-coed", "2026-08-07")]
     public void Picks_the_newest_release_date_for_the_sport(string sportId, string expected)
     {
-        Assert.Equal(expected, WbscReleaseDateResolver.ExtractLatestReleaseDate(Fixture.Read("Wbsc_Rankings.html"), sportId));
+        Assert.Equal(expected, WbscReleaseDateResolver.ExtractLatestReleaseDate(Sample.Read("Wbsc_Rankings.html"), sportId));
     }
 
     [Fact]
     public void Throws_when_the_sport_has_no_dates()
     {
-        Assert.ThrowsAny<Exception>(() => WbscReleaseDateResolver.ExtractLatestReleaseDate(Fixture.Read("Wbsc_Rankings.html"), "cricket-m"));
+        Assert.ThrowsAny<Exception>(() => WbscReleaseDateResolver.ExtractLatestReleaseDate(Sample.Read("Wbsc_Rankings.html"), "cricket-m"));
     }
 
     [Fact]
     public async Task Resolve_formats_the_newest_date_into_the_url_and_returns_it()
     {
-        var fetcher = new FakeFetcher(new() { ["https://rankings.wbsc.org/"] = Fixture.Read("Wbsc_Rankings.html") });
+        var fetcher = new FakeFetcher(new() { ["https://rankings.wbsc.org/"] = Sample.Read("Wbsc_Rankings.html") });
         var item = new RankingItem { Sport = "Baseball", Gender = "Men", Url = "http://wbsc/api?sportId=baseball-m&date={0}", Source = "Wbsc", UrlResolver = "WbscReleaseDate" };
 
         ResolvedUrl resolved = await new WbscReleaseDateResolver(fetcher).ResolveAsync(item, CancellationToken.None);

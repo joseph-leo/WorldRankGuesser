@@ -15,9 +15,9 @@ public class FigParserTests
 {
     private readonly FigParser _parser = new();
 
-    private static string Men => Fixture.Read("Fig_Artistic_Men.html");
-    private static string Women => Fixture.Read("Fig_Artistic_Women.html");
-    private static string Rhythmic => Fixture.Read("Fig_Rhythmic_Women.html");
+    private static string Men => Sample.Read("Fig_Artistic_Men.html");
+    private static string Women => Sample.Read("Fig_Artistic_Women.html");
+    private static string Rhythmic => Sample.Read("Fig_Rhythmic_Women.html");
 
     [Fact]
     public void Selects_the_apparatus_table_of_the_requested_series()
@@ -83,7 +83,7 @@ public class FigParserTests
     [MemberData(nameof(EveryTable))]
     public void Every_table_yields_three_letter_codes_and_positive_positions(string fixture, string selector)
     {
-        var rows = _parser.Parse(Fixture.Read(fixture), selector).Entries;
+        var rows = _parser.Parse(Sample.Read(fixture), selector).Entries;
 
         Assert.True(rows.Count >= 15, $"{fixture} {selector}: expected a full table, got {rows.Count} rows");
         Assert.All(rows, r =>

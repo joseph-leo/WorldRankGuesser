@@ -1,0 +1,76 @@
+{
+  "rankings": [
+    {
+      "position": 1,
+      "ioc": "JPN",
+      "date": "2026-03-26",
+      "points": 6337
+    },
+    {
+      "position": 2,
+      "ioc": "USA",
+      "date": "2026-03-26",
+      "points": 6000
+    },
+    {
+      "position": 3,
+      "ioc": "KOR",
+      "date": "2026-03-26",
+      "points": 5500
+    },
+    {
+      "position": 4,
+      "ioc": "TPE",
+      "date": "2026-03-26",
+      "points": 5300
+    },
+    {
+      "position": 5,
+      "ioc": "VEN",
+      "date": "2026-03-26",
+      "points": 4800
+    },
+    {
+      "position": 6,
+      "ioc": "MEX",
+      "date": "2026-03-26",
+      "points": 4500
+    },
+    {
+      "position": 7,
+      "ioc": "DOM",
+      "date": "2026-03-26",
+      "points": 4200
+    },
+    {
+      "position": 8,
+      "ioc": "CUB",
+      "date": "2026-03-26",
+      "points": 4000
+    },
+    {
+      "position": 9,
+      "ioc": "NED",
+      "date": "2026-03-26",
+      "points": 3800
+    },
+    {
+      "position": 10,
+      "ioc": "GER",
+      "date": "2026-03-26",
+      "points": 2000
+    },
+    {
+      "position": 11,
+      "ioc": "PAN",
+      "date": "2026-03-26",
+      "points": 1500
+    },
+    {
+      "position": 11,
+      "ioc": "TUR",
+      "date": "2026-03-26",
+      "points": 1500
+    }
+  ]
+}

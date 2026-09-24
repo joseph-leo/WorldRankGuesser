@@ -1,0 +1,81 @@
+{
+  "data": {
+    "bat-rank": {
+      "rank_date": "2026-09-12",
+      "rank": [
+        {
+          "no": 1,
+          "shortname": "AUS-W",
+          "rating": 126,
+          "points": 3000
+        },
+        {
+          "no": 2,
+          "shortname": "ENG-W",
+          "rating": 121,
+          "points": 2900
+        },
+        {
+          "no": 3,
+          "shortname": "IND-W",
+          "rating": 116,
+          "points": 2800
+        },
+        {
+          "no": 4,
+          "shortname": "NZ-W",
+          "rating": 111,
+          "points": 2700
+        },
+        {
+          "no": 5,
+          "shortname": "SA-W",
+          "rating": 106,
+          "points": 2600
+        },
+        {
+          "no": 6,
+          "shortname": "WI-W",
+          "rating": 101,
+          "points": 2500
+        },
+        {
+          "no": 7,
+          "shortname": "SL-W",
+          "rating": 96,
+          "points": 2400
+        },
+        {
+          "no": 8,
+          "shortname": "PAK-W",
+          "rating": 91,
+          "points": 2300
+        },
+        {
+          "no": 9,
+          "shortname": "HK-W",
+          "rating": 86,
+          "points": 2200
+        },
+        {
+          "no": 10,
+          "shortname": "SRL-W",
+          "rating": 81,
+          "points": 2100
+        },
+        {
+          "no": 11,
+          "shortname": "ESW-W",
+          "rating": 76,
+          "points": 2000
+        },
+        {
+          "no": 12,
+          "shortname": "SDA-W",
+          "rating": 71,
+          "points": 1900
+        }
+      ]
+    }
+  }
+}
