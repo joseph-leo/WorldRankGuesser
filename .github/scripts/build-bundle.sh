@@ -7,6 +7,9 @@
 # out; the scraper's appsettings.json carries its own dev string. The bundle's own run gets the real string through
 # the same variable (never --connection: the app's startup demands a configured string before it could apply).
 # `--target-runtime` is the bundle's option; the common `--runtime` would only set the restore RID.
+# `dotnet ef` 11 reads the project's metadata without restoring first, so on a fresh checkout it fails with
+# NETSDK1004 (no obj/project.assets.json) before it builds anything: restore explicitly (seen on the first deploy,
+# 2026-09-24; a local run only passed because obj already existed).
 set -euo pipefail
 
 project="${1:?project directory}"
@@ -16,6 +19,7 @@ export ConnectionStrings__WorldRankGuesserConnection="${ConnectionStrings__World
 export ASPNETCORE_ENVIRONMENT=Production
 
 dotnet tool restore
+dotnet restore "$project"
 dotnet ef migrations bundle \
   --project "$project" --startup-project "$project" --configuration Release \
   --self-contained --target-runtime linux-x64 \
