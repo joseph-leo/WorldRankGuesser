@@ -18,7 +18,7 @@ public class WikipediaIihfParserTests
     [Fact]
     public void Men_selector_reads_the_mens_table()
     {
-        var rows = _parser.Parse(Fixture.Read(Page), "Men").Entries;
+        var rows = _parser.Parse(Sample.Read(Page), "Men").Entries;
 
         Assert.Equal(58, rows.Count);
         Assert.Equal(new RankEntry(1, "CHE", Points: 5335m), rows.Single(r => r.Position == 1));
@@ -29,7 +29,7 @@ public class WikipediaIihfParserTests
     [Fact]
     public void Women_selector_reads_the_womens_table()
     {
-        var rows = _parser.Parse(Fixture.Read(Page), "Women").Entries;
+        var rows = _parser.Parse(Sample.Read(Page), "Women").Entries;
 
         Assert.Equal(45, rows.Count);
         Assert.Equal(new RankEntry(1, "USA", Points: 5460m), rows.Single(r => r.Position == 1));
@@ -40,8 +40,8 @@ public class WikipediaIihfParserTests
     [Fact]
     public void Teams_listed_as_not_ranked_are_not_entries()
     {
-        var men = _parser.Parse(Fixture.Read(Page), "Men").Entries;
-        var women = _parser.Parse(Fixture.Read(Page), "Women").Entries;
+        var men = _parser.Parse(Sample.Read(Page), "Men").Entries;
+        var women = _parser.Parse(Sample.Read(Page), "Women").Entries;
 
         Assert.DoesNotContain(men, r => r.ISO3 is "RUS" or "IND" or "MAR");     // "NR"
         Assert.DoesNotContain(women, r => r.ISO3 == "PHL");                     // "new"
@@ -50,7 +50,7 @@ public class WikipediaIihfParserTests
     [Fact]
     public void The_article_states_no_ranking_date()
     {
-        Assert.Null(_parser.Parse(Fixture.Read(Page), "Men").RankingDate);
+        Assert.Null(_parser.Parse(Sample.Read(Page), "Men").RankingDate);
     }
 
     [Theory]
@@ -58,7 +58,7 @@ public class WikipediaIihfParserTests
     [InlineData("Mixed")]
     public void A_selector_that_names_no_table_is_a_parse_error(string? selector)
     {
-        var ex = Assert.Throws<ParseException>(() => _parser.Parse(Fixture.Read(Page), selector));
+        var ex = Assert.Throws<ParseException>(() => _parser.Parse(Sample.Read(Page), selector));
 
         Assert.Contains("Men", ex.Message);
     }

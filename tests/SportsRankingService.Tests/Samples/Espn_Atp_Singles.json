@@ -1,0 +1,118 @@
+{
+  "rankings": [
+    {
+      "name": "ATP Singles",
+      "update": "2026-09-10T06:00:00Z",
+      "ranks": [
+        {
+          "current": 1,
+          "previous": 1,
+          "points": 11500,
+          "athlete": {
+            "citizenshipCountry": "ITA",
+            "displayName": "Jonah Alpha"
+          }
+        },
+        {
+          "current": 2,
+          "previous": 2,
+          "points": 10800,
+          "athlete": {
+            "citizenshipCountry": "ESP",
+            "displayName": "Mika Bravo"
+          }
+        },
+        {
+          "current": 3,
+          "previous": 3,
+          "points": 10100,
+          "athlete": {
+            "citizenshipCountry": "GER",
+            "displayName": "Sacha Charlie"
+          }
+        },
+        {
+          "current": 4,
+          "previous": 4,
+          "points": 9400,
+          "athlete": {
+            "citizenshipCountry": "SUI",
+            "displayName": "Rene Delta"
+          }
+        },
+        {
+          "current": 5,
+          "previous": 5,
+          "points": 8700,
+          "athlete": {
+            "citizenshipCountry": "USA",
+            "displayName": "Toni Echo"
+          }
+        },
+        {
+          "current": 6,
+          "previous": 6,
+          "points": 8000,
+          "athlete": {
+            "citizenshipCountry": "RUS",
+            "displayName": "Kim Foxtrot"
+          }
+        },
+        {
+          "current": 7,
+          "previous": 7,
+          "points": 7300,
+          "athlete": {
+            "citizenshipCountry": "DNK",
+            "displayName": "Ari Golf"
+          }
+        },
+        {
+          "current": 8,
+          "previous": 8,
+          "points": 6600,
+          "athlete": {
+            "citizenshipCountry": "NOR",
+            "displayName": "Lou Hotel"
+          }
+        },
+        {
+          "current": 9,
+          "previous": 9,
+          "points": 5900,
+          "athlete": {
+            "citizenshipCountry": "AUS",
+            "displayName": "Sam India"
+          }
+        },
+        {
+          "current": 10,
+          "previous": 10,
+          "points": 5200,
+          "athlete": {
+            "citizenshipCountry": "GRC",
+            "displayName": "Noa Juliet"
+          }
+        },
+        {
+          "current": 11,
+          "previous": 11,
+          "points": 4500,
+          "athlete": {
+            "citizenshipCountry": "CAN",
+            "displayName": "Eli Kilo"
+          }
+        },
+        {
+          "current": 12,
+          "previous": 12,
+          "points": 3800,
+          "athlete": {
+            "citizenshipCountry": "LUX",
+            "displayName": "Max Lima"
+          }
+        }
+      ]
+    }
+  ]
+}

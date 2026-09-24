@@ -1,0 +1,69 @@
+{
+  "data": {
+    "bat-rank": {
+      "rank_date": "2026-09-12",
+      "rank": [
+        {
+          "no": 1,
+          "shortname": "AUS",
+          "rating": 126,
+          "points": 3000
+        },
+        {
+          "no": 2,
+          "shortname": "SA",
+          "rating": 121,
+          "points": 2900
+        },
+        {
+          "no": 3,
+          "shortname": "ENG",
+          "rating": 116,
+          "points": 2800
+        },
+        {
+          "no": 4,
+          "shortname": "IND",
+          "rating": 111,
+          "points": 2700
+        },
+        {
+          "no": 5,
+          "shortname": "NZ",
+          "rating": 106,
+          "points": 2600
+        },
+        {
+          "no": 6,
+          "shortname": "SL",
+          "rating": 101,
+          "points": 2500
+        },
+        {
+          "no": 7,
+          "shortname": "WI",
+          "rating": 96,
+          "points": 2400
+        },
+        {
+          "no": 8,
+          "shortname": "PAK",
+          "rating": 91,
+          "points": 2300
+        },
+        {
+          "no": 9,
+          "shortname": "BAN",
+          "rating": 86,
+          "points": 2200
+        },
+        {
+          "no": 10,
+          "shortname": "ZIM",
+          "rating": 81,
+          "points": 2100
+        }
+      ]
+    }
+  }
+}

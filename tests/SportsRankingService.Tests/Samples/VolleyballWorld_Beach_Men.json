@@ -1,0 +1,100 @@
+{
+  "teams": [
+    {
+      "rankToDisplay": 1,
+      "federationCode": "SWE",
+      "name": "Alpha/Bravo, M",
+      "player1Name": "Jonah Alpha",
+      "player2Name": "Mika Bravo",
+      "points": 8020
+    },
+    {
+      "rankToDisplay": 2,
+      "federationCode": "BRA",
+      "name": "Charlie/Delta, R",
+      "player1Name": "Sacha Charlie",
+      "player2Name": "Rene Delta",
+      "points": 7620
+    },
+    {
+      "rankToDisplay": 3,
+      "federationCode": "NOR",
+      "name": "Echo/Foxtrot, K",
+      "player1Name": "Toni Echo",
+      "player2Name": "Kim Foxtrot",
+      "points": 7220
+    },
+    {
+      "rankToDisplay": 4,
+      "federationCode": "USA",
+      "name": "Golf/Hotel, L",
+      "player1Name": "Ari Golf",
+      "player2Name": "Lou Hotel",
+      "points": 6820
+    },
+    {
+      "rankToDisplay": 5,
+      "federationCode": "BRA",
+      "name": "India/Juliet, N",
+      "player1Name": "Sam India",
+      "player2Name": "Noa Juliet",
+      "points": 6420
+    },
+    {
+      "rankToDisplay": 6,
+      "federationCode": "GER",
+      "name": "Kilo/Lima, M",
+      "player1Name": "Eli Kilo",
+      "player2Name": "Max Lima",
+      "points": 6020
+    },
+    {
+      "rankToDisplay": 7,
+      "federationCode": "NED",
+      "name": "Mike/November, U",
+      "player1Name": "Ola Mike",
+      "player2Name": "Uma November",
+      "points": 5620
+    },
+    {
+      "rankToDisplay": 8,
+      "federationCode": "QAT",
+      "name": "Oscar/Papa, Z",
+      "player1Name": "Ivo Oscar",
+      "player2Name": "Zoe Papa",
+      "points": 5220
+    },
+    {
+      "rankToDisplay": 9,
+      "federationCode": "ITA",
+      "name": "Quebec/Romeo, A",
+      "player1Name": "Rae Quebec",
+      "player2Name": "Ash Romeo",
+      "points": 4820
+    },
+    {
+      "rankToDisplay": 10,
+      "federationCode": "POL",
+      "name": "Sierra/Tango, B",
+      "player1Name": "Ida Sierra",
+      "player2Name": "Bo Tango",
+      "points": 4420
+    },
+    {
+      "rankToDisplay": 11,
+      "federationCode": "CZE",
+      "name": "Alpha/Bravo, M",
+      "player1Name": "Jonah Alpha",
+      "player2Name": "Mika Bravo",
+      "points": 4020
+    },
+    {
+      "rankToDisplay": 12,
+      "federationCode": "AUS",
+      "name": "Charlie/Delta, R",
+      "player1Name": "Sacha Charlie",
+      "player2Name": "Rene Delta",
+      "points": 3620
+    }
+  ]
+}

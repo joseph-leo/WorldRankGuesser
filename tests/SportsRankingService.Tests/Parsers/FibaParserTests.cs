@@ -14,7 +14,7 @@ public class FibaParserTests
     [Fact]
     public void Parses_country_from_the_team_link_slug()
     {
-        var rows = _parser.Parse(Fixture.Read("Fiba_Ranking_Men.html")).Entries;
+        var rows = _parser.Parse(Sample.Read("Fiba_Ranking_Men.html")).Entries;
 
         Assert.Equal("USA", rows.First(r => r.Position == 1).ISO3);
         Assert.Equal("DEU", rows.First(r => r.Position == 2).ISO3);
@@ -24,7 +24,7 @@ public class FibaParserTests
     [Fact]
     public void Every_row_has_a_three_letter_code_and_a_positive_position()
     {
-        var rows = _parser.Parse(Fixture.Read("Fiba_Ranking_Men.html")).Entries;
+        var rows = _parser.Parse(Sample.Read("Fiba_Ranking_Men.html")).Entries;
 
         Assert.True(rows.Count >= 150, $"expected the full ranking, got {rows.Count} rows");
         Assert.All(rows, r =>
@@ -37,20 +37,20 @@ public class FibaParserTests
     [Fact]
     public void Carries_the_selected_ranking_date()
     {
-        Assert.Equal(new DateOnly(2026, 9, 1), _parser.Parse(Fixture.Read("Fiba_Ranking_Men.html")).RankingDate);
+        Assert.Equal(new DateOnly(2026, 9, 1), _parser.Parse(Sample.Read("Fiba_Ranking_Men.html")).RankingDate);
     }
 
     [Fact]
     public void Carries_the_PTS_column()
     {
-        Assert.Equal(952.3m, _parser.Parse(Fixture.Read("Fiba_Ranking_Men.html")).Entries.First(r => r.Position == 1).Points);
+        Assert.Equal(952.3m, _parser.Parse(Sample.Read("Fiba_Ranking_Men.html")).Entries.First(r => r.Position == 1).Points);
     }
 
     [Fact]
     public void Ignores_the_movers_and_drops_widget_tables()
     {
         // The page also carries "Meilleures Progressions" and "Pires Chutes" tables whose rows repeat ranked countries.
-        var rows = _parser.Parse(Fixture.Read("Fiba_Ranking_Men.html")).Entries;
+        var rows = _parser.Parse(Sample.Read("Fiba_Ranking_Men.html")).Entries;
 
         Assert.Equal(159, rows.Count);
         Assert.Equal(159, rows.Select(r => r.ISO3).Distinct().Count());

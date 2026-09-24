@@ -1,0 +1,105 @@
+{
+  "label": "Sample men's rankings",
+  "effective": {
+    "millis": 1789344000000,
+    "label": "2026-09-14"
+  },
+  "entries": [
+    {
+      "pos": 1,
+      "pts": 95.09,
+      "team": {
+        "countryCode": "RSA",
+        "name": "RSA"
+      }
+    },
+    {
+      "pos": 2,
+      "pts": 86.5,
+      "team": {
+        "countryCode": "IRL",
+        "name": "IRL"
+      }
+    },
+    {
+      "pos": 3,
+      "pts": 83,
+      "team": {
+        "countryCode": "NZL",
+        "name": "NZL"
+      }
+    },
+    {
+      "pos": 4,
+      "pts": 79.5,
+      "team": {
+        "countryCode": "FRA",
+        "name": "FRA"
+      }
+    },
+    {
+      "pos": 5,
+      "pts": 76,
+      "team": {
+        "countryCode": "ENG",
+        "name": "ENG"
+      }
+    },
+    {
+      "pos": 6,
+      "pts": 72.5,
+      "team": {
+        "countryCode": "ARG",
+        "name": "ARG"
+      }
+    },
+    {
+      "pos": 7,
+      "pts": 69,
+      "team": {
+        "countryCode": "SCO",
+        "name": "SCO"
+      }
+    },
+    {
+      "pos": 8,
+      "pts": 65.5,
+      "team": {
+        "countryCode": "AUS",
+        "name": "AUS"
+      }
+    },
+    {
+      "pos": 9,
+      "pts": 62,
+      "team": {
+        "countryCode": "FIJ",
+        "name": "FIJ"
+      }
+    },
+    {
+      "pos": 10,
+      "pts": 58.5,
+      "team": {
+        "countryCode": "ITA",
+        "name": "ITA"
+      }
+    },
+    {
+      "pos": 11,
+      "pts": 55,
+      "team": {
+        "countryCode": "GEO",
+        "name": "GEO"
+      }
+    },
+    {
+      "pos": 12,
+      "pts": 51.5,
+      "team": {
+        "countryCode": "ASA",
+        "name": "ASA"
+      }
+    }
+  ]
+}

@@ -1,0 +1,76 @@
+{
+  "ranks": [
+    {
+      "rank": 1,
+      "team_short_code": "GER",
+      "team_name": "Germany",
+      "points": 3720.41
+    },
+    {
+      "rank": 2,
+      "team_short_code": "NED",
+      "team_name": "Netherlands",
+      "points": 3600.2
+    },
+    {
+      "rank": 3,
+      "team_short_code": "BEL",
+      "team_name": "Belgium",
+      "points": 3500.7
+    },
+    {
+      "rank": 4,
+      "team_short_code": "AUS",
+      "team_name": "Australia",
+      "points": 3400
+    },
+    {
+      "rank": 5,
+      "team_short_code": "IND",
+      "team_name": "India",
+      "points": 3300.5
+    },
+    {
+      "rank": 6,
+      "team_short_code": "ENG",
+      "team_name": "England",
+      "points": 3200.9
+    },
+    {
+      "rank": 7,
+      "team_short_code": "ARG",
+      "team_name": "Argentina",
+      "points": 3100.1
+    },
+    {
+      "rank": 8,
+      "team_short_code": "ESP",
+      "team_name": "Spain",
+      "points": 3000.3
+    },
+    {
+      "rank": 9,
+      "team_short_code": "RSA",
+      "team_name": "South Africa",
+      "points": 2000
+    },
+    {
+      "rank": 10,
+      "team_short_code": "NZL",
+      "team_name": "New Zealand",
+      "points": 1900.6
+    },
+    {
+      "rank": 11,
+      "team_short_code": "FRA",
+      "team_name": "France",
+      "points": 1800.2
+    },
+    {
+      "rank": 12,
+      "team_short_code": "MAR",
+      "team_name": "Morocco",
+      "points": 400
+    }
+  ]
+}

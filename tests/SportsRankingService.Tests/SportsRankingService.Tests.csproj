@@ -22,8 +22,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <!-- One saved real response per feed. Tests read these from the output directory. -->
-    <None Include="Fixtures\**" CopyToOutputDirectory="PreserveNewest" />
+    <!-- Synthetic samples (committed) and real captures (git-ignored, optional). Tests read them from the output directory. -->
+    <None Include="Samples\**;Captures\**" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>

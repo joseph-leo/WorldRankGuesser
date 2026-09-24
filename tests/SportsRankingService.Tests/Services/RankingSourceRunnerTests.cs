@@ -69,7 +69,7 @@ public class RankingSourceRunnerTests
     {
         var fetcher = new FakeFetcher(new()
         {
-            ["http://wta?page=0&pageSize=100"] = Fixture.Read("Wta_Doubles.json"),
+            ["http://wta?page=0&pageSize=100"] = Sample.Read("Wta_Doubles.json"),
             ["http://wta?page=1&pageSize=100"] = WtaPage("2026-09-14T00:00:00Z", (101, "USA", "Ann"), (102, "FRA", "Bea")),
             ["http://wta?page=2&pageSize=100"] = "[]",
         });
@@ -90,7 +90,7 @@ public class RankingSourceRunnerTests
     {
         var fetcher = new FakeFetcher(new()
         {
-            ["http://wta?page=0&pageSize=100"] = Fixture.Read("Wta_Doubles.json"),
+            ["http://wta?page=0&pageSize=100"] = Sample.Read("Wta_Doubles.json"),
             // page 1 is missing
             ["http://wta?page=2&pageSize=100"] = WtaPage("2026-09-14T00:00:00Z", (201, "USA", "Cat")),
         });
@@ -106,7 +106,7 @@ public class RankingSourceRunnerTests
     {
         var fetcher = new FakeFetcher(new()
         {
-            ["http://wta?page=0&pageSize=100"] = Fixture.Read("Wta_Doubles.json"),
+            ["http://wta?page=0&pageSize=100"] = Sample.Read("Wta_Doubles.json"),
             ["http://wta?page=1&pageSize=100"] = WtaPage("2026-09-21T00:00:00Z", (101, "USA", "Ann")),
             ["http://wta?page=2&pageSize=100"] = "[]",
         });
@@ -197,7 +197,7 @@ public class RankingSourceRunnerTests
     [Fact]
     public async Task A_first_page_on_a_url_without_the_placeholder_is_a_configuration_error()
     {
-        var fetcher = new FakeFetcher(new() { ["http://wta?page=0"] = Fixture.Read("Wta_Doubles.json") });
+        var fetcher = new FakeFetcher(new() { ["http://wta?page=0"] = Sample.Read("Wta_Doubles.json") });
         var item = new RankingItem { Sport = "Tennis", Event = "Doubles", Gender = "Women", Url = "http://wta?page=0", Source = "Wta", FirstPage = 0 };
 
         var ex = await Assert.ThrowsAsync<InvalidOperationException>(() => Runner(fetcher).RunAsync(item, CancellationToken.None));
@@ -210,7 +210,7 @@ public class RankingSourceRunnerTests
     [Fact]
     public async Task Static_feed_is_fetched_parsed_and_stamped()
     {
-        var fetcher = new FakeFetcher(new() { ["http://fih/outdoor_m.json"] = Fixture.Read("Fih_Outdoor_Men.json") });
+        var fetcher = new FakeFetcher(new() { ["http://fih/outdoor_m.json"] = Sample.Read("Fih_Outdoor_Men.json") });
         var item = new RankingItem { Sport = "Field Hockey", Event = "Outdoor", Gender = "Men", Url = "http://fih/outdoor_m.json", Source = "Fih" };
 
         RankingSnapshot? snapshot = await Runner(fetcher).RunAsync(item, CancellationToken.None);
@@ -226,7 +226,7 @@ public class RankingSourceRunnerTests
     [Fact]
     public async Task A_dateless_feed_gets_todays_date_flagged_as_not_the_federations()
     {
-        var fetcher = new FakeFetcher(new() { ["http://fih/outdoor_m.json"] = Fixture.Read("Fih_Outdoor_Men.json") });
+        var fetcher = new FakeFetcher(new() { ["http://fih/outdoor_m.json"] = Sample.Read("Fih_Outdoor_Men.json") });
         var item = new RankingItem { Sport = "Field Hockey", Event = "Outdoor", Gender = "Men", Url = "http://fih/outdoor_m.json", Source = "Fih" };
 
         RankingSnapshot? snapshot = await Runner(fetcher).RunAsync(item, CancellationToken.None);
@@ -241,8 +241,8 @@ public class RankingSourceRunnerTests
     {
         var fetcher = new FakeFetcher(new()
         {
-            ["https://inside.fifa.com/fifa-rankings/world-ranking/men"] = Fixture.Read("Fifa_WorldRanking_Men.html"),
-            ["http://fifa/api?id=FRS_Male_Football_20260611"] = Fixture.Read("Fifa_V3_Men_FRS_20260611.json"),
+            ["https://inside.fifa.com/fifa-rankings/world-ranking/men"] = Sample.Read("Fifa_WorldRanking_Men.html"),
+            ["http://fifa/api?id=FRS_Male_Football_20260611"] = Sample.Read("Fifa_V3_Men_FRS_20260611.json"),
         });
         var item = new RankingItem { Sport = "Soccer", Gender = "Men", Url = "http://fifa/api?id={0}", Source = "FifaV3", UrlResolver = "FifaDateId" };
 
@@ -258,7 +258,7 @@ public class RankingSourceRunnerTests
     [Fact]
     public async Task Selector_reaches_the_parser_for_a_page_holding_several_tables()
     {
-        var fetcher = new FakeFetcher(new() { ["http://fig/rg"] = Fixture.Read("Fig_Rhythmic_Women.html") });
+        var fetcher = new FakeFetcher(new() { ["http://fig/rg"] = Sample.Read("Fig_Rhythmic_Women.html") });
         var item = new RankingItem { Sport = "Rhythmic Gymnastics", Event = "World Cup Group 5x", Gender = "Women", Url = "http://fig/rg", Source = "Fig", Selector = "World Cup / Group 5x" };
 
         RankingSnapshot? snapshot = await Runner(fetcher).RunAsync(item, CancellationToken.None);
@@ -273,7 +273,7 @@ public class RankingSourceRunnerTests
     [Fact]
     public async Task Feeds_sharing_a_page_fetch_it_once_and_each_parse_their_own_table()
     {
-        var pages = new FakeFetcher(new() { ["http://fig/rg"] = Fixture.Read("Fig_Rhythmic_Women.html") });
+        var pages = new FakeFetcher(new() { ["http://fig/rg"] = Sample.Read("Fig_Rhythmic_Women.html") });
         var runner = new RankingSourceRunner(
             [new CachingFetcher(pages)],
             [new FigParser()],
@@ -319,7 +319,7 @@ public class RankingSourceRunnerTests
     public async Task An_item_is_fetched_through_the_fetcher_it_names()
     {
         var http = new FakeFetcher([]);
-        var curl = new FakeFetcher(new() { ["http://fih/outdoor_m.json"] = Fixture.Read("Fih_Outdoor_Men.json") }, name: "Curl");
+        var curl = new FakeFetcher(new() { ["http://fih/outdoor_m.json"] = Sample.Read("Fih_Outdoor_Men.json") }, name: "Curl");
         var item = new RankingItem { Sport = "Field Hockey", Event = "Outdoor", Gender = "Men", Url = "http://fih/outdoor_m.json", Source = "Fih", Fetcher = "curl" };
 
         RankingSnapshot? snapshot = await Runner(http, curl).RunAsync(item, CancellationToken.None);

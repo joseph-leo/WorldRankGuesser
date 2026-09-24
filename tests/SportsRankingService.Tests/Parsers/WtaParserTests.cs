@@ -9,7 +9,7 @@ public class WtaParserTests
     [Fact]
     public void Parses_the_doubles_ranking()
     {
-        var rows = _parser.Parse(Fixture.Read("Wta_Doubles.json")).Entries;
+        var rows = _parser.Parse(Sample.Read("Wta_Doubles.json")).Entries;
 
         Assert.Equal(100, rows.Count);
         Assert.Equal("CZE", rows.Single(r => r.Position == 1).ISO3);
@@ -20,13 +20,13 @@ public class WtaParserTests
     [Fact]
     public void Carries_the_rankedAt_date()
     {
-        Assert.Equal(new DateOnly(2026, 9, 14), _parser.Parse(Fixture.Read("Wta_Doubles.json")).RankingDate);
+        Assert.Equal(new DateOnly(2026, 9, 14), _parser.Parse(Sample.Read("Wta_Doubles.json")).RankingDate);
     }
 
     [Fact]
     public void Carries_points_and_the_player_as_competitor_with_no_country_name()
     {
-        var top = _parser.Parse(Fixture.Read("Wta_Doubles.json")).Entries.Single(r => r.Position == 1);
+        var top = _parser.Parse(Sample.Read("Wta_Doubles.json")).Entries.Single(r => r.Position == 1);
 
         Assert.Equal(11460m, top.Points);
         Assert.Equal("Katerina Siniakova", top.Competitor);

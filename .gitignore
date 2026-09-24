@@ -400,3 +400,6 @@ FodyWeavers.xsd
 
 # Claude Code worktrees
 .claude/worktrees/
+
+# Real federation responses for the optional capture pass (never committed)
+tests/SportsRankingService.Tests/Captures/

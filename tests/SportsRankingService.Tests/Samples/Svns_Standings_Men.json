@@ -1,0 +1,100 @@
+{
+  "entries": [
+    {
+      "position": 1,
+      "team": {
+        "abbreviation": "RSA",
+        "countryCode": null
+      },
+      "totalPoints": 52
+    },
+    {
+      "position": 2,
+      "team": {
+        "abbreviation": "ARG",
+        "countryCode": null
+      },
+      "totalPoints": 48
+    },
+    {
+      "position": 3,
+      "team": {
+        "abbreviation": "FIJ",
+        "countryCode": null
+      },
+      "totalPoints": 44
+    },
+    {
+      "position": 4,
+      "team": {
+        "abbreviation": "NZL",
+        "countryCode": null
+      },
+      "totalPoints": 40
+    },
+    {
+      "position": 5,
+      "team": {
+        "abbreviation": "FRA",
+        "countryCode": null
+      },
+      "totalPoints": 36
+    },
+    {
+      "position": 6,
+      "team": {
+        "abbreviation": "ESP",
+        "countryCode": null
+      },
+      "totalPoints": 32
+    },
+    {
+      "position": 7,
+      "team": {
+        "abbreviation": "AUS",
+        "countryCode": null
+      },
+      "totalPoints": 28
+    },
+    {
+      "position": 8,
+      "team": {
+        "abbreviation": "GBR",
+        "countryCode": null
+      },
+      "totalPoints": 24
+    },
+    {
+      "position": 9,
+      "team": {
+        "abbreviation": "IRL",
+        "countryCode": null
+      },
+      "totalPoints": 20
+    },
+    {
+      "position": 10,
+      "team": {
+        "abbreviation": "USA",
+        "countryCode": null
+      },
+      "totalPoints": 16
+    },
+    {
+      "position": 11,
+      "team": {
+        "abbreviation": "KEN",
+        "countryCode": null
+      },
+      "totalPoints": 12
+    },
+    {
+      "position": 12,
+      "team": {
+        "abbreviation": "URU",
+        "countryCode": null
+      },
+      "totalPoints": 8
+    }
+  ]
+}

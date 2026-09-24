@@ -1,0 +1,122 @@
+[
+  {
+    "player": {
+      "id": 300,
+      "countryCode": "CZE",
+      "fullName": "Jonah Alpha"
+    },
+    "ranking": 1,
+    "points": 11460,
+    "rankedAt": "2026-09-14T00:00:00Z"
+  },
+  {
+    "player": {
+      "id": 301,
+      "countryCode": "USA",
+      "fullName": "Mika Bravo"
+    },
+    "ranking": 2,
+    "points": 10960,
+    "rankedAt": "2026-09-14T00:00:00Z"
+  },
+  {
+    "player": {
+      "id": 302,
+      "countryCode": "ITA",
+      "fullName": "Sacha Charlie"
+    },
+    "ranking": 3,
+    "points": 10460,
+    "rankedAt": "2026-09-14T00:00:00Z"
+  },
+  {
+    "player": {
+      "id": 303,
+      "countryCode": "CAN",
+      "fullName": "Rene Delta"
+    },
+    "ranking": 4,
+    "points": 9960,
+    "rankedAt": "2026-09-14T00:00:00Z"
+  },
+  {
+    "player": {
+      "id": 304,
+      "countryCode": "AUS",
+      "fullName": "Toni Echo"
+    },
+    "ranking": 5,
+    "points": 9460,
+    "rankedAt": "2026-09-14T00:00:00Z"
+  },
+  {
+    "player": {
+      "id": 305,
+      "countryCode": "BEL",
+      "fullName": "Kim Foxtrot"
+    },
+    "ranking": 6,
+    "points": 8960,
+    "rankedAt": "2026-09-14T00:00:00Z"
+  },
+  {
+    "player": {
+      "id": 306,
+      "countryCode": "LAT",
+      "fullName": "Ari Golf"
+    },
+    "ranking": 7,
+    "points": 8460,
+    "rankedAt": "2026-09-14T00:00:00Z"
+  },
+  {
+    "player": {
+      "id": 307,
+      "countryCode": "JPN",
+      "fullName": "Lou Hotel"
+    },
+    "ranking": 8,
+    "points": 7960,
+    "rankedAt": "2026-09-14T00:00:00Z"
+  },
+  {
+    "player": {
+      "id": 308,
+      "countryCode": "CHN",
+      "fullName": "Sam India"
+    },
+    "ranking": 9,
+    "points": 7460,
+    "rankedAt": "2026-09-14T00:00:00Z"
+  },
+  {
+    "player": {
+      "id": 309,
+      "countryCode": "UKR",
+      "fullName": "Noa Juliet"
+    },
+    "ranking": 10,
+    "points": 6960,
+    "rankedAt": "2026-09-14T00:00:00Z"
+  },
+  {
+    "player": {
+      "id": 310,
+      "countryCode": "ESP",
+      "fullName": "Eli Kilo"
+    },
+    "ranking": 11,
+    "points": 6460,
+    "rankedAt": "2026-09-14T00:00:00Z"
+  },
+  {
+    "player": {
+      "id": 311,
+      "countryCode": "ROU",
+      "fullName": "Max Lima"
+    },
+    "ranking": 12,
+    "points": 5960,
+    "rankedAt": "2026-09-14T00:00:00Z"
+  }
+]
