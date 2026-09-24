@@ -810,7 +810,7 @@ Expected: "The bundle records a complete history" and the ref list (main, three 
 
 ```bash
 K=$(git show 04221ddd:WorldRankGuesser/wwwroot/urls.json | grep -oE 'api_key=[A-Za-z0-9_-]+' | head -1 | cut -d= -f2)
-test ${#K} -eq 32 || { echo "key not found"; exit 1; }
+test ${#K} -eq 24 || { echo "key not found"; exit 1; }
 TMP="$SCRATCHPAD/filter-branch"    # a directory outside the repository, on the same drive
 FILTER_BRANCH_SQUELCH_WARNING=1 git filter-branch -f -d "$TMP" \
   --index-filter 'git rm -r -q --cached --ignore-unmatch tests/SportsRankingService.Tests/Fixtures SportsRankingService.Tests/Fixtures WorldRankGuesser/wwwroot/remotehtml' \
@@ -827,7 +827,7 @@ git reflog expire --expire=now --all && git gc --prune=now -q
 echo "sportradar: $(git log --all --oneline -S"$K" | wc -l)"
 echo "fixture paths: $(git log --all --format= --name-only | grep -cE '(^|/)Fixtures/|remotehtml/')"
 echo "google keys: $(git grep -l -E 'AIza[0-9A-Za-z_-]{30,}' $(git rev-list --all) | wc -l)"
-echo "azure key: $(git grep -l 'NEXT_CLIENT_COGNITIVE_SEARCH_KEY' $(git rev-list --all) | wc -l)"
+echo "azure key: $(git grep -l 'NEXT_CLIENT_COGNITIVE_SEARCH_KEY' $(git rev-list --all) -- . ':!docs/superpowers/plans' | wc -l)"   # the plan file names the variable
 gitleaks git --log-opts="--all" --redact --report-format json --report-path artifacts/gitleaks-after.json . ; echo "gitleaks exit $?"
 dotnet test tests/SportsRankingService.Tests   # the rewritten tip still builds and passes
 ```
