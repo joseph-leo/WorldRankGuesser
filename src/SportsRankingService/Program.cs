@@ -36,6 +36,8 @@ HostApplicationBuilder builder = Host.CreateApplicationBuilder(new HostApplicati
 builder.Configuration.AddJsonFile("serviceconfig.json", optional: EF.IsDesignTime);
 
 builder.Services.Configure<RankingSourcesOptions>(builder.Configuration);
+// Unset locally (those feeds go direct); the Job sets Proxy__Url and Proxy__Token (infra/scraper.bicep).
+builder.Services.Configure<ProxyOptions>(builder.Configuration.GetSection(ProxyOptions.SectionName));
 builder.Services.AddDbContext<RankingsDbContext>(
     options => options.UseSqlServer(builder.Configuration.GetConnectionString("WorldRankGuesserConnection")));
 builder.Services.AddScoped<IRankingRepository, RankingRepository>();
