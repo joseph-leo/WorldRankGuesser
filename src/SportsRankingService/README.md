@@ -84,6 +84,14 @@ the PATH: Windows 10 and later, macOS and most Linux distributions ship it (slim
 not; the Dockerfile installs it). curl is started directly, never through a shell, so the same code runs
 on all three; without it only those seven feeds fail, each with a log line that says so.
 
+A third fetcher, `"Fetcher": "Proxy"`, sends the request to the Cloudflare Worker in `proxy/` (`GET /fetch?url=...`
+with the shared token in `X-Proxy-Token`), which forwards it from Cloudflare's addresses and returns the upstream
+answer unchanged. The five WBSC feeds need it: www.wbsc.org sits behind CloudFront, which refuses hosting addresses
+(Azure's Job got 403 for every client on 2026-09-24) but serves Cloudflare. The Worker is configured by `Proxy__Url`
+and `Proxy__Token` (the Job sets them from `infra/scraper.bicep`); with no URL configured, as in a local run, those
+feeds are fetched directly with one warning, which works from a residential address. A resolver's preliminary
+request goes through the item's fetcher too, so the WBSC release-date page takes the same route as its feeds.
+
 Ice hockey comes from Wikipedia's "IIHF World Ranking" article rather than iihf.com, which answers
 every scripted client with a Cloudflare challenge. The article states no ranking date, so those two
 feeds carry the scrape date (`IsFederationDate = 0`).
