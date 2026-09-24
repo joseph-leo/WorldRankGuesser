@@ -12,7 +12,7 @@
 
 ## Global Constraints
 
-- **Region** `eastus2` for everything. The first free SQL database fixes the region of every later one in the subscription; staging's first `main.bicep` deploy is what commits to it (spec section 7).
+- **Region** `centralus` for everything (East US 2, the spec's choice, refused new SQL servers on this subscription on 2026-09-23: `ProvisioningDisabled`). The first free SQL database fixes the region of every later one in the subscription; staging's first `main.bicep` deploy is what commits to it (spec section 7).
 - **Names** (`<env>` is `staging` or `production`): resource group `rg-wrg-<env>`; Log Analytics `log-wrg-<env>`; Container Apps environment `cae-wrg-<env>`; SQL server `sql-wrg-<env>-<uniq>` where `<uniq>` is `uniqueString(resourceGroup().id)` (server names are global DNS names), database `WorldRankGuesser`; game app `ca-wrg-<env>-game`; scraper job `caj-wrg-<env>-scraper`; identities `id-wrg-<env>-deploy`, `id-wrg-<env>-monitor`, `id-wrg-<env>-game`, `id-wrg-<env>-scraper`; budget `budget-wrg-<env>`; production's managed certificate `cert-games-foweeti-com`. Bicep derives every name from the `env` parameter; the workflows spell the app and job names out per job (a rename touches both, noted in the runbook).
 - **Images** `ghcr.io/joseph-leo/worldrankguesser-game` and `ghcr.io/joseph-leo/worldrankguesser-scraper`, tagged `sha-<commit sha>` on every staging build and `staged-<hash>` after staging's smoke test, deployed to Azure **by digest only**. `provenance: false` on the build step, so the digest names a plain image manifest.
 - **Production never builds** (spec 8.1). `<hash>` is the first 12 hex characters of the SHA-256 of `git ls-tree -r --full-tree HEAD -- <inputs>`, where the inputs are exactly the paths of the workflow's push filter, listed once per workflow in its top-level `env.PATHS` (directories without a trailing `/**`); a test pins that the filter and the list agree.
@@ -842,7 +842,7 @@ Spec section 7. Owner-only, once per environment, because a Contributor cannot w
 - Create: `infra/production/bootstrap.bicepparam`
 
 **Interfaces:**
-- Produces: `az deployment sub create --location eastus2 --parameters infra/<env>/bootstrap.bicepparam` with outputs `resourceGroupName`, `tenantId`, `subscriptionId`, `deployClientId`, `monitorClientId` (the GitHub variables of Task 18); identities named `id-wrg-<env>-deploy` and `id-wrg-<env>-monitor`.
+- Produces: `az deployment sub create --location centralus --parameters infra/<env>/bootstrap.bicepparam` with outputs `resourceGroupName`, `tenantId`, `subscriptionId`, `deployClientId`, `monitorClientId` (the GitHub variables of Task 18); identities named `id-wrg-<env>-deploy` and `id-wrg-<env>-monitor`.
 
 - [ ] **Step 1: The subscription-scope template**
 
@@ -852,14 +852,15 @@ Create `infra/bootstrap.bicep`:
 // Owner only, once per environment (infra/README.md): the resource group and the two identities GitHub logs in as.
 // Separate from main.bicep because a Contributor cannot write role assignments: this file holds every role
 // assignment, so everything else stays deployable by id-wrg-<env>-deploy, which has Contributor on this group only.
-//   az deployment sub create --location eastus2 --name bootstrap-staging --parameters infra/staging/bootstrap.bicepparam
+//   az deployment sub create --location centralus --name bootstrap-staging --parameters infra/staging/bootstrap.bicepparam
 targetScope = 'subscription'
 
 @allowed(['staging', 'production'])
 param env string
 
-// East US 2 for everything: the first free SQL database fixes the region of every later one in the subscription.
-param location string = 'eastus2'
+// Central US for everything (East US 2 refused new SQL servers on this subscription on 2026-09-23, and Central US is
+// nearer the owner): the first free SQL database fixes the region of every later one in the subscription.
+param location string = 'centralus'
 
 // The federated credentials trust this repository's GitHub environments and its main branch. Renaming or
 // transferring the repository breaks that trust silently (GitHub's OIDC subject carries the name): redeploy then.
@@ -2803,7 +2804,7 @@ which sees none of the Windows tools: call `& "C:\Program Files\Git\bin\bash.exe
 1. **Bootstrap** (owner only; the only template with role assignments):
 
    ```powershell
-   az deployment sub create --location eastus2 --name bootstrap-staging --parameters infra/staging/bootstrap.bicepparam --query properties.outputs
+   az deployment sub create --location centralus --name bootstrap-staging --parameters infra/staging/bootstrap.bicepparam --query properties.outputs
    ```
 
    Keep the outputs: `deployClientId`, `monitorClientId`, `tenantId`, `subscriptionId`, `resourceGroupName`.
@@ -2819,7 +2820,7 @@ which sees none of the Windows tools: call `& "C:\Program Files\Git\bin\bash.exe
    Keep `environmentDefaultDomain`, `customDomainVerificationId`, `sqlServerName`, `sqlServerFqdn`. On a subscription
    younger than 48 hours the budget can be refused: rerun with `$env:BUDGET_ENABLED = 'false'`, and once more with
    `'true'` a couple of days later. **The first free database fixes the region of every later one**: staging's is the
-   commitment to East US 2. Check the offer took effect:
+   commitment to Central US (East US 2 refused new SQL servers on this subscription on 2026-09-23). Check the offer took effect:
 
    ```powershell
    az sql db show --resource-group rg-wrg-staging --server <sqlServerName> --name WorldRankGuesser --query "{free: useFreeLimit, whenSpent: freeLimitExhaustionBehavior, sku: currentSku.name}"
@@ -3185,13 +3186,13 @@ Expected: five lines ending in `Registered`.
 - [ ] **Step 3: Bootstrap staging (owner rights: the role assignments)**
 
 ```powershell
-az deployment sub create --location eastus2 --name bootstrap-staging --parameters infra/staging/bootstrap.bicepparam --query properties.outputs > "$env:TEMP\staging-bootstrap.json"
+az deployment sub create --location centralus --name bootstrap-staging --parameters infra/staging/bootstrap.bicepparam --query properties.outputs > "$env:TEMP\staging-bootstrap.json"
 Get-Content "$env:TEMP\staging-bootstrap.json"
 ```
 
 Expected: JSON with `deployClientId`, `monitorClientId`, `tenantId`, `subscriptionId`, `resourceGroupName` (`rg-wrg-staging`). A `RoleAssignmentUpdateNotPermitted` or `PrincipalNotFound` error is a replication delay: run the same command again.
 
-- [ ] **Step 4: The shared resources (this commits the subscription to East US 2)**
+- [ ] **Step 4: The shared resources (this commits the subscription to Central US)**
 
 ```powershell
 $me = az ad signed-in-user show --query "{id:id, upn:userPrincipalName}" | ConvertFrom-Json
@@ -3397,7 +3398,7 @@ The same as Task 17 with `production`, plus the two DNS records the custom hostn
 - [ ] **Step 1: Bootstrap and the shared resources**
 
 ```powershell
-az deployment sub create --location eastus2 --name bootstrap-production --parameters infra/production/bootstrap.bicepparam --query properties.outputs > "$env:TEMP\production-bootstrap.json"
+az deployment sub create --location centralus --name bootstrap-production --parameters infra/production/bootstrap.bicepparam --query properties.outputs > "$env:TEMP\production-bootstrap.json"
 $me = az ad signed-in-user show --query "{id:id, upn:userPrincipalName}" | ConvertFrom-Json
 $env:SQL_ADMIN_LOGIN = $me.upn; $env:SQL_ADMIN_OBJECT_ID = $me.id; $env:BUDGET_EMAIL = '<the owner's email>'
 az deployment group create --resource-group rg-wrg-production --name main-first --parameters infra/production/main.bicepparam --query properties.outputs > "$env:TEMP\production-main.json"
@@ -3406,7 +3407,7 @@ $o = Get-Content "$env:TEMP\production-main.json" | ConvertFrom-Json
 az sql db show --resource-group rg-wrg-production --server $o.sqlServerName.value --name WorldRankGuesser --query "{free: useFreeLimit, whenSpent: freeLimitExhaustionBehavior, region: location}"
 ```
 
-Expected: the same outputs as staging's; the database `free: true`, `whenSpent: AutoPause`, region `eastus2` (the second free database is bound to the first one's region). The budget is $5 here (`amount` 5 in the parameter file). If the second Container Apps environment is refused by quota (`Managed Environment Count`; a new subscription's default is not published), request the quota in the portal (Quotas, provider Azure Container Apps, East US 2) and rerun; if that is refused, spec section 10's fallback, both apps and both Jobs in one environment, is a template change designed as its own piece of work before continuing.
+Expected: the same outputs as staging's; the database `free: true`, `whenSpent: AutoPause`, region `centralus` (the second free database is bound to the first one's region). The budget is $5 here (`amount` 5 in the parameter file). If the second Container Apps environment is refused by quota (`Managed Environment Count`; a new subscription's default is not published), request the quota in the portal (Quotas, provider Azure Container Apps, Central US) and rerun; if that is refused, spec section 10's fallback, both apps and both Jobs in one environment, is a template change designed as its own piece of work before continuing.
 
 - [ ] **Step 2: Owner: the database users (first run)**
 

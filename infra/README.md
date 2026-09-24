@@ -53,7 +53,7 @@ which sees none of the Windows tools: call `& "C:\Program Files\Git\bin\bash.exe
 1. **Bootstrap** (owner only; the only template with role assignments):
 
    ```powershell
-   az deployment sub create --location eastus2 --name bootstrap-staging --parameters infra/staging/bootstrap.bicepparam --query properties.outputs
+   az deployment sub create --location centralus --name bootstrap-staging --parameters infra/staging/bootstrap.bicepparam --query properties.outputs
    ```
 
    Keep the outputs: `deployClientId`, `monitorClientId`, `tenantId`, `subscriptionId`, `resourceGroupName`.
@@ -69,7 +69,7 @@ which sees none of the Windows tools: call `& "C:\Program Files\Git\bin\bash.exe
    Keep `environmentDefaultDomain`, `customDomainVerificationId`, `sqlServerName`, `sqlServerFqdn`. On a subscription
    younger than 48 hours the budget can be refused: rerun with `$env:BUDGET_ENABLED = 'false'`, and once more with
    `'true'` a couple of days later. **The first free database fixes the region of every later one**: staging's is the
-   commitment to East US 2. Check the offer took effect:
+   commitment to Central US (East US 2 refused new SQL servers on this subscription on 2026-09-23). Check the offer took effect:
 
    ```powershell
    az sql db show --resource-group rg-wrg-staging --server <sqlServerName> --name WorldRankGuesser --query "{free: useFreeLimit, whenSpent: freeLimitExhaustionBehavior, sku: currentSku.name}"
