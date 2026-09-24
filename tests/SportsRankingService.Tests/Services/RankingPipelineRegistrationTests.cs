@@ -15,7 +15,7 @@ public class RankingPipelineRegistrationTests
 
         IEnumerable<string> names = provider.GetServices<IHttpFetcher>().Select(f => f.Name);
 
-        Assert.Equal(["Curl", "Http"], names.Order());
+        Assert.Equal(["Curl", "Http", "Proxy"], names.Order());
     }
 
     /// <summary>

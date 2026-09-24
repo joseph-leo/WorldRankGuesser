@@ -20,13 +20,17 @@ public static class RankingPipelineServiceCollectionExtensions
             client.DefaultRequestHeaders.UserAgent.ParseAdd(UserAgent);
             client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("*/*"));
         });
+        // The proxy Worker sets its own upstream headers; this client only needs the timeout.
+        services.AddHttpClient(ProxyFetcher.ClientName, client => client.Timeout = TimeSpan.FromSeconds(30));
         // The runner indexes the fetchers by Name and hands the item's one to its resolver too, so nothing injects a single
         // IHttpFetcher and the order here does not matter. Every fetcher is only handed out behind CachingFetcher, so feeds
         // and resolvers sharing a page request it once per run; the concrete types are registered as themselves for it to wrap.
         services.AddSingleton<CurlFetcher>();
         services.AddSingleton<HttpFetcher>();
+        services.AddSingleton<ProxyFetcher>();
         services.AddSingleton<IHttpFetcher>(sp => new CachingFetcher(sp.GetRequiredService<CurlFetcher>()));
         services.AddSingleton<IHttpFetcher>(sp => new CachingFetcher(sp.GetRequiredService<HttpFetcher>()));
+        services.AddSingleton<IHttpFetcher>(sp => new CachingFetcher(sp.GetRequiredService<ProxyFetcher>()));
 
         // Parsers are stateless; the runner indexes them by SourceName.
         services.AddSingleton<IRankingParser, BwfParser>();
