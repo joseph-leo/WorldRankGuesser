@@ -11,9 +11,9 @@ public class EspnTennisParserTests
     {
         var rows = _parser.Parse(Sample.Read("Espn_Atp_Singles.json")).Entries;
 
-        Assert.Equal(150, rows.Count);
+        Assert.Equal(12, rows.Count);
         Assert.Equal("ITA", rows.Single(r => r.Position == 1).ISO3);
-        Assert.Equal("LUX", rows.Single(r => r.Position == 150).ISO3);
+        Assert.Equal("LUX", rows.Single(r => r.Position == 12).ISO3);
         Assert.All(rows, r => Assert.Matches("^[A-Z]{3}$", r.ISO3));
     }
 
@@ -29,6 +29,6 @@ public class EspnTennisParserTests
         var top = _parser.Parse(Sample.Read("Espn_Atp_Singles.json")).Entries.Single(r => r.Position == 1);
 
         Assert.Equal(11500m, top.Points);
-        Assert.Equal("Jannik Sinner", top.Competitor);
+        Assert.Equal("Jonah Alpha", top.Competitor);
     }
 }

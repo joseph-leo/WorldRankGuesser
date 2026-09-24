@@ -11,9 +11,9 @@ public class WorldRugbyParserTests
     {
         var rows = _parser.Parse(Sample.Read("WorldRugby_Union_Men.json")).Entries;
 
-        Assert.Equal(114, rows.Count);
+        Assert.Equal(12, rows.Count);
         Assert.Equal("ZAF", rows.Single(r => r.Position == 1).ISO3);
-        Assert.Equal("ASM", rows.Single(r => r.Position == 114).ISO3);
+        Assert.Equal("ASM", rows.Single(r => r.Position == 12).ISO3);
         Assert.All(rows, r => Assert.Matches("^[A-Z]{3}$", r.ISO3));
     }
 
@@ -30,7 +30,7 @@ public class WorldRugbyParserTests
     {
         var top = _parser.Parse(Sample.Read("WorldRugby_Union_Men.json")).Entries.Single(r => r.Position == 1);
 
-        Assert.Equal(95.09175036626566m, top.Points);
+        Assert.Equal(95.09m, top.Points);
         Assert.Equal("ZAF", top.ISO3);
     }
 }

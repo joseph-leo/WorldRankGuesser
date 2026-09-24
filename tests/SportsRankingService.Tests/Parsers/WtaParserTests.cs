@@ -11,9 +11,9 @@ public class WtaParserTests
     {
         var rows = _parser.Parse(Sample.Read("Wta_Doubles.json")).Entries;
 
-        Assert.Equal(100, rows.Count);
+        Assert.Equal(12, rows.Count);
         Assert.Equal("CZE", rows.Single(r => r.Position == 1).ISO3);
-        Assert.Equal("ROU", rows.Single(r => r.Position == 100).ISO3);
+        Assert.Equal("ROU", rows.Single(r => r.Position == 12).ISO3);
         Assert.All(rows, r => Assert.Matches("^[A-Z]{3}$", r.ISO3));
     }
 
@@ -29,7 +29,7 @@ public class WtaParserTests
         var top = _parser.Parse(Sample.Read("Wta_Doubles.json")).Entries.Single(r => r.Position == 1);
 
         Assert.Equal(11460m, top.Points);
-        Assert.Equal("Katerina Siniakova", top.Competitor);
+        Assert.Equal("Jonah Alpha", top.Competitor);
     }
 
     /// <summary>

@@ -17,9 +17,9 @@ public class BwfParserTests
     {
         var rows = _parser.Parse(Sample.Read("Bwf_MensSingles.json")).Entries;
 
-        Assert.Equal(100, rows.Count);
+        Assert.Equal(12, rows.Count);
         Assert.Equal("IDN", rows.Single(r => r.Position == 1).ISO3);
-        Assert.Equal("AZE", rows.Single(r => r.Position == 100).ISO3);
+        Assert.Equal("AZE", rows.Single(r => r.Position == 12).ISO3);
         Assert.All(rows, r => Assert.Matches("^[A-Z]{3}$", r.ISO3));
     }
 
@@ -29,17 +29,17 @@ public class BwfParserTests
         var rows = _parser.Parse(Sample.Read("Bwf_MensDoubles.json")).Entries;
 
         Assert.Equal(new[] { "KOR", "KOR" }, rows.Where(r => r.Position == 1).Select(r => r.ISO3));
-        Assert.Equal(new[] { "KOR", "MYS" }, rows.Where(r => r.Position == 37).Select(r => r.ISO3).Order());
+        Assert.Equal(new[] { "KOR", "MYS" }, rows.Where(r => r.Position == 5).Select(r => r.ISO3).Order());
         Assert.All(rows, r => Assert.Matches("^[A-Z]{3}$", r.ISO3));
     }
 
     [Fact]
     public void Neutral_athletes_are_dropped()
     {
-        // The doubles fixture contains "Athlete Independent Neutral" players; the singles one does not.
+        // The doubles sample has ten pairs, one of them "Athlete Independent Neutral"; the singles one has none.
         var rows = _parser.Parse(Sample.Read("Bwf_MensDoubles.json")).Entries;
 
-        Assert.InRange(rows.Count, 190, 199);
+        Assert.Equal(18, rows.Count);
     }
 
     /// <summary>
@@ -68,8 +68,8 @@ public class BwfParserTests
 
     /// <summary>
     /// BWF's full lists echo some rows inside a block of tied players: a second row id for the same player ids with the same
-    /// rank and points (172 echoes over the five lists on 2026-09-18). The excerpt is five consecutive real rows at rank 925:
-    /// three players, two of them listed twice.
+    /// rank and points (172 echoes over the five lists on 2026-09-18). The sample is five rows tied at rank 925: three players,
+    /// two of them listed twice.
     /// </summary>
     [Fact]
     public void A_player_the_feed_lists_twice_is_one_entry()
@@ -83,14 +83,14 @@ public class BwfParserTests
     /// <summary>
     /// A player can be ranked with several partners. When two of his pairs tie on rank and points his two entries are
     /// identical, because an entry names the player and not the pair; he is then listed once (decided 2026-09-18).
-    /// The excerpt is the two real rows of one player's pairs tied at rank 505.
+    /// The sample is one player's two pairs tied at rank 505.
     /// </summary>
     [Fact]
     public void A_player_in_two_tied_pairs_is_listed_once_at_that_rank()
     {
         var rows = _parser.Parse(Sample.Read("Bwf_MensDoubles_TiedPairs.json")).Entries;
 
-        Assert.Equal(["Enrico Keoni ASUNCION", "Adrian King-Sun MAR", "Jacob ZHANG"], rows.Select(r => r.Competitor));
+        Assert.Equal(["Sam INDIA", "Noa JULIET", "Eli KILO"], rows.Select(r => r.Competitor));
         Assert.All(rows, r => Assert.Equal(new RankEntry(505, "USA", r.Competitor, 2200m), r));
     }
 
@@ -115,7 +115,7 @@ public class BwfParserTests
 
         Assert.Equal(87631m, top.Points);
         Assert.Equal("IDN", top.ISO3);
-        Assert.Equal("Jonatan CHRISTIE", top.Competitor);
+        Assert.Equal("Jonah ALPHA", top.Competitor);
     }
 
     [Fact]
@@ -123,7 +123,7 @@ public class BwfParserTests
     {
         var pair = _parser.Parse(Sample.Read("Bwf_MensDoubles.json")).Entries.Where(r => r.Position == 1).ToList();
 
-        Assert.Equal(["KIM Won Ho", "SEO Seung Jae"], pair.Select(r => r.Competitor));
+        Assert.Equal(["Jonah ALPHA", "Mika BRAVO"], pair.Select(r => r.Competitor));
         Assert.All(pair, r => Assert.Equal("KOR", r.ISO3));
         Assert.All(pair, r => Assert.Equal(114099m, r.Points));
     }

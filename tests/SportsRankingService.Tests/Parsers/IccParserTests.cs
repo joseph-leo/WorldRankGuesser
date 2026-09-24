@@ -42,7 +42,7 @@ public class IccParserTests
     {
         var rows = _parser.Parse(Sample.Read("Icc_T20_Women.json")).Entries;
 
-        Assert.Equal(80, rows.Count);
+        Assert.Equal(12, rows.Count);
         Assert.Equal("AUS", rows.First(r => r.Position == 1).ISO3);
         Assert.All(rows, r => Assert.DoesNotContain("-", r.ISO3));
         Assert.Contains("HKG", rows.Select(r => r.ISO3));   // HK-W
