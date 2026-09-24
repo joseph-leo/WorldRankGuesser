@@ -171,3 +171,67 @@ which sees none of the Windows tools: call `& "C:\Program Files\Git\bin\bash.exe
   carries the repository name): redeploy `bootstrap.bicep` with the new `githubRepository`.
 - **The allowance ran out** (the front end says the server is resting until the 1st): expected on the free tier;
   production moves to stage 2 when that happens to real players.
+
+## First-deploy notes (staging, 2026-09-24)
+
+What differed from the plan, in the order it was met. Each item is fixed in the templates, the scripts or this
+runbook; the notes are the record.
+
+- **Region.** East US 2 refused the SQL server (`ProvisioningDisabled`, "provisioning is restricted in this region")
+  on this subscription; Central US accepted it, so `infra/bootstrap.bicep` defaults to `centralus` (PR #3). Nothing
+  created in East US 2 survived: the half-built group was deleted and staging bootstrapped again.
+- **A subscription-level deployment keeps its region.** Rerunning `bootstrap-staging` in another region fails with
+  `InvalidDeploymentLocation` until the old deployment record is removed:
+  `az deployment sub delete --name bootstrap-staging` (history only; it deletes no resource).
+- **The Container Apps environment takes a while to delete.** `az group delete` removed everything else within
+  ten minutes and left the environment in `ScheduledForDelete` for about 25 minutes more; the group is gone when
+  `az group show` says so.
+- **The free database refuses a custom auto-pause delay.** `autoPauseDelay: 15` failed with
+  "Only default value for auto pause delay is allowed for Free Limit database with auto pause exhaustion behavior";
+  the template leaves the default, and the database reports 60 minutes (PR #4).
+- **The budget** was created on the first try, on a subscription a day old.
+- **The bundle script needs `dotnet restore`** before `dotnet ef migrations bundle`: `dotnet ef` 11 reads the
+  project's metadata without restoring, so a fresh checkout fails with NETSDK1004 (PR #5). Locally it had always
+  passed because `obj` existed.
+- **`scraper-check.yml` before the first scraper deploy** fails at the execution check with Azure's
+  `ResourceNotFound` for the Job, not with the script's "no execution yet": the Job does not exist yet. Either way
+  the run fails, which is the point of the acceptance step.
+- **WBSC blocks Azure.** `www.wbsc.org` sits behind CloudFront, which answers 403 "Request blocked" to the Job's
+  address for every User-Agent and for curl too (probed with a one-off execution of the Job:
+  `az containerapp job start --yaml`, a template with `command: [/bin/sh]` and the probe as `args`). A residential
+  address is fine. The five WBSC feeds are disabled with a dated note (PR #6); the game's baseball category has no
+  other source and is empty until WBSC gets another egress or another source. 49 feeds run, in about 40 seconds;
+  the view has 3,286 rows and 215 drawable countries (the local database had 3,590 rows with WBSC on 2026-09-22).
+- **JSON-valued secrets are set from Git Bash.** `ALLOWED_IPS` set with `gh secret set --body '["…/32"]'` from
+  PowerShell 5.1 reached GitHub without its double quotes (PowerShell passes embedded quotes to a program
+  unescaped), and the game deploy failed with BCP186 in `game.bicepparam`. `printf '%s' '["…/32"]' | gh secret set
+  ALLOWED_IPS --env staging` from Git Bash is the form that works.
+- **The portal's query editor hides `PRINT` output** when the script returns a grid: `bootstrap.sql`'s "run this
+  file again" message is not shown. Run it twice anyway; the second run is idempotent.
+- **A probe or manual execution of the Job counts** as its latest execution for `scraper-check.yml` until the next
+  real run.
+- **The kill switch was off while fix pull requests merged**, so a merge to `main` started no deploy; each deploy
+  was then dispatched by hand. That avoids one deploy per fix merge plus one per dispatch.
+- **First game deploy:** creating the app took 34 seconds (the plan allowed two to three minutes) and `/readyz`
+  answered 200 on the first poll, 16 seconds after the deploy finished; the Playwright game passed in 10 seconds
+  through the ingress. Rankings loaded: 3,286 rows, 215 drawable countries.
+- **The rate limit.** A cookie-less caller's *player* limit is keyed on their address (30 starts an hour), so a burst
+  of cookie-less starts is refused from the 31st, not the 121st the plan expected; the per-address limit (120) sits
+  behind it. A refused request (an address off the list, the app at zero replicas) did not wake the app: the ingress
+  answered "access denied" and the replica count stayed at zero. A game plays from the phone over mobile data while
+  the owner's network is at its limit, so the limit is keyed on the caller, not the ingress.
+- **The database pauses early.** It reports a 60-minute auto-pause delay and paused about 13 minutes after the last
+  request in practice, so a cold start meets a paused database far more often than the delay suggests.
+- **The first cold start killed the container.** With the database paused, the first container logged nothing for
+  30 seconds, not even "Now listening", and the startup probe killed it; the second container, started after the
+  database had resumed, listened within 3 seconds. Data protection registers a hosted service that preloads its key
+  ring at startup; with the keys in the database that login blocks for as long as the resume takes, and Kestrel starts
+  only after the hosted services. The registration is removed right before the host is built (PR #9).
+- **Cold start, measured after the fix** from zero replicas and a paused database: the replica was assigned 5 seconds
+  after the request, the image pulled in 1 second, the container started 14 seconds in and listened 1 second later;
+  the first page byte arrived at 17.5 seconds, `/readyz` turned 200 at 70 seconds (the database resumed in about
+  55 seconds, during which the front end shows its waking-up state) and a game started at 72 seconds. Within the
+  90 seconds the spec asks for; the page itself is not "about 2 seconds" from a cold start, because the ingress
+  holds the first request until the replica listens.
+- **Path filters:** a merge touching only the scraper's folder ran `Deploy scraper` and not `Deploy game`; a merge
+  touching only a plan file ran CI alone.
