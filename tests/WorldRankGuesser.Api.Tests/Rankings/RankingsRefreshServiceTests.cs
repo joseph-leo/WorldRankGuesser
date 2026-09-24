@@ -47,7 +47,7 @@ public class RankingsRefreshServiceTests
 
     private static readonly Exception Down = new InvalidOperationException("The database is resuming.");
 
-    private static (RankingsRefreshService Service, RankingsStore Store) Create(ScriptedReader reader, FakeTimeProvider time, int refreshMinutes = 60)
+    private static (RankingsRefreshService Service, RankingsStore Store) Create(IRankingsReader reader, FakeTimeProvider time, int refreshMinutes = 60)
     {
         var store = new RankingsStore();
         var scopes = new ServiceCollection()
@@ -181,6 +181,39 @@ public class RankingsRefreshServiceTests
 
         await AdvanceUntil(time, () => store.Current is not null, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(6));
         Assert.Equal(2, reader.Attempts);
+
+        await service.StopAsync(CancellationToken.None);
+    }
+
+    /// <summary>Blocks the calling thread inside ReadAsync until released: what SqlClient does while a paused database resumes.</summary>
+    private sealed class BlockingReader(ManualResetEventSlim release) : IRankingsReader
+    {
+        public Task<IReadOnlyList<CountryRankingRow>> ReadAsync(CancellationToken ct)
+        {
+            release.Wait(ct);
+            return Task.FromResult((IReadOnlyList<CountryRankingRow>)Rows);
+        }
+    }
+
+    /// <summary>
+    /// SqlClient creates the physical connection synchronously inside OpenAsync, and a paused Azure SQL database holds that
+    /// login for tens of seconds while it resumes. The web server starts only after the hosted services, so a hosted
+    /// service whose start waits on that login keeps the app from listening (staging, 2026-09-24). The runtime starts a
+    /// BackgroundService's ExecuteAsync off the caller's thread; this pins that starting the service returns at once even
+    /// when the reader blocks the calling thread.
+    /// </summary>
+    [Fact]
+    public async Task Starting_returns_at_once_even_when_the_first_read_blocks_the_thread()
+    {
+        using var release = new ManualResetEventSlim(false);
+        var (service, store) = Create(new BlockingReader(release), new FakeTimeProvider(TestData.LoadedAt));
+
+        var starting = service.StartAsync(CancellationToken.None);
+        var returned = await Task.WhenAny(starting, Task.Delay(TimeSpan.FromSeconds(5))) == starting;
+
+        release.Set();                                           // whatever happened, let the blocked read finish
+        Assert.True(returned, "StartAsync waited for a read that blocks the thread; the web server would not be listening.");
+        Assert.True(await Holds(() => store.Current is not null));
 
         await service.StopAsync(CancellationToken.None);
     }
