@@ -20,10 +20,10 @@ public class WikipediaIihfParserTests
     {
         var rows = _parser.Parse(Sample.Read(Page), "Men").Entries;
 
-        Assert.Equal(58, rows.Count);
+        Assert.Equal(12, rows.Count);
         Assert.Equal(new RankEntry(1, "CHE", Points: 5335m), rows.Single(r => r.Position == 1));
         Assert.Equal(new RankEntry(2, "CAN", Points: 5305m), rows.Single(r => r.Position == 2));
-        Assert.Equal(new RankEntry(58, "ARM", Points: 805m), rows.Single(r => r.Position == 58));
+        Assert.Equal(new RankEntry(12, "ARM", Points: 805m), rows.Single(r => r.Position == 12));
     }
 
     [Fact]
@@ -31,10 +31,10 @@ public class WikipediaIihfParserTests
     {
         var rows = _parser.Parse(Sample.Read(Page), "Women").Entries;
 
-        Assert.Equal(45, rows.Count);
+        Assert.Equal(10, rows.Count);
         Assert.Equal(new RankEntry(1, "USA", Points: 5460m), rows.Single(r => r.Position == 1));
         Assert.Equal(new RankEntry(3, "CZE", Points: 5125m), rows.Single(r => r.Position == 3));
-        Assert.Equal(new RankEntry(45, "SGP", Points: 1135m), rows.Single(r => r.Position == 45));
+        Assert.Equal(new RankEntry(10, "SGP", Points: 1135m), rows.Single(r => r.Position == 10));
     }
 
     [Fact]

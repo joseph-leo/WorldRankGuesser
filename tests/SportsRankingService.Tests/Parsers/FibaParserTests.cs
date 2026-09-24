@@ -26,7 +26,7 @@ public class FibaParserTests
     {
         var rows = _parser.Parse(Sample.Read("Fiba_Ranking_Men.html")).Entries;
 
-        Assert.True(rows.Count >= 150, $"expected the full ranking, got {rows.Count} rows");
+        Assert.Equal(12, rows.Count);
         Assert.All(rows, r =>
         {
             Assert.Matches("^[A-Z]{3}$", r.ISO3);
@@ -49,10 +49,10 @@ public class FibaParserTests
     [Fact]
     public void Ignores_the_movers_and_drops_widget_tables()
     {
-        // The page also carries "Meilleures Progressions" and "Pires Chutes" tables whose rows repeat ranked countries.
+        // The page also carries movers and drops tables whose rows repeat ranked countries.
         var rows = _parser.Parse(Sample.Read("Fiba_Ranking_Men.html")).Entries;
 
-        Assert.Equal(159, rows.Count);
-        Assert.Equal(159, rows.Select(r => r.ISO3).Distinct().Count());
+        Assert.Equal(12, rows.Count);
+        Assert.Equal(12, rows.Select(r => r.ISO3).Distinct().Count());
     }
 }

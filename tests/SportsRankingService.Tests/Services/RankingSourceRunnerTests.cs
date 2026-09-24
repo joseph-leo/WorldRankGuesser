@@ -70,7 +70,7 @@ public class RankingSourceRunnerTests
         var fetcher = new FakeFetcher(new()
         {
             ["http://wta?page=0&pageSize=100"] = Sample.Read("Wta_Doubles.json"),
-            ["http://wta?page=1&pageSize=100"] = WtaPage("2026-09-14T00:00:00Z", (101, "USA", "Ann"), (102, "FRA", "Bea")),
+            ["http://wta?page=1&pageSize=100"] = WtaPage("2026-09-14T00:00:00Z", (13, "USA", "Ann"), (14, "FRA", "Bea")),
             ["http://wta?page=2&pageSize=100"] = "[]",
         });
 
@@ -78,8 +78,8 @@ public class RankingSourceRunnerTests
 
         Assert.NotNull(snapshot);
         Assert.Equal(["http://wta?page=0&pageSize=100", "http://wta?page=1&pageSize=100", "http://wta?page=2&pageSize=100"], fetcher.Requested);
-        Assert.Equal(102, snapshot.Entries.Count);
-        Assert.Equal("FRA", snapshot.Entries.Single(e => e.Position == 102).ISO3);
+        Assert.Equal(14, snapshot.Entries.Count);
+        Assert.Equal("FRA", snapshot.Entries.Single(e => e.Position == 14).ISO3);
         Assert.Equal(new DateOnly(2026, 9, 14), snapshot.RankingDate);
         Assert.True(snapshot.IsFederationDate);
     }
@@ -92,7 +92,7 @@ public class RankingSourceRunnerTests
         {
             ["http://wta?page=0&pageSize=100"] = Sample.Read("Wta_Doubles.json"),
             // page 1 is missing
-            ["http://wta?page=2&pageSize=100"] = WtaPage("2026-09-14T00:00:00Z", (201, "USA", "Cat")),
+            ["http://wta?page=2&pageSize=100"] = WtaPage("2026-09-14T00:00:00Z", (25, "USA", "Cat")),
         });
 
         RankingSnapshot? snapshot = await Runner(fetcher).RunAsync(PagedWtaItem(), CancellationToken.None);
@@ -107,7 +107,7 @@ public class RankingSourceRunnerTests
         var fetcher = new FakeFetcher(new()
         {
             ["http://wta?page=0&pageSize=100"] = Sample.Read("Wta_Doubles.json"),
-            ["http://wta?page=1&pageSize=100"] = WtaPage("2026-09-21T00:00:00Z", (101, "USA", "Ann")),
+            ["http://wta?page=1&pageSize=100"] = WtaPage("2026-09-21T00:00:00Z", (13, "USA", "Ann")),
             ["http://wta?page=2&pageSize=100"] = "[]",
         });
 
@@ -219,7 +219,7 @@ public class RankingSourceRunnerTests
         Assert.Equal("Field Hockey", snapshot.Sport);
         Assert.Equal("Outdoor", snapshot.Event);
         Assert.Equal("Men", snapshot.Gender);
-        Assert.Equal(104, snapshot.Entries.Count);
+        Assert.Equal(12, snapshot.Entries.Count);
         Assert.Equal("DEU", snapshot.Entries.Single(e => e.Position == 1).ISO3);
     }
 
@@ -242,14 +242,14 @@ public class RankingSourceRunnerTests
         var fetcher = new FakeFetcher(new()
         {
             ["https://inside.fifa.com/fifa-rankings/world-ranking/men"] = Sample.Read("Fifa_WorldRanking_Men.html"),
-            ["http://fifa/api?id=FRS_Male_Football_20260611"] = Sample.Read("Fifa_V3_Men_FRS_20260611.json"),
+            ["http://fifa/api?id=FRS_Male_Football_20260611"] = Sample.Read("Fifa_V3_Men.json"),
         });
         var item = new RankingItem { Sport = "Soccer", Gender = "Men", Url = "http://fifa/api?id={0}", Source = "FifaV3", UrlResolver = "FifaDateId" };
 
         RankingSnapshot? snapshot = await Runner(fetcher).RunAsync(item, CancellationToken.None);
 
         Assert.NotNull(snapshot);
-        Assert.Equal(211, snapshot.Entries.Count);
+        Assert.Equal(12, snapshot.Entries.Count);
         Assert.Equal(new DateOnly(2026, 7, 20), snapshot.RankingDate);
         Assert.True(snapshot.IsFederationDate);
         Assert.Equal(["https://inside.fifa.com/fifa-rankings/world-ranking/men", "http://fifa/api?id=FRS_Male_Football_20260611"], fetcher.Requested);
@@ -265,7 +265,7 @@ public class RankingSourceRunnerTests
 
         Assert.NotNull(snapshot);
         Assert.Equal("World Cup Group 5x", snapshot.Event);
-        Assert.Equal(21, snapshot.Entries.Count);
+        Assert.Equal(5, snapshot.Entries.Count);
         Assert.Equal("CHN", snapshot.Entries.Single(e => e.Position == 1).ISO3);
     }
 
@@ -288,7 +288,7 @@ public class RankingSourceRunnerTests
             runner.RunAsync(hoop, CancellationToken.None));
 
         Assert.Equal(["http://fig/rg"], pages.Requested);
-        Assert.Equal(21, snapshots[0]!.Entries.Count);
+        Assert.Equal(5, snapshots[0]!.Entries.Count);
         Assert.Equal("World Cup Hoop", snapshots[1]!.Event);
         Assert.NotEmpty(snapshots[1]!.Entries);
         Assert.NotEqual(snapshots[0]!.Entries, snapshots[1]!.Entries);

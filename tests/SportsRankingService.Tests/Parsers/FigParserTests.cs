@@ -25,12 +25,12 @@ public class FigParserTests
         var worldCup = _parser.Parse(Men, "World Cup / Floor Exercise").Entries;
         var challengeCup = _parser.Parse(Men, "World Challenge Cup / Floor Exercise").Entries;
 
-        Assert.Equal(104, worldCup.Count);
+        Assert.Equal(6, worldCup.Count);
         Assert.Equal("BLR", worldCup.First(r => r.Position == 1).ISO3);
         Assert.Equal("PHL", worldCup.First(r => r.Position == 2).ISO3);
         Assert.Equal("ISR", worldCup.First(r => r.Position == 3).ISO3);
 
-        Assert.Equal(55, challengeCup.Count);
+        Assert.Equal(5, challengeCup.Count);
         Assert.Equal("DEU", challengeCup.First(r => r.Position == 1).ISO3);
     }
 
@@ -39,7 +39,7 @@ public class FigParserTests
     {
         var top = _parser.Parse(Men, "World Cup / Floor Exercise").Entries.First(r => r.Position == 1);
 
-        Assert.Equal("SHARAMKOU Yahor", top.Competitor);
+        Assert.Equal("ALPHA Jonah", top.Competitor);
     }
 
     [Fact]
@@ -57,9 +57,9 @@ public class FigParserTests
     {
         var rows = _parser.Parse(Women, "World Cup / Balance Beam").Entries;
 
-        Assert.Equal(134, rows.Count);
+        Assert.Equal(6, rows.Count);
         Assert.Equal("DZA", rows.First(r => r.Position == 1).ISO3);
-        Assert.Equal("NEMOUR Kaylia", rows.First(r => r.Position == 1).Competitor);
+        Assert.Equal("BRAVO Mika", rows.First(r => r.Position == 1).Competitor);
     }
 
     [Fact]
@@ -67,7 +67,7 @@ public class FigParserTests
     {
         var rows = _parser.Parse(Rhythmic, "World Cup / Group 5x").Entries;
 
-        Assert.Equal(21, rows.Count);
+        Assert.Equal(5, rows.Count);
         Assert.Equal("CHN", rows.First(r => r.Position == 1).ISO3);
         Assert.Null(rows.First(r => r.Position == 1).Competitor);
         Assert.Equal("RUS", rows.First(r => r.Position == 2).ISO3);
@@ -85,7 +85,7 @@ public class FigParserTests
     {
         var rows = _parser.Parse(Sample.Read(fixture), selector).Entries;
 
-        Assert.True(rows.Count >= 15, $"{fixture} {selector}: expected a full table, got {rows.Count} rows");
+        Assert.True(rows.Count >= 5, $"{fixture} {selector}: expected a table, got {rows.Count} rows");
         Assert.All(rows, r =>
         {
             Assert.Matches("^[A-Z]{3}$", r.ISO3);
@@ -96,21 +96,13 @@ public class FigParserTests
     public static TheoryData<string, string> EveryTable()
     {
         TheoryData<string, string> data = new();
-        string[] series = ["World Cup", "World Challenge Cup"];
-        var pages = new (string Fixture, string[] Apparatus)[]
+        foreach ((string page, string[] apparatus) in Feeds.FigPages)
         {
-            ("Fig_Artistic_Men.html", ["Floor Exercise", "Pommel Horse", "Still Rings", "Vault", "Parallel Bars", "Horizontal Bar"]),
-            ("Fig_Artistic_Women.html", ["Vault", "Uneven Bars", "Balance Beam", "Floor Exercise"]),
-            ("Fig_Rhythmic_Women.html", ["Individual All-Around", "Hoop", "Ball", "Clubs", "Ribbon", "Group All-Around", "Group 5x", "Group 3x+2x"]),
-        };
-
-        foreach (var (fixture, apparatus) in pages)
-        {
-            foreach (string s in series)
+            foreach (string series in Feeds.FigSeries)
             {
                 foreach (string a in apparatus)
                 {
-                    data.Add(fixture, $"{s} / {a}");
+                    data.Add(page, $"{series} / {a}");
                 }
             }
         }

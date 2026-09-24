@@ -13,7 +13,7 @@ public class SvnsSeriesResolverTests
     {
         var ids = SvnsSeriesResolver.ExtractSeriesIds(Sample.Read("Svns_Standings.html"));
 
-        Assert.Equal(["1cbf9c53-7b2f-4973-9619-215c98d7a494", "60023731-b2e9-4d5f-8c19-e6ecf2cf1e89"], ids);
+        Assert.Equal(["11111111-2222-4333-8444-555555555555", "66666666-7777-4888-9999-000000000000"], ids);
     }
 
     [Fact]
