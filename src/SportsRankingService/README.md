@@ -37,6 +37,10 @@ docker run --rm -e "ConnectionStrings__WorldRankGuesserConnection=Server=...;Dat
 docker run --rm -e "ConnectionStrings__WorldRankGuesserConnection=..." worldrankguesser-scraper --only Soccer   # a subset
 ```
 
+In Azure the same image runs as the Container Apps Job `caj-wrg-<env>-scraper`, scheduled by `infra/scraper.bicep` (Fridays
+06:00 UTC on staging, Mondays in production) and deployed by `.github/workflows/deploy-scraper.yml`; `infra/README.md` is
+the runbook, and `scraper-check.yml` fails a run when the weekly scrape did not succeed.
+
 In this repo's compose stack it is `docker compose run --rm scraper`.
 
 Windows Task Scheduler (after `dotnet publish -c Release -o publish`):
