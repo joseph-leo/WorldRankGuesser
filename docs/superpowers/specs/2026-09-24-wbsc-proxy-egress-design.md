@@ -1,7 +1,7 @@
 # WBSC through a Cloudflare Worker: a proxy fetcher for feeds that block hosting addresses
 
 Date: 2026-09-24
-Status: **approved design.** Every section was approved in discussion on 2026-09-24. Plan: to be written with the writing-plans skill.
+Status: **approved design.** Every section was approved in discussion on 2026-09-24. Plan: `docs/superpowers/plans/2026-09-24-wbsc-proxy-egress.md`.
 
 Parent design: `2026-09-19-phase-2-go-live-design.md`, section 7 (the scraper as a Container Apps Job). This document adds one component outside Azure and one fetcher to the scraper; nothing about the game, the view or the promotion flow changes.
 
@@ -42,7 +42,7 @@ The fix is a small HTTP proxy outside Azure: a Cloudflare Worker on the free pla
 
 **When no proxy is configured.** With `Proxy:Url` unset the fetcher delegates to the HTTP fetcher and logs one warning per run that items are being fetched directly.
 
-**The resolver's request follows the item's fetcher.** Today the three resolvers that make a preliminary request (FIFA, SVNS, WBSC) take a single `IHttpFetcher` from DI, always the HTTP one. `IUrlResolver.ResolveAsync` gains the item's fetcher as a parameter, the runner passes the one it already selected, and the resolvers drop their constructor dependency. FIFA and SVNS keep the HTTP fetcher because their items say nothing, so their behaviour is unchanged. The comment on `RankingItem.Fetcher` that says a resolver's request always goes through Http is corrected, and the DI comment about registration order goes away, since nothing depends on it any more.
+**The resolver's request follows the item's fetcher.** Today the three resolvers that make a preliminary request (FIFA, SVNS, WBSC) take a single `IHttpFetcher` from DI, always the HTTP one. `IUrlResolver.ResolveAsync` gains the item's fetcher as a parameter, the runner passes the one it already selected, and the resolvers drop their constructor dependency. FIFA and SVNS keep the HTTP fetcher because their items say nothing, so their behaviour is unchanged. The comment on `RankingItem.Fetcher` that says a resolver's request always goes through Http is corrected, and the DI comment about registration order goes away, since nothing depends on it any more. The WBSC resolver reads `https://www.wbsc.org/en/rankings`, where rankings.wbsc.org redirects permanently since 2026-09-24, so the proxy makes one request for the page rather than two.
 
 **Configuration.** The five WBSC items are re-enabled with `"Fetcher": "Proxy"` and a dated note saying CloudFront blocks hosting addresses and the Worker in `proxy/` is the egress. The disabled-with-reason convention stays for ATP doubles.
 
@@ -72,7 +72,7 @@ The fix is a small HTTP proxy outside Azure: a Cloudflare Worker on the free pla
 
 **Worker tests**, plain `node --test`, driving the exported handler with a fake fetch: 405 for any method but GET; 401 for a missing or wrong token, checked before anything else; 500 when the secret is unset; 400 for a missing or unparsable url; 403 for a host off the allow-list; a forwarded request carries the browser User-Agent and follows redirects; status, body and content type pass through unchanged for a 200 and for an upstream 403 alike; 502 when the upstream fetch throws.
 
-**Scraper unit tests**, no database, in `tests/SportsRankingService.Tests`: the proxy fetcher builds the right request (the encoded target in the query, the token header); a success returns the body; a non-success logs the status and returns null; a transport failure returns null; with no URL configured it delegates to the inner fetcher and logs the warning once. The runner passes the item's fetcher to the resolver, checked with an item that names Curl. The three resolvers' existing tests adapt to the new signature. The configuration test that checks every item's `Fetcher` names a registered fetcher covers the five re-enabled items automatically.
+**Scraper unit tests**, no database, in `tests/SportsRankingService.Tests`: the proxy fetcher builds the right request (the encoded target in the query, the token header); a success returns the body; a non-success logs the status and returns null; a transport failure returns null; with no URL configured it delegates to the inner fetcher and logs the warning once. The runner passes the item's fetcher to the resolver, checked with an item that names Curl. The three resolvers' existing tests adapt to the new signature. A new configuration test loads the committed `serviceconfig.json` and checks that every item names a registered parser, resolver and fetcher, and that the five WBSC items are enabled through the proxy; no such test existed before.
 
 **Verification before merge.** From the owner's machine, with the two proxy settings exported in the shell, one run of the scraper for the five WBSC feeds against the local database through the real Worker: the only end-to-end check that needs no Azure, and it exercises the resolver's page and the five feeds through the proxy.
 
