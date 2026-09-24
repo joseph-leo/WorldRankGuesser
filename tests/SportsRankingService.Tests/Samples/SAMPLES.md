@@ -12,7 +12,7 @@ commit the script and the regenerated files together with the test expectations 
 
 Real responses prove that a parser still reads the live format. Save one per feed under
 `tests/SportsRankingService.Tests/Captures/` (git-ignored) using the sample's file name, and `CaptureTests`
-runs every parser over them; without the folder those tests are skipped. Capture with `curl` and the scraper's
+runs every parser over them; without the folder those tests are skipped (the build copies the folder next to the binaries, so after removing it delete `bin/Debug/net11.0/Captures` too). Capture with `curl` and the scraper's
 own User-Agent, from the URLs in `src/SportsRankingService/serviceconfig.json` (the FIFA, WBSC and SVNS
 resolvers read the pages named in `Services/UrlResolvers/`). Never commit a capture: a federation's page is
 its copyright and carries its browser keys.
