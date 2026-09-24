@@ -1,6 +1,6 @@
 # Phase 2c: Azure, Pipelines and Going Public Implementation Plan
 
-Status: Part B in progress; staging bootstrapped in Central US and both first deploys tagged 2026-09-24, acceptance (Task 20) in progress.
+Status: Part B done, staging accepted 2026-09-24 (first-deploy notes in `infra/README.md`); Part C (production) in progress.
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
