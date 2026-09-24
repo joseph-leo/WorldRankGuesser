@@ -67,7 +67,7 @@ public sealed class RankingSourceRunner : IRankingSourceRunner
             throw new InvalidOperationException($"A Url with {PagePlaceholder} cannot use the '{item.UrlResolver}' resolver, which formats the Url ({item.Describe()})");
         }
 
-        ResolvedUrl resolved = await resolver.ResolveAsync(item, cancellationToken);
+        ResolvedUrl resolved = await resolver.ResolveAsync(item, fetcher, cancellationToken);
         ParsedRanking? parsed = resolved.Url.Contains(PagePlaceholder, StringComparison.Ordinal)
             ? await ParsePagesAsync(item, resolved.Url, fetcher, parser, cancellationToken)
             : await ParseOneAsync(item, resolved.Url, fetcher, parser, cancellationToken);

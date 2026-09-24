@@ -9,22 +9,13 @@ public class RankingPipelineRegistrationTests
         new ServiceCollection().AddLogging().AddRankingPipeline().BuildServiceProvider();
 
     [Fact]
-    public void Both_fetchers_are_registered_under_their_names()
+    public void Every_fetcher_is_registered_under_its_name()
     {
         using ServiceProvider provider = Provider();
 
         IEnumerable<string> names = provider.GetServices<IHttpFetcher>().Select(f => f.Name);
 
         Assert.Equal(["Curl", "Http"], names.Order());
-    }
-
-    /// <summary>The URL resolvers inject one <see cref="IHttpFetcher"/>; their preliminary requests must not start needing curl.</summary>
-    [Fact]
-    public void A_single_fetcher_dependency_is_the_HttpClient_one()
-    {
-        using ServiceProvider provider = Provider();
-
-        Assert.Equal(HttpFetcher.FetcherName, provider.GetRequiredService<IHttpFetcher>().Name);
     }
 
     /// <summary>
@@ -37,6 +28,5 @@ public class RankingPipelineRegistrationTests
         using ServiceProvider provider = Provider();
 
         Assert.All(provider.GetServices<IHttpFetcher>(), fetcher => Assert.IsType<CachingFetcher>(fetcher));
-        Assert.Same(provider.GetRequiredService<IHttpFetcher>(), provider.GetServices<IHttpFetcher>().Single(f => f.Name == HttpFetcher.FetcherName));
     }
 }

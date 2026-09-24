@@ -10,7 +10,7 @@ namespace SportsRankingService.Services.UrlResolvers;
 /// FIFA's ranking API needs a ranking-schedule id. The men's and women's ranking pages embed the
 /// available dates as Next.js page data; the newest one is formatted into the item's URL ({0}).
 /// </summary>
-public sealed class FifaDateIdResolver(IHttpFetcher fetcher) : IUrlResolver
+public sealed class FifaDateIdResolver : IUrlResolver
 {
     public const string ResolverName = "FifaDateId";
 
@@ -19,7 +19,7 @@ public sealed class FifaDateIdResolver(IHttpFetcher fetcher) : IUrlResolver
 
     public string Name => ResolverName;
 
-    public async Task<ResolvedUrl> ResolveAsync(RankingItem item, CancellationToken cancellationToken)
+    public async Task<ResolvedUrl> ResolveAsync(RankingItem item, IHttpFetcher fetcher, CancellationToken cancellationToken)
     {
         string page = item.Gender == "Women" ? WomenPage : MenPage;
         string html = (await fetcher.GetStringAsync(page, cancellationToken))

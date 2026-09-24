@@ -24,8 +24,9 @@ namespace SportsRankingService.Models
         public string UrlResolver { get; set; } = IdentityUrlResolver.ResolverName;
 
         /// <summary>
-        /// <see cref="Services.IHttpFetcher.Name"/> of the client that fetches <see cref="Url"/>: "Http" (.NET HttpClient) unless a feed
-        /// only answers another client (BWF: "Curl"). A resolver's preliminary request always goes through "Http".
+        /// <see cref="Services.IHttpFetcher.Name"/> of the client that fetches <see cref="Url"/> and every preliminary request the
+        /// <see cref="UrlResolver"/> makes: "Http" (.NET HttpClient) unless a feed only answers another client (BWF: "Curl") or its
+        /// site refuses hosting addresses (WBSC: "Proxy").
         /// </summary>
         public string Fetcher { get; set; } = Services.HttpFetcher.FetcherName;
 

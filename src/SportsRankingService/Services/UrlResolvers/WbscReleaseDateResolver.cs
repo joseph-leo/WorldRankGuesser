@@ -5,19 +5,20 @@ using SportsRankingService.Models;
 namespace SportsRankingService.Services.UrlResolvers;
 
 /// <summary>
-/// The WBSC rankings API only answers for an exact release date. rankings.wbsc.org embeds its
+/// The WBSC rankings API only answers for an exact release date. www.wbsc.org/en/rankings embeds its
 /// date dropdown as {"date","sport","year","formatted"} objects; the newest for the item's sportId
 /// (read from the item's URL query) is formatted into the URL ({0}).
 /// </summary>
-public sealed partial class WbscReleaseDateResolver(IHttpFetcher fetcher) : IUrlResolver
+public sealed partial class WbscReleaseDateResolver : IUrlResolver
 {
     public const string ResolverName = "WbscReleaseDate";
 
-    private const string RankingsPage = "https://rankings.wbsc.org/";
+    // rankings.wbsc.org redirects here permanently since 2026-09-24; the dropdown objects are embedded in this page.
+    private const string RankingsPage = "https://www.wbsc.org/en/rankings";
 
     public string Name => ResolverName;
 
-    public async Task<ResolvedUrl> ResolveAsync(RankingItem item, CancellationToken cancellationToken)
+    public async Task<ResolvedUrl> ResolveAsync(RankingItem item, IHttpFetcher fetcher, CancellationToken cancellationToken)
     {
         Match sport = SportIdQuery().Match(item.Url);
         if (!sport.Success)

@@ -66,7 +66,7 @@ public class FifaDateIdTests
         var fetcher = new FakeFetcher(new() { ["https://inside.fifa.com/fifa-rankings/world-ranking/men"] = Sample.Read("Fifa_WorldRanking_Men.html") });
         var item = new RankingItem { Sport = "Soccer", Gender = "Men", Url = "http://fifa/api?id={0}", Source = "FifaV3", UrlResolver = "FifaDateId" };
 
-        ResolvedUrl resolved = await new FifaDateIdResolver(fetcher).ResolveAsync(item, CancellationToken.None);
+        ResolvedUrl resolved = await new FifaDateIdResolver().ResolveAsync(item, fetcher, CancellationToken.None);
 
         Assert.Equal("http://fifa/api?id=FRS_Male_Football_20260611", resolved.Url);
         Assert.Equal(new DateOnly(2026, 7, 20), resolved.RankingDate);

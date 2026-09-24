@@ -20,9 +20,9 @@ public static class RankingPipelineServiceCollectionExtensions
             client.DefaultRequestHeaders.UserAgent.ParseAdd(UserAgent);
             client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("*/*"));
         });
-        // The runner indexes the fetchers by Name. HttpFetcher stays last: a single IHttpFetcher dependency
-        // (the URL resolvers) gets the last registration, and their requests must not start needing curl.
-        // Both are only handed out behind CachingFetcher, so feeds and resolvers sharing a page request it once per run.
+        // The runner indexes the fetchers by Name and hands the item's one to its resolver too, so nothing injects a single
+        // IHttpFetcher and the order here does not matter. Every fetcher is only handed out behind CachingFetcher, so feeds
+        // and resolvers sharing a page request it once per run; the concrete types are registered as themselves for it to wrap.
         services.AddSingleton<CurlFetcher>();
         services.AddSingleton<HttpFetcher>();
         services.AddSingleton<IHttpFetcher>(sp => new CachingFetcher(sp.GetRequiredService<CurlFetcher>()));
