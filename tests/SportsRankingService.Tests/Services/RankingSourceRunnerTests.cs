@@ -50,7 +50,7 @@ public class RankingSourceRunnerTests
     private static RankingSourceRunner Runner(FakeFetcher fetcher, params FakeFetcher[] otherFetchers) =>
         new([fetcher, .. otherFetchers],
             [new FihParser(), new FifaV3Parser(), new FigParser(), new WtaParser(), new FakeParser()],
-            [new IdentityUrlResolver(), new FifaDateIdResolver(fetcher)],
+            [new IdentityUrlResolver(), new FifaDateIdResolver()],
             new FakeTimeProvider(Now),
             NullLogger<RankingSourceRunner>.Instance);
 
@@ -326,6 +326,28 @@ public class RankingSourceRunnerTests
 
         Assert.NotNull(snapshot);
         Assert.Equal(["http://fih/outdoor_m.json"], curl.Requested);
+        Assert.Empty(http.Requested);
+    }
+
+    /// <summary>
+    /// WBSC's release-date page sits on the same blocked host as its feeds, so a resolver's preliminary request must
+    /// go through whatever fetcher the item names, not always the direct one.
+    /// </summary>
+    [Fact]
+    public async Task A_resolvers_preliminary_request_goes_through_the_fetcher_the_item_names()
+    {
+        var http = new FakeFetcher([]);
+        var curl = new FakeFetcher(new()
+        {
+            ["https://inside.fifa.com/fifa-rankings/world-ranking/men"] = Sample.Read("Fifa_WorldRanking_Men.html"),
+            ["http://fifa/api?id=FRS_Male_Football_20260611"] = Sample.Read("Fifa_V3_Men.json"),
+        }, name: "Curl");
+        var item = new RankingItem { Sport = "Soccer", Gender = "Men", Url = "http://fifa/api?id={0}", Source = "FifaV3", UrlResolver = "FifaDateId", Fetcher = "Curl" };
+
+        RankingSnapshot? snapshot = await Runner(http, curl).RunAsync(item, CancellationToken.None);
+
+        Assert.NotNull(snapshot);
+        Assert.Equal(["https://inside.fifa.com/fifa-rankings/world-ranking/men", "http://fifa/api?id=FRS_Male_Football_20260611"], curl.Requested);
         Assert.Empty(http.Requested);
     }
 

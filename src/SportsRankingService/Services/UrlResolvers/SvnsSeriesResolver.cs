@@ -9,7 +9,7 @@ namespace SportsRankingService.Services.UrlResolvers;
 /// data attribute. Each series' metadata says whether it is men's ("mrs") or women's ("wrs"); the
 /// one matching the item's gender is formatted into the item's URL ({0}).
 /// </summary>
-public sealed class SvnsSeriesResolver(IHttpFetcher fetcher) : IUrlResolver
+public sealed class SvnsSeriesResolver : IUrlResolver
 {
     public const string ResolverName = "SvnsSeries";
 
@@ -18,7 +18,7 @@ public sealed class SvnsSeriesResolver(IHttpFetcher fetcher) : IUrlResolver
 
     public string Name => ResolverName;
 
-    public async Task<ResolvedUrl> ResolveAsync(RankingItem item, CancellationToken cancellationToken)
+    public async Task<ResolvedUrl> ResolveAsync(RankingItem item, IHttpFetcher fetcher, CancellationToken cancellationToken)
     {
         string wanted = item.Gender == "Women" ? "wrs" : "mrs";
 
