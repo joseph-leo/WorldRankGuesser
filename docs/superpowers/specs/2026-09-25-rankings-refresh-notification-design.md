@@ -1,7 +1,7 @@
 # A scrape reaches players at once: the refresh endpoint and the scraper's notification
 
 Date: 2026-09-25
-Status: **approved design.** Every section was approved in discussion on 2026-09-25. Plan: `docs/superpowers/plans/2026-09-25-rankings-refresh-notification.md`.
+Status: **implemented in staging 2026-09-25** (PRs #14 and #16; the plan is `docs/superpowers/plans/2026-09-25-rankings-refresh-notification.md`). Every section was approved in discussion on 2026-09-25; the URL decision in section 2 was revised the same day (the internal hostname, section 7). Verified in staging at 04:31 UTC: the Job's "Game notified: 3587 rows, 218 drawable countries", the game's "Rankings loaded" one second later, no restart. Production follows with phase 2c Part C.
 
 Parent designs: `2026-09-19-server-authoritative-rebuild-design.md` (the rankings pipeline and the anti-cheat invariants) and `2026-09-19-phase-2-go-live-design.md`, section 7 (the two environments, the free serverless database). Follows `2026-09-24-wbsc-proxy-egress-design.md`, whose first deploy exposed the gap.
 
