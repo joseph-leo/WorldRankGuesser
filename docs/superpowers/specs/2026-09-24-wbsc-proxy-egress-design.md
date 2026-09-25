@@ -1,7 +1,7 @@
 # WBSC through a Cloudflare Worker: a proxy fetcher for feeds that block hosting addresses
 
 Date: 2026-09-24
-Status: **approved design.** Every section was approved in discussion on 2026-09-24. Plan: `docs/superpowers/plans/2026-09-24-wbsc-proxy-egress.md`.
+Status: **implemented in staging 2026-09-25** (PR #12; the plan is `docs/superpowers/plans/2026-09-24-wbsc-proxy-egress.md`). Every section was approved in discussion on 2026-09-24. Production follows with phase 2c Part C.
 
 Parent design: `2026-09-19-phase-2-go-live-design.md`, section 7 (the scraper as a Container Apps Job). This document adds one component outside Azure and one fetcher to the scraper; nothing about the game, the view or the promotion flow changes.
 
