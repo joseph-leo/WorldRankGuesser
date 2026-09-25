@@ -92,6 +92,11 @@ and `Proxy__Token` (the Job sets them from `infra/scraper.bicep`); with no URL c
 feeds are fetched directly with one warning, which works from a residential address. A resolver's preliminary
 request goes through the item's fetcher too, so the WBSC release-date page takes the same route as its feeds.
 
+After a run that stored at least one new release, the scraper POSTs once to the game's `/api/rankings/refresh`
+(`Notify__Url`, with the shared token in `X-Refresh-Token` from `Notify__Token`), so the game re-reads the view
+at once instead of at its next 12-hour refresh. Unset locally, nothing is sent; a failed notification is a warning
+and never fails the run.
+
 Ice hockey comes from Wikipedia's "IIHF World Ranking" article rather than iihf.com, which answers
 every scripted client with a Cloudflare challenge. The article states no ranking date, so those two
 feeds carry the scrape date (`IsFederationDate = 0`).
