@@ -114,10 +114,15 @@ jobs:
 
       - name: Pin Bicep
         run: az bicep install --version v0.47.16
+      - name: The rankings refresh token secret exists
+        env:
+          RANKINGS_REFRESH_TOKEN: ${{ secrets.RANKINGS_REFRESH_TOKEN }}
+        run: .github/scripts/require-env.sh RANKINGS_REFRESH_TOKEN "the game would get an empty refresh token and every notification from the scraper would fail with 401"
       - name: Deploy the app by digest
         env:
           GAME_IMAGE: ${{ env.IMAGE }}@${{ steps.build.outputs.digest }}
           ALLOWED_IPS: ${{ secrets.ALLOWED_IPS }}
+          RANKINGS_REFRESH_TOKEN: ${{ secrets.RANKINGS_REFRESH_TOKEN }}
         run: |
           [[ -n "$ALLOWED_IPS" ]] || { echo "::error::ALLOWED_IPS is empty: staging would be public" >&2; exit 1; }
           az deployment group create --resource-group "$RG" --name "game-${{ github.run_id }}" --template-file infra/game.bicep --parameters infra/staging/game.bicepparam --output none
@@ -222,9 +227,14 @@ jobs:
 
       - name: Pin Bicep
         run: az bicep install --version v0.47.16
+      - name: The rankings refresh token secret exists
+        env:
+          RANKINGS_REFRESH_TOKEN: ${{ secrets.RANKINGS_REFRESH_TOKEN }}
+        run: .github/scripts/require-env.sh RANKINGS_REFRESH_TOKEN "the game would get an empty refresh token and every notification from the scraper would fail with 401"
       - name: Deploy the app by digest
         env:
           GAME_IMAGE: ${{ env.IMAGE }}@${{ steps.guard.outputs.digest }}
+          RANKINGS_REFRESH_TOKEN: ${{ secrets.RANKINGS_REFRESH_TOKEN }}
         run: >
           az deployment group create --resource-group "$RG" --name "game-${{ github.run_id }}"
           --template-file infra/game.bicep --parameters infra/production/game.bicepparam --output none

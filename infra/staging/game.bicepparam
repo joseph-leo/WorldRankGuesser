@@ -7,3 +7,7 @@ param env = 'staging'
 param image = readEnvironmentVariable('GAME_IMAGE', 'ghcr.io/joseph-leo/worldrankguesser-game:placeholder')
 param minReplicas = 0
 param allowedIps = json(readEnvironmentVariable('ALLOWED_IPS', '[]'))
+
+// The refresh token comes from the deploy workflow's RANKINGS_REFRESH_TOKEN; the placeholder only lets
+// `az bicep build-params` run without it.
+param rankingsRefreshToken = readEnvironmentVariable('RANKINGS_REFRESH_TOKEN', 'placeholder')

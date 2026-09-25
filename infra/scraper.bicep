@@ -24,6 +24,10 @@ param proxyUrl string
 @secure()
 param proxyToken string
 
+// The same token the game checks on POST /api/rankings/refresh; the Job calls it after a run that stored a release.
+@secure()
+param rankingsRefreshToken string
+
 var uniq = uniqueString(resourceGroup().id)
 
 resource cae 'Microsoft.App/managedEnvironments@2026-01-01' existing = {
@@ -59,6 +63,10 @@ resource job 'Microsoft.App/jobs@2026-01-01' = {
           name: 'proxy-token'
           value: proxyToken
         }
+        {
+          name: 'rankings-refresh-token'
+          value: rankingsRefreshToken
+        }
       ]
       scheduleTriggerConfig: {
         cronExpression: cron
@@ -91,6 +99,16 @@ resource job 'Microsoft.App/jobs@2026-01-01' = {
             {
               name: 'Proxy__Token'
               secretRef: 'proxy-token'
+            }
+            {
+              // The game's default hostname: its app name under the environment's default domain, so nothing here
+              // depends on the game app existing, and the first-deploy order (scraper, then game) stands.
+              name: 'Notify__Url'
+              value: 'https://ca-wrg-${env}-game.${cae.properties.defaultDomain}/api/rankings/refresh'
+            }
+            {
+              name: 'Notify__Token'
+              secretRef: 'rankings-refresh-token'
             }
           ]
         }

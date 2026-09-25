@@ -10,3 +10,4 @@ param cron = '0 6 * * 1'
 // lets `az bicep build-params` run without it.
 param proxyUrl = 'https://wrg-proxy.foweeti.workers.dev'
 param proxyToken = readEnvironmentVariable('PROXY_TOKEN', 'placeholder')
+param rankingsRefreshToken = readEnvironmentVariable('RANKINGS_REFRESH_TOKEN', 'placeholder')

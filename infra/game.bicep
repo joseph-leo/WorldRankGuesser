@@ -25,6 +25,11 @@ param allowedIps array = []
 // 12 hours: an hourly refresh would wake the paused database and spend the free allowance in two weeks.
 param refreshMinutes int = 720
 
+// The token POST /api/rankings/refresh requires, from the GitHub secret RANKINGS_REFRESH_TOKEN, which the scraper's
+// Job also gets (docs/superpowers/specs/2026-09-25-rankings-refresh-notification-design.md).
+@secure()
+param rankingsRefreshToken string
+
 var uniq = uniqueString(resourceGroup().id)
 
 resource cae 'Microsoft.App/managedEnvironments@2026-01-01' existing = {
@@ -53,6 +58,12 @@ resource app 'Microsoft.App/containerApps@2026-01-01' = {
     workloadProfileName: 'Consumption'
     configuration: {
       activeRevisionsMode: 'Single'
+      secrets: [
+        {
+          name: 'rankings-refresh-token'
+          value: rankingsRefreshToken
+        }
+      ]
       ingress: {
         external: true
         targetPort: 8080
@@ -103,6 +114,10 @@ resource app 'Microsoft.App/containerApps@2026-01-01' = {
             {
               name: 'Rankings__RefreshMinutes'
               value: string(refreshMinutes)
+            }
+            {
+              name: 'Rankings__RefreshToken'
+              secretRef: 'rankings-refresh-token'
             }
           ]
           // All three on /healthz, never /readyz: a visitor arriving while the database resumes must get the front
