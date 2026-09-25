@@ -38,6 +38,8 @@ builder.Configuration.AddJsonFile("serviceconfig.json", optional: EF.IsDesignTim
 builder.Services.Configure<RankingSourcesOptions>(builder.Configuration);
 // Unset locally (those feeds go direct); the Job sets Proxy__Url and Proxy__Token (infra/scraper.bicep).
 builder.Services.Configure<ProxyOptions>(builder.Configuration.GetSection(ProxyOptions.SectionName));
+// Unset locally (no game is told); the Job sets Notify__Url and Notify__Token (infra/scraper.bicep).
+builder.Services.Configure<NotifyOptions>(builder.Configuration.GetSection(NotifyOptions.SectionName));
 builder.Services.AddDbContext<RankingsDbContext>(
     options => options.UseSqlServer(builder.Configuration.GetConnectionString("WorldRankGuesserConnection")));
 builder.Services.AddScoped<IRankingRepository, RankingRepository>();
@@ -63,6 +65,9 @@ try
     IRankingUpdater updater = scope.ServiceProvider.GetRequiredService<IRankingUpdater>();
 
     UpdateSummary summary = await updater.UpdateAllAsync(filter, shutdown.Token);
+
+    // Tells the game to re-read the view when a release was stored; a failure here is logged and never fails the run.
+    await host.Services.GetRequiredService<RefreshNotifier>().NotifyAsync(summary, shutdown.Token);
 
     return summary.Failed > 0 ? 1 : 0;
 }
