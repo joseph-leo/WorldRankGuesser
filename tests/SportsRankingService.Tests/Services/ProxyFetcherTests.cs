@@ -122,6 +122,24 @@ public class ProxyFetcherTests
         Assert.Single(log.Collector.GetSnapshot(), r => r.Level == LogLevel.Warning);
     }
 
+    /// <summary>A rotation slip: the URL is set but the token is not. The request still goes out (the Worker answers 401), and one warning names the cause.</summary>
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    public async Task With_a_url_but_no_token_it_warns_once_and_still_asks_the_proxy(string? token)
+    {
+        var (fetcher, handler, _, log) = Build(new ProxyOptions { Url = "https://wrg-proxy.example.workers.dev", Token = token }, HttpStatusCode.Unauthorized, "missing or wrong X-Proxy-Token");
+
+        string? first = await fetcher.GetStringAsync(Target, CancellationToken.None);
+        string? second = await fetcher.GetStringAsync("https://www.wbsc.org/en/rankings", CancellationToken.None);
+
+        Assert.Null(first);
+        Assert.Null(second);
+        Assert.Equal(2, handler.Requests.Count);
+        FakeLogRecord warning = Assert.Single(log.Collector.GetSnapshot(), r => r.Level == LogLevel.Warning && r.Message.Contains("Proxy:Token"));
+        Assert.DoesNotContain(Target, warning.Message);
+    }
+
     [Fact]
     public void Its_name_is_Proxy()
     {

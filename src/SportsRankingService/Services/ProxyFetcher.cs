@@ -22,7 +22,8 @@ public sealed class ProxyFetcher : IHttpFetcher
     private readonly IHttpFetcher _direct;
     private readonly ProxyOptions _options;
     private readonly ILogger<ProxyFetcher> _logger;
-    private int _warned;
+    private int _warnedNoUrl;
+    private int _warnedNoToken;
 
     public ProxyFetcher(IHttpClientFactory httpClientFactory, HttpFetcher direct, IOptions<ProxyOptions> options, ILogger<ProxyFetcher> logger)
         : this(httpClientFactory, (IHttpFetcher)direct, options.Value, logger)
@@ -43,12 +44,18 @@ public sealed class ProxyFetcher : IHttpFetcher
     {
         if (string.IsNullOrWhiteSpace(_options.Url))
         {
-            if (Interlocked.Exchange(ref _warned, 1) == 0)
+            if (Interlocked.Exchange(ref _warnedNoUrl, 1) == 0)
             {
                 _logger.LogWarning("Proxy:Url is not configured: feeds with Fetcher \"{Fetcher}\" are fetched directly, which a hosting address may be refused for", FetcherName);
             }
 
             return await _direct.GetStringAsync(url, cancellationToken);
+        }
+
+        // A rotation slip (the Job deployed without the secret) shows as six 401 lines; this names the cause once.
+        if (string.IsNullOrWhiteSpace(_options.Token) && Interlocked.Exchange(ref _warnedNoToken, 1) == 0)
+        {
+            _logger.LogWarning("Proxy:Token is not configured: the proxy at {ProxyUrl} will answer 401", _options.Url);
         }
 
         _logger.LogInformation("Fetching {Url} through the proxy", url);
