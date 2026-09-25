@@ -77,7 +77,7 @@ which sees none of the Windows tools: call `& "C:\Program Files\Git\bin\bash.exe
 
 3. **Database users.** In the portal, open the SQL database, **Query editor**, sign in with Entra (the owner is the
    admin), paste `infra/staging/bootstrap.sql` and run it. It says the view does not exist yet; that is expected.
-   Run it again after step 6.
+   Run it again after step 7.
 
 4. **GitHub environment and variables** (once per environment; the repository-level ones once):
 
@@ -105,7 +105,23 @@ which sees none of the Windows tools: call `& "C:\Program Files\Git\bin\bash.exe
 
    No `ALLOWED_IPS` for production, ever.
 
-5. **Production only: DNS, before the first game deploy.** At the DNS host of `foweeti.com` (Google), add a CNAME
+5. **Cloudflare, once for both environments** (the Worker in `proxy/` that the scraper fetches WBSC through; spec
+   `docs/superpowers/specs/2026-09-24-wbsc-proxy-egress-design.md`). A free Cloudflare account, with two-factor
+   authentication on since it is part of the pipeline. In the dashboard: Workers & Pages → the account's
+   workers.dev subdomain set to `foweeti` (the Worker's URL, `https://wrg-proxy.foweeti.workers.dev`, is in both
+   `scraper.bicepparam` files); Manage Account → Account API Tokens → Create Token from the **Edit Cloudflare
+   Workers** template, account resources limited to this account, no zone, no expiry. Then, from Git Bash:
+
+   ```bash
+   gh secret set CLOUDFLARE_API_TOKEN --body '<the cfat_ token>'
+   gh variable set CLOUDFLARE_ACCOUNT_ID --body bcd3da3c05cafdc2be799b70825d0ce5
+   openssl rand -hex 32 | gh secret set PROXY_TOKEN
+   ```
+
+   `deploy-proxy.yml` deploys the Worker and sets its `PROXY_TOKEN` secret; `deploy-scraper.yml` passes the same
+   secret to the Job. Both must have run after the secret exists, in either order. Done on 2026-09-24.
+
+6. **Production only: DNS, before the first game deploy.** At the DNS host of `foweeti.com` (Google), add a CNAME
    `games` pointing at `ca-wrg-production-game.<environmentDefaultDomain>` and a TXT `asuid.games` whose value is
    `<customDomainVerificationId>`. Wait until both resolve (`nslookup -type=CNAME games.foweeti.com`,
    `nslookup -type=TXT asuid.games.foweeti.com`). The CNAME must point directly at the app, not through another
@@ -127,7 +143,7 @@ which sees none of the Windows tools: call `& "C:\Program Files\Git\bin\bash.exe
 
    (`az containerapp env certificate create --help` if a flag has moved.)
 
-6. **First deploys**, as manual dispatches, scraper first because the game's smoke test needs rankings:
+7. **First deploys**, as manual dispatches, scraper first because the game's smoke test needs rankings:
 
    ```powershell
    gh workflow run scraper-check.yml --ref main -f environment=staging; gh run watch --exit-status   # must FAIL: no execution yet, and the email must arrive
@@ -156,6 +172,10 @@ which sees none of the Windows tools: call `& "C:\Program Files\Git\bin\bash.exe
 - **Scrape on demand:** `bash .github/scripts/run-job.sh caj-wrg-<env>-scraper rg-wrg-<env> 3900` starts the Job
   and waits for the execution to succeed (`check-job.sh` only reads the latest execution; it is the scheduled
   check's tool, not a wait).
+- **Rotate the proxy token:** `openssl rand -hex 32 | gh secret set PROXY_TOKEN`, then `gh workflow run deploy-proxy.yml --ref main`
+  and `gh workflow run deploy-scraper.yml --ref main` (and `--ref prod` for production). Until both have run the
+  WBSC feeds fail with 401 and keep their previous release. **Watch the Worker:** `cd proxy; npx wrangler tail`
+  (after `npx wrangler login` once on this machine).
 - **Admit another address to staging** (a phone on mobile data) until the next deploy resets the list:
   `az containerapp ingress access-restriction set --name ca-wrg-staging-game --resource-group rg-wrg-staging --rule-name phone --ip-address <ip>/32 --action Allow`.
   The owner's own address changed? Update the `ALLOWED_IPS` secret and dispatch `deploy-game.yml` on `main`.
