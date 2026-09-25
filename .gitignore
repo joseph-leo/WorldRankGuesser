@@ -406,3 +406,4 @@ tests/SportsRankingService.Tests/Captures/
 
 # wrangler's local state for the proxy Worker
 proxy/.wrangler/
+proxy/dist/

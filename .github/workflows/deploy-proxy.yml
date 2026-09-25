@@ -41,6 +41,10 @@ jobs:
       - run: npm test
       - name: Deploy wrg-proxy
         run: npx wrangler deploy
+      - name: The proxy token secret exists
+        env:
+          PROXY_TOKEN: ${{ secrets.PROXY_TOKEN }}
+        run: ../.github/scripts/require-env.sh PROXY_TOKEN "the Worker would get an empty token and refuse every request"
       - name: Set the shared token
         env:
           PROXY_TOKEN: ${{ secrets.PROXY_TOKEN }}
