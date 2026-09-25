@@ -180,6 +180,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.MapHealthEndpoints();
+app.MapRankingsEndpoints(app.Services.GetRequiredService<IOptions<RankingsOptions>>().Value);
 app.MapGameEndpoints();
 
 // The single-page app's client-side routes (/play/..., /results/...) all load index.html.
