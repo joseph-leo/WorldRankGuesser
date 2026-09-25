@@ -1,3 +1,0 @@
-# gitleaks fingerprints (commit:file:rule:line) of known false positives; CI's secrets job scans every commit of a PR.
-# The plan's local checkpoint curls the refresh endpoint with the placeholder token local-test-token; not a secret.
-9189ac81b9d5a2610b3da87f43d93b24a78e7ab4:docs/superpowers/plans/2026-09-25-rankings-refresh-notification.md:curl-auth-header:1211

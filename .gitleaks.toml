@@ -1,0 +1,10 @@
+# CI's secrets job (gitleaks) scans every commit of a PR and of a push to main. The default rules stay; the
+# allowlist below names the one known false positive. A fingerprint in .gitleaksignore would not survive a rebase
+# merge (the commit's SHA changes), which is why the match is on the string itself.
+
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "The plan's local checkpoint curls the refresh endpoint with the placeholder token local-test-token"
+regexes = ['''local-test-token''']
