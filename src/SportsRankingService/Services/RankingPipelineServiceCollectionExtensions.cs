@@ -22,6 +22,8 @@ public static class RankingPipelineServiceCollectionExtensions
         });
         // The proxy Worker sets its own upstream headers; this client only needs the timeout.
         services.AddHttpClient(ProxyFetcher.ClientName, client => client.Timeout = TimeSpan.FromSeconds(30));
+        // The game may wait for its paused database before answering a refresh (about 40 seconds on staging).
+        services.AddHttpClient(RefreshNotifier.ClientName, client => client.Timeout = TimeSpan.FromSeconds(120));
         // The runner indexes the fetchers by Name and hands the item's one to its resolver too, so nothing injects a single
         // IHttpFetcher and the order here does not matter. Every fetcher is only handed out behind CachingFetcher, so feeds
         // and resolvers sharing a page request it once per run; the concrete types are registered as themselves for it to wrap.
@@ -56,6 +58,7 @@ public static class RankingPipelineServiceCollectionExtensions
         services.AddSingleton<RankingSourceRunner>();
         services.AddSingleton<IRankingSourceRunner>(sp => sp.GetRequiredService<RankingSourceRunner>());
         services.AddTransient<IRankingUpdater, RankingUpdater>();
+        services.AddSingleton<RefreshNotifier>();
 
         return services;
     }

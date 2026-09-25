@@ -29,4 +29,15 @@ public class RankingPipelineRegistrationTests
 
         Assert.All(provider.GetServices<IHttpFetcher>(), fetcher => Assert.IsType<CachingFetcher>(fetcher));
     }
+
+    /// <summary>The game may wait for its paused database to resume before answering (about 40 seconds on staging), so the notifier waits longer than a fetch.</summary>
+    [Fact]
+    public void The_notify_client_waits_two_minutes()
+    {
+        using ServiceProvider provider = Provider();
+
+        HttpClient client = provider.GetRequiredService<IHttpClientFactory>().CreateClient(RefreshNotifier.ClientName);
+
+        Assert.Equal(TimeSpan.FromSeconds(120), client.Timeout);
+    }
 }
