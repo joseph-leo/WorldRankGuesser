@@ -41,7 +41,7 @@ builder.Services.Configure<ProxyOptions>(builder.Configuration.GetSection(ProxyO
 // Unset locally (no game is told); the Job sets Notify__Url and Notify__Token (infra/scraper.bicep).
 builder.Services.Configure<NotifyOptions>(builder.Configuration.GetSection(NotifyOptions.SectionName));
 builder.Services.AddDbContext<RankingsDbContext>(
-    options => options.UseSqlServer(builder.Configuration.GetConnectionString("WorldRankGuesserConnection")));
+    options => RankingsDbContext.Configure(options, builder.Configuration.GetConnectionString("WorldRankGuesserConnection")));
 builder.Services.AddScoped<IRankingRepository, RankingRepository>();
 builder.Services.AddRankingPipeline();
 
