@@ -116,10 +116,13 @@ which sees none of the Windows tools: call `& "C:\Program Files\Git\bin\bash.exe
    gh secret set CLOUDFLARE_API_TOKEN --body '<the cfat_ token>'
    gh variable set CLOUDFLARE_ACCOUNT_ID --body bcd3da3c05cafdc2be799b70825d0ce5
    openssl rand -hex 32 | gh secret set PROXY_TOKEN
+   openssl rand -hex 32 | gh secret set RANKINGS_REFRESH_TOKEN
    ```
 
    `deploy-proxy.yml` deploys the Worker and sets its `PROXY_TOKEN` secret; `deploy-scraper.yml` passes the same
    secret to the Job. Both must have run after the secret exists, in either order. Done on 2026-09-24.
+   `RANKINGS_REFRESH_TOKEN` is the token the game's `POST /api/rankings/refresh` checks and the Job sends after a run
+   that stored a release; both deploys carry it.
 
 6. **Production only: DNS, before the first game deploy.** At the DNS host of `foweeti.com` (Google), add a CNAME
    `games` pointing at `ca-wrg-production-game.<environmentDefaultDomain>` and a TXT `asuid.games` whose value is
@@ -172,10 +175,21 @@ which sees none of the Windows tools: call `& "C:\Program Files\Git\bin\bash.exe
 - **Scrape on demand:** `bash .github/scripts/run-job.sh caj-wrg-<env>-scraper rg-wrg-<env> 3900` starts the Job
   and waits for the execution to succeed (`check-job.sh` only reads the latest execution; it is the scheduled
   check's tool, not a wait).
+  The game reads the view into memory on startup and every 12 hours (`Rankings__RefreshMinutes=720`), and the Job
+  tells it to read again at the end of any run that stored a new release (`POST /api/rankings/refresh` with the
+  shared token; the Job's log says "Game notified", the game's "Rankings loaded"), so a scrape reaches new boards
+  within seconds and games in progress keep their boards. A restart is never needed; if a notification failed (the
+  Job's log says so), the timer covers it within 12 hours, or call the endpoint by hand with the secret's value
+  (GitHub never shows it again; keep it in a password manager):
+  `curl -X POST -H "X-Refresh-Token: <the secret>" https://<the game's hostname>/api/rankings/refresh`
+  (from an address staging admits).
 - **Rotate the proxy token:** `openssl rand -hex 32 | gh secret set PROXY_TOKEN`, then `gh workflow run deploy-proxy.yml --ref main`
   and `gh workflow run deploy-scraper.yml --ref main` (and `--ref prod` for production). Until both have run the
   WBSC feeds fail with 401 and keep their previous release. **Watch the Worker:** `cd proxy; npx wrangler tail`
   (after `npx wrangler login` once on this machine).
+- **Rotate the refresh token:** `openssl rand -hex 32 | gh secret set RANKINGS_REFRESH_TOKEN`, then dispatch
+  `deploy-game.yml` and `deploy-scraper.yml` on `main` (and on `prod`). Until both have run for an environment, the
+  Job's notification there fails with 401 and the 12-hour timer covers.
 - **Admit another address to staging** (a phone on mobile data) until the next deploy resets the list:
   `az containerapp ingress access-restriction set --name ca-wrg-staging-game --resource-group rg-wrg-staging --rule-name phone --ip-address <ip>/32 --action Allow`.
   The owner's own address changed? Update the `ALLOWED_IPS` secret and dispatch `deploy-game.yml` on `main`.
