@@ -73,6 +73,10 @@ services:
       dockerfile: src/SportsRankingService/Dockerfile
     environment:
       <<: *stack-connection
+      # Export PROXY_URL and PROXY_TOKEN in the shell to fetch the "Proxy" feeds (WBSC) through the real Worker;
+      # unset, they are fetched directly with a warning, which works from a residential address.
+      Proxy__Url: ${PROXY_URL:-}
+      Proxy__Token: ${PROXY_TOKEN:-}
     depends_on:
       sql:
         condition: service_healthy

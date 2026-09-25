@@ -16,6 +16,14 @@ param image string
 // Five fields, UTC.
 param cron string
 
+// The Worker in proxy/ that the feeds with "Fetcher": "Proxy" go through (WBSC: CloudFront refuses Azure addresses;
+// docs/superpowers/specs/2026-09-24-wbsc-proxy-egress-design.md). Public, so a plain parameter.
+param proxyUrl string
+
+// The token the Worker checks, from the GitHub secret PROXY_TOKEN: the one source for both ends.
+@secure()
+param proxyToken string
+
 var uniq = uniqueString(resourceGroup().id)
 
 resource cae 'Microsoft.App/managedEnvironments@2026-01-01' existing = {
@@ -46,6 +54,12 @@ resource job 'Microsoft.App/jobs@2026-01-01' = {
       triggerType: 'Schedule'
       replicaTimeout: 1800
       replicaRetryLimit: 1
+      secrets: [
+        {
+          name: 'proxy-token'
+          value: proxyToken
+        }
+      ]
       scheduleTriggerConfig: {
         cronExpression: cron
         parallelism: 1
@@ -69,6 +83,14 @@ resource job 'Microsoft.App/jobs@2026-01-01' = {
             {
               name: 'ConnectionStrings__WorldRankGuesserConnection'
               value: 'Server=tcp:${sql.properties.fullyQualifiedDomainName},1433;Database=WorldRankGuesser;Authentication=Active Directory Managed Identity;User Id=${identity.properties.clientId};Encrypt=True;Connect Timeout=60'
+            }
+            {
+              name: 'Proxy__Url'
+              value: proxyUrl
+            }
+            {
+              name: 'Proxy__Token'
+              secretRef: 'proxy-token'
             }
           ]
         }

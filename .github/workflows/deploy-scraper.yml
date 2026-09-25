@@ -3,6 +3,7 @@ name: Deploy scraper
 # The scraper's image and Job, promoted like the game (docs/superpowers/specs/2026-09-19-phase-2-go-live-design.md,
 # section 8.4). Promotion moves the image, never the data: each environment scrapes into its own database on its
 # own schedule. env.PATHS must list exactly the paths below, directories without /**.
+# Both jobs pass the proxy token (repository secret PROXY_TOKEN) to the Job; the Worker itself is deployed by deploy-proxy.yml.
 on:
   push:
     branches: [main, 'stage/**', prod]
@@ -118,6 +119,7 @@ jobs:
       - name: Deploy the Job by digest
         env:
           SCRAPER_IMAGE: ${{ env.IMAGE }}@${{ steps.build.outputs.digest }}
+          PROXY_TOKEN: ${{ secrets.PROXY_TOKEN }}
         run: >
           az deployment group create --resource-group "$RG" --name "scraper-${{ github.run_id }}"
           --template-file infra/scraper.bicep --parameters infra/staging/scraper.bicepparam --output none
@@ -192,6 +194,7 @@ jobs:
       - name: Deploy the Job by digest
         env:
           SCRAPER_IMAGE: ${{ env.IMAGE }}@${{ steps.guard.outputs.digest }}
+          PROXY_TOKEN: ${{ secrets.PROXY_TOKEN }}
         run: >
           az deployment group create --resource-group "$RG" --name "scraper-${{ github.run_id }}"
           --template-file infra/scraper.bicep --parameters infra/production/scraper.bicepparam --output none
