@@ -101,10 +101,13 @@ resource job 'Microsoft.App/jobs@2026-01-01' = {
               secretRef: 'proxy-token'
             }
             {
-              // The game's default hostname: its app name under the environment's default domain, so nothing here
-              // depends on the game app existing, and the first-deploy order (scraper, then game) stands.
+              // The game's internal hostname: its app name under the environment's internal domain, so the call never
+              // leaves the environment. The public hostname is refused by staging's IP allow-list (403 on 2026-09-25:
+              // the environment's outbound pool is about 170 rotating addresses, nothing to allow-list), while the
+              // internal name reaches the app over HTTPS from inside the environment, allow-list or not. Nothing here
+              // depends on the game app existing, so the first-deploy order (scraper, then game) stands.
               name: 'Notify__Url'
-              value: 'https://ca-wrg-${env}-game.${cae.properties.defaultDomain}/api/rankings/refresh'
+              value: 'https://ca-wrg-${env}-game.internal.${cae.properties.defaultDomain}/api/rankings/refresh'
             }
             {
               name: 'Notify__Token'
