@@ -63,8 +63,14 @@ public sealed class RefreshNotifier
             _logger.LogInformation("Game notified: {Rows} rows, {Countries} drawable countries",
                 body.RootElement.GetProperty("rows").GetInt32(), body.RootElement.GetProperty("drawableCountries").GetInt32());
         }
-        catch (Exception ex) when (ex is HttpRequestException or JsonException or KeyNotFoundException || (ex is TaskCanceledException && !cancellationToken.IsCancellationRequested))
+        catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {
+            throw;    // the run itself was cancelled: Program.cs reports that, not this
+        }
+        catch (Exception ex)
+        {
+            // A transport error, the client's own timeout, a body that is not the game's, a URL the client refuses:
+            // none of it is the feeds' fault, and the run's exit code is theirs alone.
             _logger.LogWarning(ex, "The refresh notification to the game failed; its next timed refresh covers it");
         }
     }

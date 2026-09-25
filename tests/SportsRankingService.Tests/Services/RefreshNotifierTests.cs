@@ -112,6 +112,30 @@ public class RefreshNotifierTests
         Assert.Contains("401", warning.Message);
     }
 
+    /// <summary>A misconfigured URL, an unexpected body: whatever goes wrong, the run's exit code stays the feeds'.</summary>
+    [Theory]
+    [InlineData("api/rankings/refresh", "{\"rows\":1,\"drawableCountries\":1}")]      // relative: the client refuses it
+    [InlineData(Url, "{\"rows\":\"many\",\"drawableCountries\":218}")]              // rows is not a number
+    public async Task Any_other_failure_warns_and_does_not_throw(string url, string body)
+    {
+        var (notifier, _, log) = Build(new NotifyOptions { Url = url, Token = "t0k" }, body: body);
+
+        await notifier.NotifyAsync(Inserted, CancellationToken.None);
+
+        Assert.Single(log.Collector.GetSnapshot(), r => r.Level == LogLevel.Warning);
+    }
+
+    /// <summary>A cancelled run is the one thing that does surface: Program.cs reports it and exits 1.</summary>
+    [Fact]
+    public async Task A_cancelled_run_surfaces_its_cancellation()
+    {
+        using var cancelled = new CancellationTokenSource();
+        cancelled.Cancel();
+        var (notifier, _, _) = Build(new NotifyOptions { Url = Url, Token = "t0k" }, throws: new OperationCanceledException(cancelled.Token));
+
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => notifier.NotifyAsync(Inserted, cancelled.Token));
+    }
+
     [Fact]
     public async Task A_transport_failure_warns_and_does_not_throw()
     {
