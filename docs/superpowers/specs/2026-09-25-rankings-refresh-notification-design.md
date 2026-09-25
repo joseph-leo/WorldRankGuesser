@@ -1,7 +1,7 @@
 # A scrape reaches players at once: the refresh endpoint and the scraper's notification
 
 Date: 2026-09-25
-Status: **approved design.** Every section was approved in discussion on 2026-09-25. Plan: to be written with the writing-plans skill.
+Status: **approved design.** Every section was approved in discussion on 2026-09-25. Plan: `docs/superpowers/plans/2026-09-25-rankings-refresh-notification.md`.
 
 Parent designs: `2026-09-19-server-authoritative-rebuild-design.md` (the rankings pipeline and the anti-cheat invariants) and `2026-09-19-phase-2-go-live-design.md`, section 7 (the two environments, the free serverless database). Follows `2026-09-24-wbsc-proxy-egress-design.md`, whose first deploy exposed the gap.
 
@@ -41,7 +41,7 @@ This design adds one endpoint to the API, `POST /api/rankings/refresh`, guarded 
 
 **Configuration.** A `Notify` section, `NotifyOptions`: `Url` (the endpoint's absolute URL) and `Token`. In Azure the Job's environment variables `Notify__Url` and `Notify__Token`; unset locally.
 
-**The notifier.** `RefreshNotifier.NotifyAsync(UpdateSummary, CancellationToken)`: when `Url` is blank, logs one information line that no game is configured to notify and returns; when `summary.Inserted` is 0, returns without a request; otherwise POSTs to the URL with the token in `X-Refresh-Token` through a named `HttpClient` with a 30 second timeout, logs "Game notified: N rows, M drawable countries" from the 200 body, and logs a warning with the status (or the transport error) otherwise. It never throws.
+**The notifier.** `RefreshNotifier.NotifyAsync(UpdateSummary, CancellationToken)`: when `Url` is blank, logs one information line that no game is configured to notify and returns; when `summary.Inserted` is 0, returns without a request; otherwise POSTs to the URL with the token in `X-Refresh-Token` through a named `HttpClient` with a 120 second timeout (a refresh may wait for the paused database to resume, about 40 seconds on staging), logs "Game notified: N rows, M drawable countries" from the 200 body, and logs a warning with the status (or the transport error) otherwise. It never throws.
 
 **Where it runs.** `Program.cs`, after `UpdateAllAsync` returns and before the exit code is decided, on every run including `--only`. A cancelled run does not notify.
 
