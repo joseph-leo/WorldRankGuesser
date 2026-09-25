@@ -55,15 +55,19 @@ public class RankingsRefreshServiceTests
             .BuildServiceProvider()
             .GetRequiredService<IServiceScopeFactory>();
 
-        var service = new RankingsRefreshService(
+        var refresher = new RankingsRefresher(
             scopes,
             store,
             Options.Create(TestData.Options()),
             Options.Create(new ScoringOptions()),
-            Options.Create(new RankingsOptions { RefreshMinutes = refreshMinutes }),
             TestData.Catalog,
             time,
-            NullLogger<RankingsRefreshService>.Instance);
+            NullLogger<RankingsRefresher>.Instance);
+
+        var service = new RankingsRefreshService(
+            refresher,
+            Options.Create(new RankingsOptions { RefreshMinutes = refreshMinutes }),
+            time);
 
         return (service, store);
     }

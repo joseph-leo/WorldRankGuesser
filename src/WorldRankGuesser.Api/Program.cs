@@ -76,6 +76,7 @@ builder.Services.AddSingleton(Random.Shared);
 builder.Services.AddSingleton(CountryCatalog.LoadEmbedded());
 builder.Services.AddSingleton<IRankingsStore, RankingsStore>();
 builder.Services.AddScoped<IRankingsReader, RankingsReader>();
+builder.Services.AddSingleton<RankingsRefresher>();
 
 if (!isOpenApiBuild)
 {
@@ -179,6 +180,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.MapHealthEndpoints();
+app.MapRankingsEndpoints(app.Services.GetRequiredService<IOptions<RankingsOptions>>().Value);
 app.MapGameEndpoints();
 
 // The single-page app's client-side routes (/play/..., /results/...) all load index.html.

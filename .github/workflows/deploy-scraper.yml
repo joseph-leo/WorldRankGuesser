@@ -116,14 +116,18 @@ jobs:
 
       - name: Pin Bicep
         run: az bicep install --version v0.47.16
-      - name: The proxy token secret exists
+      - name: The proxy and refresh token secrets exist
         env:
           PROXY_TOKEN: ${{ secrets.PROXY_TOKEN }}
-        run: .github/scripts/require-env.sh PROXY_TOKEN "the Job would get an empty proxy token and every WBSC feed would fail with 401"
+          RANKINGS_REFRESH_TOKEN: ${{ secrets.RANKINGS_REFRESH_TOKEN }}
+        run: |
+          .github/scripts/require-env.sh PROXY_TOKEN "the Job would get an empty proxy token and every WBSC feed would fail with 401"
+          .github/scripts/require-env.sh RANKINGS_REFRESH_TOKEN "the Job would get an empty refresh token and its notification to the game would fail with 401"
       - name: Deploy the Job by digest
         env:
           SCRAPER_IMAGE: ${{ env.IMAGE }}@${{ steps.build.outputs.digest }}
           PROXY_TOKEN: ${{ secrets.PROXY_TOKEN }}
+          RANKINGS_REFRESH_TOKEN: ${{ secrets.RANKINGS_REFRESH_TOKEN }}
         run: >
           az deployment group create --resource-group "$RG" --name "scraper-${{ github.run_id }}"
           --template-file infra/scraper.bicep --parameters infra/staging/scraper.bicepparam --output none
@@ -195,14 +199,18 @@ jobs:
 
       - name: Pin Bicep
         run: az bicep install --version v0.47.16
-      - name: The proxy token secret exists
+      - name: The proxy and refresh token secrets exist
         env:
           PROXY_TOKEN: ${{ secrets.PROXY_TOKEN }}
-        run: .github/scripts/require-env.sh PROXY_TOKEN "the Job would get an empty proxy token and every WBSC feed would fail with 401"
+          RANKINGS_REFRESH_TOKEN: ${{ secrets.RANKINGS_REFRESH_TOKEN }}
+        run: |
+          .github/scripts/require-env.sh PROXY_TOKEN "the Job would get an empty proxy token and every WBSC feed would fail with 401"
+          .github/scripts/require-env.sh RANKINGS_REFRESH_TOKEN "the Job would get an empty refresh token and its notification to the game would fail with 401"
       - name: Deploy the Job by digest
         env:
           SCRAPER_IMAGE: ${{ env.IMAGE }}@${{ steps.guard.outputs.digest }}
           PROXY_TOKEN: ${{ secrets.PROXY_TOKEN }}
+          RANKINGS_REFRESH_TOKEN: ${{ secrets.RANKINGS_REFRESH_TOKEN }}
         run: >
           az deployment group create --resource-group "$RG" --name "scraper-${{ github.run_id }}"
           --template-file infra/scraper.bicep --parameters infra/production/scraper.bicepparam --output none
