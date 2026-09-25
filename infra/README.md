@@ -171,7 +171,12 @@ which sees none of the Windows tools: call `& "C:\Program Files\Git\bin\bash.exe
   Migrations are skipped; the earlier image must work with the current schema (add first, remove later).
 - **Scrape on demand:** `bash .github/scripts/run-job.sh caj-wrg-<env>-scraper rg-wrg-<env> 3900` starts the Job
   and waits for the execution to succeed (`check-job.sh` only reads the latest execution; it is the scheduled
-  check's tool, not a wait).
+  check's tool, not a wait). The game reads the view into memory on startup and then every 12 hours
+  (`Rankings__RefreshMinutes=720`), so a scrape shows up in new boards within 12 hours, or at once after
+  `az containerapp revision restart --name ca-wrg-<env>-game --resource-group rg-wrg-<env> --revision <active revision>`
+  (`az containerapp revision list ... --query "[?properties.active].name" -o tsv`). A merge that deploys the game and
+  the scraper together usually starts the new game revision before the Job has saved, as on 2026-09-25 (baseball
+  missing until a restart); the weekly scrape has no such race.
 - **Rotate the proxy token:** `openssl rand -hex 32 | gh secret set PROXY_TOKEN`, then `gh workflow run deploy-proxy.yml --ref main`
   and `gh workflow run deploy-scraper.yml --ref main` (and `--ref prod` for production). Until both have run the
   WBSC feeds fail with 401 and keep their previous release. **Watch the Worker:** `cd proxy; npx wrangler tail`
