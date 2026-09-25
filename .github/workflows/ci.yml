@@ -41,6 +41,23 @@ jobs:
       - run: npm test -- --passWithNoTests
       - run: npm run build
 
+  # The proxy Worker's tests, and wrangler's own check of the bundle without an account.
+  proxy:
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: proxy
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: proxy/package-lock.json
+      - run: npm ci
+      - run: npm test
+      - run: npx wrangler deploy --dry-run --outdir dist
+
   # Both images, and the compose stack's migrate target, build on every pull request; nothing is pushed here.
   # The deploy workflows are what push (docs/superpowers/specs/2026-09-19-phase-2-go-live-design.md, section 8).
   images:

@@ -1,0 +1,47 @@
+name: Deploy proxy
+
+# The Cloudflare Worker in proxy/ that the scraper fetches WBSC through (docs/superpowers/specs/2026-09-24-wbsc-proxy-egress-design.md,
+# section 5). One Worker serves staging and production, so a change reaches both at once, outside the promotion guard:
+# staging's Friday Job run sees a broken Worker before production's Monday one. Reads no Azure identity. The Worker's
+# PROXY_TOKEN secret is set from the GitHub secret of the same name on every deploy (idempotent), the one source for
+# both ends; the Job gets it from deploy-scraper.yml.
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'proxy/**'
+      - '.github/workflows/deploy-proxy.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-proxy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: vars.DEPLOYS_ENABLED == 'true'
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: proxy
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ vars.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: proxy/package-lock.json
+      - run: npm ci
+      - run: npm test
+      - name: Deploy wrg-proxy
+        run: npx wrangler deploy
+      - name: Set the shared token
+        env:
+          PROXY_TOKEN: ${{ secrets.PROXY_TOKEN }}
+        run: printf '%s' "$PROXY_TOKEN" | npx wrangler secret put PROXY_TOKEN
