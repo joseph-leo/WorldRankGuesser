@@ -141,6 +141,51 @@ public class RankingsRefresherTests
         Assert.Equal(results[0].LoadedAt, results[1].LoadedAt);
     }
 
+    /// <summary>
+    /// The read belongs to nobody: a caller that gives up (a scraper's notifier at its timeout, a disconnected curl)
+    /// gets its own cancellation back, while the timer that joined the same read still gets the snapshot. Otherwise
+    /// the timer's BackgroundService would fault on a token that was never its own and stop the host.
+    /// </summary>
+    [Fact]
+    public async Task A_callers_own_cancellation_returns_only_to_that_caller()
+    {
+        var reader = new ScriptedReader(Rows) { Gate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously) };
+        var (refresher, store) = Create(reader);
+        using var first = new CancellationTokenSource();
+
+        var cancelled = refresher.RefreshAsync(first.Token);
+        var waiting = refresher.RefreshAsync(CancellationToken.None);
+        first.Cancel();
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => cancelled);
+        Assert.False(waiting.IsCompleted);                        // the read goes on for the caller still waiting
+
+        reader.Gate.SetResult();
+        var result = await waiting;
+
+        Assert.True(result.Loaded);
+        Assert.Equal(1, reader.Attempts);
+        Assert.NotNull(store.Current);
+    }
+
+    /// <summary>The read a caller started outlives that caller's cancellation, so the snapshot it was about to store still lands.</summary>
+    [Fact]
+    public async Task A_read_whose_only_caller_gave_up_still_stores_the_snapshot()
+    {
+        var reader = new ScriptedReader(Rows) { Gate = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously) };
+        var (refresher, store) = Create(reader);
+        using var only = new CancellationTokenSource();
+
+        var cancelled = refresher.RefreshAsync(only.Token);
+        only.Cancel();
+        await Assert.ThrowsAnyAsync<OperationCanceledException>(() => cancelled);
+        reader.Gate.SetResult();
+
+        var next = await refresher.RefreshAsync(CancellationToken.None);   // joins the read if still in flight, or reads again
+
+        Assert.NotNull(store.Current);
+        Assert.True(next.Loaded);
+    }
+
     [Fact]
     public async Task A_call_after_a_finished_refresh_reads_again()
     {

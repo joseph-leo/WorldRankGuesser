@@ -25,28 +25,44 @@ public sealed class RankingsRefresher(
     private readonly object _gate = new();
     private Task<RefreshResult>? _inFlight;
 
+    /// <summary>
+    /// Joins the refresh in flight or starts one. The read belongs to no caller: <paramref name="ct"/> only stops
+    /// this caller's wait, so a scraper that gives up at its timeout, or a curl that disconnects, never cancels the
+    /// read the timer joined (the timer's BackgroundService would fault on that foreign cancellation and stop the
+    /// host), and the snapshot it was about to store still lands.
+    /// </summary>
     public Task<RefreshResult> RefreshAsync(CancellationToken ct)
     {
+        TaskCompletionSource<RefreshResult>? started = null;
+        Task<RefreshResult> refresh;
+
         lock (_gate)
         {
-            if (_inFlight is { } inFlight)
+            if (_inFlight is null)
             {
-                return inFlight;
+                // The slot is taken before the read starts, so a read that completes at once (a test reader, a
+                // failed scope) still finds its own slot to release.
+                started = new TaskCompletionSource<RefreshResult>(TaskCreationOptions.RunContinuationsAsynchronously);
+                _inFlight = started.Task;
             }
 
-            // The slot is taken before the read starts, so a read that completes at once (a test reader, a failed
-            // scope) still finds its own slot to release; a continuation on the read itself would run first.
-            var completion = new TaskCompletionSource<RefreshResult>(TaskCreationOptions.RunContinuationsAsynchronously);
-            _inFlight = completion.Task;
-            _ = RunAndReleaseAsync(completion, ct);
-            return completion.Task;
+            refresh = _inFlight;
         }
+
+        if (started is not null)
+        {
+            // Outside the lock: the read's synchronous prefix (scope, context, the connection's first steps) must
+            // not hold every other caller on the monitor.
+            _ = RunAndReleaseAsync(started);
+        }
+
+        return refresh.WaitAsync(ct);
     }
 
-    /// <summary>Runs one refresh on its first caller's token, frees the slot, then hands the outcome to everyone awaiting it.</summary>
-    private async Task RunAndReleaseAsync(TaskCompletionSource<RefreshResult> completion, CancellationToken ct)
+    /// <summary>Runs one refresh, frees the slot, then hands the outcome to everyone still awaiting it.</summary>
+    private async Task RunAndReleaseAsync(TaskCompletionSource<RefreshResult> completion)
     {
-        var run = RunAsync(ct);
+        var run = RunAsync();
         await Task.WhenAny(run);    // never throws: the outcome, whatever it was, is copied below
 
         // Released before the result is handed out, so a caller that refreshes again at once starts a new read.
@@ -59,22 +75,20 @@ public sealed class RankingsRefresher(
         {
             completion.SetResult(run.Result);
         }
-        else if (run.IsCanceled)
-        {
-            completion.SetCanceled(ct);
-        }
         else
         {
-            completion.SetException(run.Exception!.InnerExceptions);
+            // RunAsync catches everything; this is the guard for the unforeseen, so a slot is never left taken.
+            completion.SetException(run.Exception?.InnerExceptions ?? [new TaskCanceledException(run)]);
         }
     }
 
-    private async Task<RefreshResult> RunAsync(CancellationToken ct)
+    /// <summary>The read itself, on no token: it runs to its own end (the connection's own timeout bounds it).</summary>
+    private async Task<RefreshResult> RunAsync()
     {
         try
         {
             await using var scope = scopes.CreateAsyncScope();
-            var rows = await scope.ServiceProvider.GetRequiredService<IRankingsReader>().ReadAsync(ct);
+            var rows = await scope.ServiceProvider.GetRequiredService<IRankingsReader>().ReadAsync(CancellationToken.None);
             var snapshot = RankingsSnapshotBuilder.Build(rows, gameOptions.Value, scoringOptions.Value.Cap, catalog, time.GetUtcNow());
 
             // A view the scraper has not filled yet cannot draw a board (BoardGenerator needs one country per category);
@@ -90,7 +104,7 @@ public sealed class RankingsRefresher(
                 "Rankings loaded: {Rows} rows, {Countries} drawable countries.", rows.Count, snapshot.DrawableCountries.Count);
             return new RefreshResult(true, rows.Count, snapshot.DrawableCountries.Count, snapshot.LoadedAt, null);
         }
-        catch (Exception error) when (error is not OperationCanceledException || !ct.IsCancellationRequested)
+        catch (Exception error)
         {
             // A cold start meeting a resuming database is expected, so those attempts log a warning without
             // claiming a previous snapshot; a failure after a snapshot exists is not expected and stays an error.
